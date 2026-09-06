@@ -141,7 +141,7 @@ enum class BatStatus : uint8_t {
 #define AURORA_LED_REFRESH_MS  30      // LED animation frame interval
 
 // Popup display time (WiFi activated, etc.)
-#define AURORA_POPUP_DURATION_MS  5000
+#define AURORA_POPUP_DURATION_MS  4000
 
 // ----------------------------------------------------------------------------
 //  Color / status text presets (no RGB on chaser, but keep palette for OLED)
