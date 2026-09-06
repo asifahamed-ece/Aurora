@@ -19,7 +19,7 @@
                         │  GPIO3   GPIO4   ...    ●  │  ◄─── Battery ADC
                         │  (ADC)   (LED)             │
                         │                            │
-   I2C ──────────────►  │  GPIO6   GPIO7   GPIO10 ●  │  ◄─── Down button
+   I2C ──────────────►  │  GPIO8   GPIO9   GPIO10 ●  │  ◄─── Down button
                         │  (SDA)   (SCL)   (DOWN)    │
                         │                            │
                         └────────────────────────────┘
@@ -29,15 +29,15 @@
 
 ## Pin-by-pin wiring
 
-### 1. I²C OLED (SSD1306 0.96")
+### 1. I²C OLED (SSD1306 0.96" or SH1106 1.3")
 
 ```
    OLED module                    ESP32-C3
    ───────────                    ────────
    VCC  ─────────────────────────► 3V3     (red)
    GND  ─────────────────────────► GND    (black)
-   SDA  ─────────────────────────► GPIO6  (yellow)
-   SCL  ─────────────────────────► GPIO7  (green)
+   SDA  ─────────────────────────► GPIO8  (yellow)
+   SCL  ─────────────────────────► GPIO9  (green)
 ```
 
 Most SSD1306 modules have on-board 4.7kΩ pull-ups on SDA/SCL — no external resistors needed.
@@ -150,8 +150,8 @@ ESP32-C3 PIN CONNECTIONS (summary)
 ==================================
 3V3  ──► 3V3 rail
 GND  ──► GND rail
-GPIO6 ──► OLED SDA
-GPIO7 ──► OLED SCL
+GPIO8 ──► OLED SDA
+GPIO9 ──► OLED SCL
 GPIO4 ──► 220Ω ──► LED anode
 GPIO0 ──► BTN-UP    (also 10kΩ pull-up to 3V3)
 GPIO1 ──► BTN-SELECT
@@ -164,7 +164,7 @@ GPIO3 ──► Battery divider mid-point
 
 ## Hardware checklist before you flash
 
-- [ ] OLED VCC/GND/SDA/SCL wired to 3V3/GND/GPIO6/GPIO7
+- [ ] OLED VCC/GND/SDA/SCL wired to 3V3/GND/GPIO8/GPIO9
 - [ ] LED on GPIO4 via 220Ω resistor, cathode to GND
 - [ ] 4 buttons wired: each button has one leg to its GPIO, the other to GND
 - [ ] 10kΩ pull-up from GPIO0 to 3V3
@@ -179,8 +179,8 @@ GPIO3 ──► Battery divider mid-point
 
 | ESP32-C3 GPIO | Firmware define | Component |
 |---|---|---|
-| GPIO6 | `AURORA_OLED_SDA_PIN` | OLED SDA |
-| GPIO7 | `AURORA_OLED_SCL_PIN` | OLED SCL |
+| GPIO8 | `AURORA_OLED_SDA_PIN` | OLED SDA |
+| GPIO9 | `AURORA_OLED_SCL_PIN` | OLED SCL |
 | GPIO4 | `AURORA_LED_PIN` | LED chaser |
 | GPIO0 | `AURORA_BTN_UP_PIN` | Button UP |
 | GPIO1 | `AURORA_BTN_SELECT_PIN` | Button SELECT |
