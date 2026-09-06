@@ -1,4 +1,4 @@
-# Aurora — Implementation Progress
+# Aurora — Implementation Progress Tracker
 
 > **Owner:** Asif (ECE final-year) • **Partner:** Claudyy (vibe-coding the firmware)
 > **Goal:** A hand-built ESP32-C3 birthday gift for a CSE classmate, due Sept 10, 2026.
