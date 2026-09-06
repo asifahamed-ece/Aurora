@@ -78,9 +78,17 @@
 // ----------------------------------------------------------------------------
 
 // --- I2C (OLED display) ---
-#define AURORA_OLED_SDA_PIN   6
-#define AURORA_OLED_SCL_PIN   7
-#define AURORA_OLED_ADDR      0x3C       // Try 0x3D if 0x3C doesn't work
+#define AURORA_OLED_SDA_PIN   8
+#define AURORA_OLED_SCL_PIN   9
+// I2C address - try these in order if display shows garbage:
+//   0x3C - standard for 0.96" SSD1306
+//   0x3D - common for 1.3" SSD1306
+//   0x78 - some Chinese modules
+#define AURORA_OLED_ADDR      0x3C
+// Display driver type:
+//   0 = SSD1306 (for 0.96" displays, most common)
+//   1 = SH1106 (for 1.3" displays - many Chinese 1.3" OLEDs use this!)
+#define AURORA_OLED_DRIVER    1  // <-- SET TO 1 IF USING 1.3" SH1106 DISPLAY
 #define AURORA_OLED_WIDTH     128
 #define AURORA_OLED_HEIGHT    64
 #define AURORA_OLED_RESET     -1         // -1 = no reset pin (use Arduino reset)

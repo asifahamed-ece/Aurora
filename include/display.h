@@ -2,15 +2,8 @@
  *  Aurora — Birthday Gift Firmware
  *  File: include/display.h
  *
- *  OLED display driver wrapper. Owns the Adafruit_SSD1306 instance and exposes
- *  project-level helpers (centered text, status screens, popup overlays).
- *
- *  Block 1 scope:
- *    - Initialize the OLED
- *    - Print boot screen
- *    - Show a 3-line status screen
- *    - Show a "popup" overlay (used for "WiFi Activated!" and battery warnings)
- *    - Centered text utility
+ *  OLED display driver wrapper using U8g2 library.
+ *  Supports both SSD1306 (0.96") and SH1106 (1.3") displays.
  */
 
 #ifndef AURORA_DISPLAY_H
@@ -18,10 +11,11 @@
 
 #include <Arduino.h>
 #include <Wire.h>
-#include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
 
 #include "config.h"
+
+// U8g2 forward declaration
+class U8G2;
 
 class AuroraDisplay {
 public:
@@ -51,12 +45,6 @@ public:
      * Show a centered popup for `durationMs` milliseconds.
      * While the popup is active, all draw calls are ignored — the popup
      * wins. This makes the popup feel like a system notification.
-     *
-     * To show a popup that lasts 5 seconds:
-     *   display.popup("WiFi Activated!", 5000);
-     *
-     * The popup is automatically dismissed after the duration. After the
-     * popup, the caller is responsible for redrawing the underlying screen.
      */
     void popup(const char* text, uint32_t durationMs);
 
@@ -80,15 +68,9 @@ public:
      */
     void display();
 
-    /**
-     * Get a reference to the underlying GFX-compatible display object.
-     */
-    Adafruit_SSD1306& raw() { return _oled; }
-
 private:
-    Adafruit_SSD1306 _oled;
-    bool             _popupActive;
-    uint32_t         _popupEndsAtMs;
+    bool  _popupActive;
+    uint32_t _popupEndsAtMs;
 };
 
 #endif // AURORA_DISPLAY_H
