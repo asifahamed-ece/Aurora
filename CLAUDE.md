@@ -11,7 +11,7 @@ This is an ESP32-C3 firmware project for an Aurora birthday gift. The project us
 ## Development Commands
 
 ### Building
-- `pio run` - Build the firmware (default env: esp32c3)
+- `pio run` - Build the firmware
 - `pio run -t upload` - Build and upload firmware to ESP32-C3
 - `pio run -t uploadfs` - Build and upload LittleFS image (dashboard files)
 - `pio run -t clean` - Clean build artifacts
