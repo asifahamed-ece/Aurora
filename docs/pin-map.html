@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aurora Block 1 — Pin Map</title>
+<style>
+  :root {
+    --bg: #0e1418;
+    --panel: #1a2229;
+    --panel-2: #232c34;
+    --text: #e8eef3;
+    --muted: #95a3ad;
+    --accent: #4ec9b0;
+    --warn: #f0a868;
+    --danger: #e06c75;
+    --wire: #6ec1ff;
+    --vcc: #ff6b6b;
+    --gnd: #4ec9b0;
+    --btn: #c792ea;
+    --i2c: #f9e64f;
+    --adc: #ff9e64;
+    --pwm: #82aaff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 24px;
+    line-height: 1.5;
+  }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .subtitle { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1200px;
+  }
+  .card {
+    background: var(--panel);
+    border-radius: 12px;
+    padding: 18px;
+    border: 1px solid var(--panel-2);
+  }
+  .card h2 { font-size: 15px; margin: 0 0 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.5px; }
+  .card.full { grid-column: 1 / -1; }
+  /* Chip layout */
+  .chip {
+    background: #0a0e12;
+    border: 2px solid var(--panel-2);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+  .pin-row {
+    display: grid;
+    grid-template-columns: 1fr 24px 1fr;
+    align-items: center;
+    gap: 8px;
+  }
+  .pin {
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: var(--panel-2);
+    color: var(--muted);
+    text-align: center;
+  }
+  .pin.used {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .pin.gpio0 { background: #2a3f3a; color: #b6e8c8; }
+  .pin.gpio1 { background: #3a2f4a; color: #d4b6e8; }
+  .pin.gpio2 { background: #4a3a2a; color: #e8c8b6; }
+  .pin.gpio3 { background: #3a3a2a; color: #e8e0b6; }
+  .pin.gpio4 { background: #2a3a4a; color: #b6c8e8; }
+  .pin.gpio6 { background: #4a4a2a; color: #e8e0b6; }
+  .pin.gpio7 { background: #4a4a2a; color: #e8e0b6; }
+  .pin.gpio10 { background: #3a2f4a; color: #d4b6e8; }
+  .pin.gpio3v3 { background: #4a2a2a; color: #ffb6b6; }
+  .pin.gpiognd { background: #2a4a3a; color: #b6e8c8; }
+  .pin-row.left  { grid-template-columns: 1fr 24px 1fr; }
+  .pin-row.right { grid-template-columns: 1fr 24px 1fr; }
+  .pin-row.left .left-label  { text-align: right; }
+  .pin-row.left .pin-name    { text-align: left; }
+  .pin-row.left .right-label { text-align: left; }
+  .pin-row.right .left-label  { text-align: right; }
+  .pin-row.right .pin-name    { text-align: right; }
+  .pin-row.right .right-label { text-align: left; }
+  .pin-row.left  .left-label  { order: 1; }
+  .pin-row.left  .pin-name    { order: 2; }
+  .pin-row.left  .right-label { order: 3; }
+  .pin-row.right .left-label  { order: 3; }
+  .pin-row.right .pin-name    { order: 2; }
+  .pin-row.right .right-label { order: 1; }
+  .chip-body {
+    text-align: center;
+    padding: 12px 8px;
+    border-top: 1px dashed var(--panel-2);
+    border-bottom: 1px dashed var(--panel-2);
+    color: var(--muted);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  /* Legend */
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; font-size: 12px; }
+  .swatch { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+  .dot { width: 12px; height: 12px; border-radius: 50%; }
+  .dot.vcc { background: var(--vcc); }
+  .dot.gnd { background: var(--gnd); }
+  .dot.btn { background: var(--btn); }
+  .dot.i2c { background: var(--i2c); }
+  .dot.adc { background: var(--adc); }
+  .dot.pwm { background: var(--pwm); }
+  /* Wiring table */
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--panel-2); }
+  th { color: var(--accent); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  td.warn { color: var(--warn); }
+  td.danger { color: var(--danger); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
+  .badge.i2c  { background: rgba(249,230,79,0.15); color: var(--i2c); }
+  .badge.pwm  { background: rgba(130,170,255,0.15); color: var(--pwm); }
+  .badge.btn  { background: rgba(199,146,234,0.15); color: var(--btn); }
+  .badge.adc  { background: rgba(255,158,100,0.15); color: var(--adc); }
+  .badge.vcc  { background: rgba(255,107,107,0.15); color: var(--vcc); }
+  .badge.gnd  { background: rgba(78,201,176,0.15); color: var(--gnd); }
+  ul.checklist { list-style: none; padding: 0; margin: 0; }
+  ul.checklist li { padding: 6px 0; padding-left: 24px; position: relative; font-size: 13px; }
+  ul.checklist li::before {
+    content: "☐"; position: absolute; left: 4px; color: var(--accent);
+  }
+  .note { background: rgba(240,168,104,0.08); border-left: 3px solid var(--warn); padding: 10px 12px; border-radius: 4px; font-size: 13px; margin-top: 12px; }
+  .note.danger { background: rgba(224,108,117,0.08); border-left-color: var(--danger); }
+  .note strong { color: var(--warn); }
+  .note.danger strong { color: var(--danger); }
+  @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<h1>Aurora — Block 1 Pin Map</h1>
+<p class="subtitle">ESP32-C3 (Robu Supermini / DevKitM-1) • 0.96" SSD1306 OLED • 4 buttons • 1 LED • battery monitor</p>
+
+<div class="grid">
+
+  <!-- Chip pinout -->
+  <div class="card">
+    <h2>ESP32-C3 chip view (one side)</h2>
+    <div class="chip">
+      <div class="pin-row left">
+        <span class="left-label">3V3</span>
+        <span class="pin-name pin gpiognd">3V3</span>
+        <span class="right-label">Power rail (red)</span>
+      </div>
+      <div class="pin-row left">
+        <span class="left-label">EN</span>
+        <span class="pin-name pin">EN</span>
+        <span class="right-label">Reset (leave alone)</span>
+      </div>
+      <div class="pin-row left">
+        <span class="left-label">GPIO2 (WiFi btn)</span>
+        <span class="pin-name pin gpio2">GPIO2</span>
+        <span class="right-label">⚠ strapping pin</span>
+      </div>
+      <div class="pin-row left">
+        <span class="left-label">GPIO1 (Sel btn)</span>
+        <span class="pin-name pin gpio1">GPIO1</span>
+        <span class="right-label">Button SELECT</span>
+      </div>
+      <div class="pin-row left">
+        <span class="left-label">GPIO0 (Up btn)</span>
+        <span class="pin-name pin gpio0">GPIO0</span>
+        <span class="right-label">+ 10kΩ pull-up</span>
+      </div>
+      <div class="pin-row left">
+        <span class="left-label">GND</span>
+        <span class="pin-name pin gpiognd">GND</span>
+        <span class="right-label">Common ground</span>
+      </div>
+      <div class="chip-body">ESP32-C3<br>USB-C</div>
+      <div class="pin-row right">
+        <span class="left-label">5V (USB)</span>
+        <span class="pin-name pin">5V</span>
+        <span class="right-label">VBUS (don't use)</span>
+      </div>
+      <div class="pin-row right">
+        <span class="left-label">GND</span>
+        <span class="pin-name pin gpiognd">GND</span>
+        <span class="right-label">Common ground</span>
+      </div>
+      <div class="pin-row right">
+        <span class="left-label">GPIO10 (Down)</span>
+        <span class="pin-name pin gpio10">GPIO10</span>
+        <span class="right-label">Button DOWN</span>
+      </div>
+      <div class="pin-row right">
+        <span class="left-label">GPIO7 (SCL)</span>
+        <span class="pin-name pin gpio7">GPIO7</span>
+        <span class="right-label">OLED SCL</span>
+      </div>
+      <div class="pin-row right">
+        <span class="left-label">GPIO6 (SDA)</span>
+        <span class="pin-name pin gpio6">GPIO6</span>
+        <span class="right-label">OLED SDA</span>
+      </div>
+      <div class="pin-row right">
+        <span class="left-label">GPIO4 (LED)</span>
+        <span class="pin-name pin gpio4">GPIO4</span>
+        <span class="right-label">→ 220Ω → LED</span>
+      </div>
+      <div class="pin-row right">
+        <span class="left-label">GPIO3 (ADC)</span>
+        <span class="pin-name pin gpio3">GPIO3</span>
+        <span class="right-label">Battery divider</span>
+      </div>
+    </div>
+    <div class="legend">
+      <span class="swatch"><span class="dot vcc"></span>Power</span>
+      <span class="swatch"><span class="dot gnd"></span>Ground</span>
+      <span class="swatch"><span class="dot btn"></span>Button</span>
+      <span class="swatch"><span class="dot i2c"></span>I²C (OLED)</span>
+      <span class="swatch"><span class="dot adc"></span>ADC (battery)</span>
+      <span class="swatch"><span class="dot pwm"></span>PWM (LED)</span>
+    </div>
+  </div>
+
+  <!-- Pin assignment table -->
+  <div class="card">
+    <h2>Pin assignments</h2>
+    <table>
+      <thead>
+        <tr><th>GPIO</th><th>Function</th><th>Component</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>GPIO6</td>
+          <td><span class="badge i2c">I²C SDA</span></td>
+          <td>OLED data</td>
+        </tr>
+        <tr>
+          <td>GPIO7</td>
+          <td><span class="badge i2c">I²C SCL</span></td>
+          <td>OLED clock</td>
+        </tr>
+        <tr>
+          <td>GPIO4</td>
+          <td><span class="badge pwm">PWM</span></td>
+          <td>LED chaser (220Ω)</td>
+        </tr>
+        <tr>
+          <td>GPIO0</td>
+          <td><span class="badge btn">Input</span></td>
+          <td>Button UP (ext 10kΩ pull-up)</td>
+        </tr>
+        <tr>
+          <td>GPIO1</td>
+          <td><span class="badge btn">Input</span></td>
+          <td>Button SELECT</td>
+        </tr>
+        <tr>
+          <td>GPIO10</td>
+          <td><span class="badge btn">Input</span></td>
+          <td>Button DOWN</td>
+        </tr>
+        <tr class="warn">
+          <td>GPIO2</td>
+          <td><span class="badge btn">Input</span></td>
+          <td>Button WiFi — strapping pin!</td>
+        </tr>
+        <tr>
+          <td>GPIO3</td>
+          <td><span class="badge adc">ADC</span></td>
+          <td>Battery voltage divider</td>
+        </tr>
+        <tr>
+          <td>3V3</td>
+          <td><span class="badge vcc">Power</span></td>
+          <td>3.3V rail (from USB LDO)</td>
+        </tr>
+        <tr>
+          <td>GND</td>
+          <td><span class="badge gnd">Ground</span></td>
+          <td>Common ground</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <strong>⚠ GPIO2 strapping pin:</strong> Do not hold the WiFi button down while the C3 is booting or resetting. The internal pull-up keeps it HIGH at boot — your finger would pull it LOW and the chip might not start. Let go of all buttons, wait ~1s after power-on, then press.
+    </div>
+  </div>
+
+  <!-- Wiring summary -->
+  <div class="card full">
+    <h2>Wiring summary (one page, copy from this)</h2>
+    <table>
+      <thead>
+        <tr><th>From</th><th>To</th><th>Via</th><th>Purpose</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>GPIO6</td><td>OLED SDA</td><td>direct wire</td><td>I²C data</td></tr>
+        <tr><td>GPIO7</td><td>OLED SCL</td><td>direct wire</td><td>I²C clock</td></tr>
+        <tr><td>3V3</td><td>OLED VCC</td><td>direct wire</td><td>Power</td></tr>
+        <tr><td>GND</td><td>OLED GND</td><td>direct wire</td><td>Common ground</td></tr>
+        <tr><td>GPIO4</td><td>LED anode</td><td>220Ω resistor</td><td>PWM breath/chase</td></tr>
+        <tr><td>LED cathode</td><td>GND</td><td>direct wire</td><td>LED return</td></tr>
+        <tr><td>GPIO0</td><td>BTN-UP pin A</td><td>direct wire</td><td>Button input</td></tr>
+        <tr><td>BTN-UP pin B</td><td>GND</td><td>direct wire</td><td>Button return</td></tr>
+        <tr><td>3V3</td><td>GPIO0 (via 10kΩ)</td><td>10kΩ pull-up</td><td>Keep GPIO0 stable HIGH at boot</td></tr>
+        <tr><td>GPIO1</td><td>BTN-SEL pin A</td><td>direct wire</td><td>Button input (internal pull-up)</td></tr>
+        <tr><td>BTN-SEL pin B</td><td>GND</td><td>direct wire</td><td>Button return</td></tr>
+        <tr><td>GPIO10</td><td>BTN-DOWN pin A</td><td>direct wire</td><td>Button input (internal pull-up)</td></tr>
+        <tr><td>BTN-DOWN pin B</td><td>GND</td><td>direct wire</td><td>Button return</td></tr>
+        <tr class="warn"><td>GPIO2</td><td>BTN-WiFi pin A</td><td>direct wire</td><td>Button input (strapping pin!)</td></tr>
+        <tr><td>BTN-WiFi pin B</td><td>GND</td><td>direct wire</td><td>Button return</td></tr>
+        <tr><td>LiPo +</td><td>100kΩ R1 top</td><td>direct wire</td><td>Battery divider input</td></tr>
+        <tr><td>100kΩ R1 bottom</td><td>GPIO3 + 100kΩ R2 top</td><td>shared node</td><td>Divider mid-point = ADC input</td></tr>
+        <tr><td>100kΩ R2 bottom</td><td>GND</td><td>direct wire</td><td>Divider return</td></tr>
+        <tr><td>3V3 (rail)</td><td>GND (rail)</td><td>470µF electrolytic cap</td><td>Decoupling (place near C3)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pre-flight checklist -->
+  <div class="card full">
+    <h2>Pre-flight checklist (before you flash)</h2>
+    <ul class="checklist">
+      <li>OLED VCC/GND/SDA/SCL wired to 3V3/GND/GPIO6/GPIO7</li>
+      <li>LED on GPIO4 via 220Ω resistor, cathode to GND</li>
+      <li>4 buttons wired: each button has one leg to its GPIO, the other to GND</li>
+      <li>10kΩ pull-up from GPIO0 to 3V3</li>
+      <li>Battery divider: LiPo+ → 100kΩ → (100kΩ → GND); mid-point → GPIO3</li>
+      <li>470µF electrolytic across 3V3 and GND, near the C3</li>
+      <li>No button held down when powering on or pressing RESET</li>
+      <li>All grounds are common (3V3 rail, GND rail, LiPo GND, OLED GND)</li>
+      <li>USB-C cable is data-capable (not charge-only) — you need this for serial + flashing</li>
+    </ul>
+    <div class="note danger">
+      <strong>Common failure modes:</strong>
+      <ul style="margin: 6px 0 0 0; padding-left: 20px;">
+        <li>Holding a button during reset → boot fails. Press RESET with no buttons pressed.</li>
+        <li>Charge-only USB cable → no serial, no flash. Use a data cable.</li>
+        <li>Missing 470µF cap → OLED flickers, ESP32 resets randomly when WiFi fires up later.</li>
+        <li>LiPo connected without divider → dead ADC, possibly dead chip. Always R1+R2 between battery+ and GPIO3.</li>
+        <li>Wrong OLED I²C address (0x3D vs 0x3C) → screen stays blank. If 0x3C fails, try 0x3D in <code>config.h</code>.</li>
+      </ul>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
