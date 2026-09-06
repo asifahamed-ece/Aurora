@@ -1,6 +1,6 @@
-# Aurora — Block 1 Pin Diagram (Breadboard)
+# Aurora — Pin Diagram Guide
 
-> **Read this BEFORE you connect anything.** The ESP32-C3 has strapping pins — wiring them wrong can prevent boot. The diagram below mirrors what's in `include/config.h` and matches the firmware exactly.
+> **IMPORTANT:** Read this BEFORE connecting hardware. The ESP32-C3 has strapping pins — wiring them wrong can prevent boot. The diagram below mirrors what's in `include/config.h` and matches the firmware exactly.
 
 ---
 
