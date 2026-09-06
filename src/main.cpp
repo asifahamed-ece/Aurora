@@ -179,7 +179,7 @@ void setup() {
     DBG_PRINTF("[SYS] SSID: %s  pass: %s  http://%u.%u.%u.%u/\n",
                AURORA_AP_SSID, AURORA_AP_PASS,
                AURORA_AP_IP);
-    DBG_PRINTLN(F("[SYS] setup() complete. Entering main loop."));
+    DBG_PRINTLN(F("[SYS] Setup complete. Entering main loop."));
     DBG_PRINTLN();
 }
 
