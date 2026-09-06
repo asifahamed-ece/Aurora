@@ -4,7 +4,7 @@
 
 ---
 
-## Top-level view
+## Board Overview
 
 ```
                         ┌────────────────────────────┐
