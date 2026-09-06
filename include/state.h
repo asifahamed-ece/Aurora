@@ -73,8 +73,9 @@ public:
     const char*    timeSourceString() const;
     void           savePeriodicEpoch(bool force = false);
 
-    // ---- Deep Sleep Standby (~5uA, RTC active) ----
-    void           enterDeepSleep();
+    // ---- Sleep Standby (Power Switch OFF, RTC active in backend) ----
+    void           enterSleep();
+    void           enterDeepSleep() { enterSleep(); }
 
     // ---- Diagnostics ----
     uint32_t bootCount()       const { return _bootCount; }

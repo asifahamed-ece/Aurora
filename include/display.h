@@ -24,8 +24,23 @@ enum class DeskmateMood : uint8_t {
     SLEEPING            // Late-night calm curved sleeping eyes, drifting z Z Z
 };
 
+// OLED Screen Display Modes (looped with Button 0 presses)
+enum class ScreenMode : uint8_t {
+    DESKMATE = 0,       // Mode 1: Animated Living Deskmate Pet Face
+    CLOCK_DATE,         // Mode 2: Large Digital Clock (IST) & Date with Contextual Greeting
+    DAILY_THOUGHT,      // Mode 3: Today's Thought of the Day (30 daily love messages)
+    PULSE_METER,        // Mode 4: Dynamic Animated Heartbeat ECG Pulse Meter
+    MODE_COUNT
+};
+
 class AuroraDisplay {
 public:
+    /**
+     * Cycle through display screens: Deskmate -> Clock -> Thought -> Pulse -> Deskmate
+     */
+    void cycleScreenMode();
+    void setScreenMode(ScreenMode mode);
+    ScreenMode screenMode() const { return _screenMode; }
     /**
      * Initialize the display hardware. Returns true on success.
      * MUST be called once in setup() before any draw call.
@@ -159,8 +174,16 @@ private:
     void spawnHeart(int16_t x, int16_t y, uint8_t size, uint16_t lifetimeMs);
     void updateAndDrawHearts(uint32_t now);
 
-    // Sub-renderers for deskmate states
+    // Screen mode sub-renderers
+    ScreenMode _screenMode { ScreenMode::DESKMATE };
+    uint32_t   _modeBadgeUntilMs { 0 };
+
     void renderDeskmate(uint32_t now);
+    void renderClockDate(uint32_t now);
+    void renderDailyThought(uint32_t now);
+    void renderPulseMeter(uint32_t now);
+    void drawWrappedText(int x, int y, const char* text, int maxW, int lineH);
+
     void drawNormalEyes(int cx1, int cx2, int cy, int w, int h, uint8_t blinkPct);
     void drawHappyEyes(int cx1, int cx2, int cy);
     void drawHeartEyes(int cx1, int cx2, int cy, uint32_t now);

@@ -134,8 +134,14 @@ void setup() {
     chaser.begin();
     chaser.setPattern(ChaserPattern::BREATHE);
 
-    // --- Buttons ---
+    // --- Buttons & Power Switch ---
     buttons.begin();
+    if (buttons.isPowerSwitchOff()) {
+        display.sleep();
+        ledcWrite(0, 0);
+        AuroraState::instance().enterSleep();
+        display.wake();
+    }
 
     // --- Battery ---
     battery.begin();
@@ -200,17 +206,18 @@ void loop() {
     // --- Button & Power Switch Inputs ---
     uint8_t events = buttons.update();
     if (events != BTN_NONE) {
-        // Button 1 (GPIO0): Warm Touch sensor
+        // Button 0 (GPIO0): Warm Touch & OLED Mode Cycle (Clock, Face, Thought, Pulse)
         if (events & BTN_TOUCH) {
             AuroraState::instance().bumpTouches();
+            display.cycleScreenMode();
+            display.triggerWarmTouch();
+            s_midnightAckDoy = aurora_clock::dayOfYear(AuroraState::instance().epoch());
+            DBG_PRINTF("[TOUCH] Button 0 pressed: Mode=%d TotalTouches=%u\n",
+                       (int)display.screenMode(), (unsigned)AuroraState::instance().touches());
+            aurora_web::requestImmediatePush();
         }
 
-        // Button 2 (GPIO2 Short Press): Mode Cycle
-        if (events & BTN_MODE_CYCLE) {
-            DBG_PRINTLN(F("[BTN] Mode cycle requested"));
-        }
-
-        // Button 2 (GPIO2 Hold 3s): WiFi SoftAP Toggle
+        // Button 2 (GPIO2): Dedicated WiFi SoftAP Toggle Switch
         if (events & BTN_WIFI_TOGGLE) {
             bool nextWifi = !AuroraState::instance().wifiOn();
             AuroraState::instance().setWifiOn(nextWifi);
@@ -224,13 +231,16 @@ void loop() {
             aurora_web::requestImmediatePush();
         }
 
-        // Deep Sleep Standby: Button 2 Hold 5s OR Slide Switch OFF (GPIO10)
+        // Switch (GPIO10): Hardware Power Switch Toggled OFF -> Sleep with RTC active
         if (events & BTN_STANDBY) {
             display.popup("Goodnight... zZZ", 1500);
             delay(1500);
             display.sleep();
             ledcWrite(0, 0);
-            AuroraState::instance().enterDeepSleep();
+            AuroraState::instance().enterSleep();
+            // Once awakened (switch turned back ON or touched):
+            display.wake();
+            display.popup("Welcome back~", 1500);
         }
     }
 

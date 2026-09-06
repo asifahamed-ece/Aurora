@@ -2,13 +2,10 @@
  *  Aurora — Birthday Gift Firmware
  *  File: src/block1/buttons.cpp
  *
- *  Dual-button handler with software debouncing & multi-tier hold timing:
- *    - Button 1 (GPIO0): Warm Touch sensor (fires BTN_TOUCH)
- *    - Button 2 (GPIO2): Multi-function push button
- *        - Short press (< 3s): BTN_MODE_CYCLE (cycles display modes)
- *        - Long press (>= 3s): BTN_WIFI_TOGGLE (toggles WiFi SoftAP)
- *        - Very long press (>= 5s): BTN_STANDBY (enters Deep Sleep standby)
- *    - Hardware Switch (GPIO10): Slide OFF (LOW) -> BTN_STANDBY
+ *  Button and Power Switch input handlers:
+ *    - Button 0 (GPIO0): Warm Touch & OLED Mode Cycle (Clock, Face, Thought, Pulse)
+ *    - Button 2 (GPIO2): WiFi AP Toggle Switch (simple press toggles WiFi AP)
+ *    - Switch (GPIO10): Power Toggle Switch (toggled OFF -> Goodnight & Sleep with RTC)
  */
 
 #include "buttons.h"
@@ -19,10 +16,10 @@ void AuroraButtons::begin() {
     _touch.lastStable = _touch.lastRaw;
     _touch.lastChangeMs = millis();
 
-    pinMode(_multi.pin, INPUT_PULLUP);
-    _multi.lastRaw = digitalRead(_multi.pin);
-    _multi.lastStable = _multi.lastRaw;
-    _multi.lastChangeMs = millis();
+    pinMode(_wifi.pin, INPUT_PULLUP);
+    _wifi.lastRaw = digitalRead(_wifi.pin);
+    _wifi.lastStable = _wifi.lastRaw;
+    _wifi.lastChangeMs = millis();
 
 #ifdef AURORA_SLEEP_SWITCH_PIN
     if (AURORA_SLEEP_SWITCH_PIN >= 0) {
@@ -33,7 +30,16 @@ void AuroraButtons::begin() {
     }
 #endif
 
-    DBG_PRINTLN(F("[BTN] begin() OK — GPIO0: Touch, GPIO2: Multi/Hold/Standby, GPIO10: Sleep Switch"));
+    DBG_PRINTLN(F("[BTN] begin() OK — GPIO0: Touch & Screen Cycle, GPIO2: WiFi Toggle, GPIO10: Power Switch"));
+}
+
+bool AuroraButtons::isPowerSwitchOff() const {
+#ifdef AURORA_SLEEP_SWITCH_PIN
+    if (AURORA_SLEEP_SWITCH_PIN >= 0) {
+        return (digitalRead(AURORA_SLEEP_SWITCH_PIN) == LOW); // LOW = switched OFF to GND
+    }
+#endif
+    return false;
 }
 
 uint8_t AuroraButtons::update() {
@@ -41,7 +47,7 @@ uint8_t AuroraButtons::update() {
     uint32_t now = millis();
 
     // ------------------------------------------------------------------------
-    // 1. Button 1 (GPIO0): Dedicated Warm Touch Sensor
+    // 1. Button 0 (GPIO0): Dedicated Warm Touch & Screen Mode Cycle
     // ------------------------------------------------------------------------
     bool touchRaw = (digitalRead(_touch.pin) == LOW); // LOW = pressed
     if (touchRaw != _touch.lastRaw) {
@@ -51,7 +57,7 @@ uint8_t AuroraButtons::update() {
     if ((now - _touch.lastChangeMs) >= (uint32_t)AURORA_BTN_DEBOUNCE_MS) {
         if (touchRaw != _touch.lastStable) {
             if (!_touch.lastStable && touchRaw) {
-                // Press edge detected
+                // Fresh press on Button 0: triggers warm touch & mode cycle
                 events |= BTN_TOUCH;
             }
             _touch.lastStable = touchRaw;
@@ -59,56 +65,37 @@ uint8_t AuroraButtons::update() {
     }
 
     // ------------------------------------------------------------------------
-    // 2. Button 2 (GPIO2): Multi-Function Button (Mode / WiFi / Standby)
+    // 2. Button 2 (GPIO2): Dedicated WiFi AP Toggle Switch (Classic simple press)
     // ------------------------------------------------------------------------
-    bool multiRaw = (digitalRead(_multi.pin) == LOW); // LOW = pressed
-    if (multiRaw != _multi.lastRaw) {
-        _multi.lastChangeMs = now;
-        _multi.lastRaw = multiRaw;
+    bool wifiRaw = (digitalRead(_wifi.pin) == LOW); // LOW = pressed
+    if (wifiRaw != _wifi.lastRaw) {
+        _wifi.lastChangeMs = now;
+        _wifi.lastRaw = wifiRaw;
     }
-    if ((now - _multi.lastChangeMs) >= (uint32_t)AURORA_BTN_DEBOUNCE_MS) {
-        if (multiRaw != _multi.lastStable) {
-            if (!_multi.lastStable && multiRaw) {
-                // Fresh press started
-                _multi.pressStartMs = now;
-                _multi.wifiTriggered = false;
-                _multi.standbyTriggered = false;
-            } else if (_multi.lastStable && !multiRaw) {
-                // Released! If neither long-press hold fired, it was a short press
-                if (!_multi.wifiTriggered && !_multi.standbyTriggered) {
-                    events |= BTN_MODE_CYCLE;
-                }
+    if ((now - _wifi.lastChangeMs) >= (uint32_t)AURORA_BTN_DEBOUNCE_MS) {
+        if (wifiRaw != _wifi.lastStable) {
+            if (!_wifi.lastStable && wifiRaw) {
+                // Fresh press on Button 2: toggles WiFi SoftAP
+                events |= BTN_WIFI_TOGGLE;
             }
-            _multi.lastStable = multiRaw;
-        }
-    }
-
-    // While holding Button 2 down, check hold duration thresholds
-    if (_multi.lastStable) {
-        uint32_t holdTime = now - _multi.pressStartMs;
-        if (holdTime >= (uint32_t)AURORA_BTN_STANDBY_HOLD_MS && !_multi.standbyTriggered) {
-            _multi.standbyTriggered = true;
-            events |= BTN_STANDBY; // 5 seconds hold -> Deep Sleep
-        } else if (holdTime >= (uint32_t)AURORA_BTN_WIFI_HOLD_MS && !_multi.wifiTriggered && !_multi.standbyTriggered) {
-            _multi.wifiTriggered = true;
-            events |= BTN_WIFI_TOGGLE; // 3 seconds hold -> WiFi Toggle
+            _wifi.lastStable = wifiRaw;
         }
     }
 
     // ------------------------------------------------------------------------
-    // 3. Optional Hardware Slide Switch (GPIO10)
+    // 3. Hardware Power Toggle Switch (GPIO10)
     // ------------------------------------------------------------------------
 #ifdef AURORA_SLEEP_SWITCH_PIN
     if (AURORA_SLEEP_SWITCH_PIN >= 0) {
-        bool swRaw = (digitalRead(AURORA_SLEEP_SWITCH_PIN) == LOW); // LOW = switch turned OFF to GND
+        bool swRaw = (digitalRead(AURORA_SLEEP_SWITCH_PIN) == LOW); // LOW = switched OFF
         if (swRaw != _switchLastRaw) {
             _switchChangeMs = now;
             _switchLastRaw = swRaw;
         }
-        if ((now - _switchChangeMs) >= 100) { // 100ms stable filter
+        if ((now - _switchChangeMs) >= 80) { // 80ms debounce filter
             if (swRaw != _switchLastStable) {
                 if (!_switchLastStable && swRaw) {
-                    // Switch flipped to OFF position
+                    // Switch flipped to OFF position!
                     events |= BTN_STANDBY;
                 }
                 _switchLastStable = swRaw;

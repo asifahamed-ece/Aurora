@@ -148,28 +148,38 @@ const char* AuroraState::timeSourceString() const {
     return "?";
 }
 
-void AuroraState::enterDeepSleep() {
-    DBG_PRINTLN(F("[PWR] Entering Deep Sleep standby (RTC oscillator active at ~5uA)..."));
+void AuroraState::enterSleep() {
+    DBG_PRINTLN(F("[PWR] Power switch toggled OFF. Sleeping with RTC active in backend..."));
     savePeriodicEpoch(true);
 
     // Shut down WiFi cleanly
+    bool wasWifiOn = _wifiOn;
     WiFi.disconnect(true);
     WiFi.mode(WIFI_OFF);
     delay(40);
 
-    // Configure GPIO Wakeup on ESP32-C3:
-    // GPIO0 (Button 1: Warm Touch) wakes on LOW
-    // GPIO2 (Button 2: Multi-function) wakes on LOW
-    esp_deep_sleep_enable_gpio_wakeup((1ULL << AURORA_BTN_TOUCH_PIN) | (1ULL << AURORA_BTN_MULTI_PIN),
-                                      ESP_GPIO_WAKEUP_GPIO_LOW);
+    // Enable GPIO Wakeup on ESP32-C3:
+    // 1. Button 0 (GPIO0): Touch button wakes on press (LOW)
+    // 2. Power Switch (GPIO10): Wakes when switch is flipped back ON (HIGH)
+    gpio_wakeup_enable((gpio_num_t)AURORA_BTN_TOUCH_PIN, GPIO_INTR_LOW_LEVEL);
 
 #ifdef AURORA_SLEEP_SWITCH_PIN
-    if (AURORA_SLEEP_SWITCH_PIN >= 0 && AURORA_SLEEP_SWITCH_PIN <= 5) {
-        esp_deep_sleep_enable_gpio_wakeup((1ULL << AURORA_SLEEP_SWITCH_PIN), ESP_GPIO_WAKEUP_GPIO_HIGH);
+    if (AURORA_SLEEP_SWITCH_PIN >= 0) {
+        gpio_wakeup_enable((gpio_num_t)AURORA_SLEEP_SWITCH_PIN, GPIO_INTR_HIGH_LEVEL);
     }
 #endif
 
-    esp_deep_sleep_start();
+    esp_sleep_enable_gpio_wakeup();
+
+    // Sleep with CPU halted and peripherals powered down (~130uA).
+    // Internal hardware RTC continues ticking accurately throughout sleep!
+    esp_light_sleep_start();
+
+    DBG_PRINTLN(F("[PWR] Power switch toggled ON! Waking up..."));
+    delay(50);
+    if (wasWifiOn) {
+        WiFi.mode(WIFI_AP);
+    }
 }
 
 void AuroraState::bumpTouches() {
