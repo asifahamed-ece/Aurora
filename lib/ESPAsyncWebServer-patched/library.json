@@ -1,0 +1,28 @@
+{
+  "name":"ESPAsyncWebServer-aurora",
+  "description":"Aurora-patched ESPAsyncWebServer (pre-allocates _temp String to fix heap corruption on ESP32-C3 RISC-V)",
+  "keywords":[
+    "http","async","websocket","webserver"
+  ],
+  "authors":
+  {
+    "name": "Aurora",
+    "maintainer": true
+  },
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/esphome/ESPAsyncWebServer.git"
+  },
+  "version": "3.4.0-aurora1",
+  "license": "LGPL-3.0",
+  "frameworks": "arduino",
+  "platforms": ["espressif32"],
+  "dependencies": [
+    {
+      "owner": "esphome",
+      "name": "AsyncTCP-esphome",
+      "platforms": ["espressif32"]
+    }
+  ]
+}

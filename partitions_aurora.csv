@@ -1,0 +1,24 @@
+# Aurora — Block 4 partition table
+# Custom layout that gives the firmware plenty of room (1.25MB) and a
+# generous but not extravagant LittleFS region (1.0MB). The full 4MB flash
+# is used: nvs + otadata + app0 + app1 + littlefs + coredump.
+#
+# | Name     | Type | SubType  | Offset   | Size     |
+# | nvs      | data | nvs      | 0x9000   | 0x5000   | 20 KB
+# | otadata  | data | ota      | 0xe000   | 0x2000   | 8 KB
+# | app0     | app  | ota_0    | 0x10000  | 0x140000 | 1.25 MB  (firmware)
+# | app1     | app  | ota_1    | 0x150000 | 0x140000 | 1.25 MB  (OTA slot)
+# | littlefs | data | spiffs   | 0x290000 | 0x160000 | 1.4 MB    (dashboard files)
+# | coredump | data | coredump | 0x3F0000 | 0x10000  | 64 KB
+#
+# Note: ESP32 partition tool uses 'spiffs' as the SubType even when the
+# filesystem is LittleFS — the SubType just declares it as a generic
+# filesystem area; the actual format (SPIFFS vs LittleFS) is chosen at
+# upload time by mklittlefs/mkspiffs and at runtime by the firmware.
+
+nvs,      data, nvs,     0x9000,  0x5000
+otadata,  data, ota,     0xe000,  0x2000
+app0,     app,  ota_0,   0x10000, 0x140000
+app1,     app,  ota_1,   0x150000,0x140000
+littlefs, data, spiffs,  0x290000,0x160000
+coredump, data, coredump,0x3F0000,0x10000
