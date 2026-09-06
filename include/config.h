@@ -136,7 +136,7 @@ enum class BatStatus : uint8_t {
 // ----------------------------------------------------------------------------
 //  Timing constants
 // ----------------------------------------------------------------------------
-#define AURORA_HEARTBEAT_MS    2000    // Serial "alive" print interval
+#define AURORA_HEARTBEAT_MS    5000    // Serial "alive" print interval
 #define AURORA_OLED_REFRESH_MS 100     // Don't redraw OLED more than 10x/sec
 #define AURORA_LED_REFRESH_MS  30      // LED animation frame interval
 
