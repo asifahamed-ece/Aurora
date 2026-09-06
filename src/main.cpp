@@ -1,6 +1,7 @@
 /**
  *  Aurora -- Birthday Gift Firmware
  *  File: src/main.cpp
+ *
  *  Unified build: Block 1 (OLED + LED + buttons + battery) + Block 4 (WiFi AP + dashboard)
  *
  *  This is the final merged firmware. It combines:
@@ -11,9 +12,9 @@
  *  Once a client connects, the dashboard takes over and the OLED continues
  *  showing battery alerts as popups. LittleFS serves the dashboard files.
  *
- *  Flash procedure:
- *    pio run -t upload          -- build + flash firmware
- *    pio run -t uploadfs        -- flash LittleFS image (dashboard)
+ *  Build: pio run
+ *  Flash: pio run -t upload
+ *  LittleFS: pio run -t uploadfs
  */
 
 #include <Arduino.h>
