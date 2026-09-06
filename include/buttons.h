@@ -31,19 +31,22 @@
 
 // Event types emitted by the button manager.
 enum ButtonEvent : uint8_t {
-    BTN_NONE   = 0b0000,
-    BTN_TOUCH  = 0b0001   // Physical touch button
+    BTN_NONE        = 0b0000,
+    BTN_TOUCH       = 0b0001,  // Button 1 (GPIO0): Warm Touch sensor
+    BTN_MODE_CYCLE  = 0b0010,  // Button 2 (GPIO2): Short press (< 3s) -> cycle display mode
+    BTN_WIFI_TOGGLE = 0b0100,  // Button 2 (GPIO2): Long press (>= 3s) -> toggle WiFi AP
+    BTN_STANDBY     = 0b1000   // Button 2 (GPIO2) hold >= 5s OR slide switch turned OFF
 };
 
 class AuroraButtons {
 public:
     /**
-     * Initialize GPIO pin and pull-up. MUST be called in setup().
+     * Initialize GPIO pins and pull-ups. MUST be called in setup().
      */
     void begin();
 
     /**
-     * Poll touch button and emit BTN_TOUCH on fresh press/release.
+     * Poll buttons and emit events (debounced).
      */
     uint8_t update();
 
@@ -53,11 +56,18 @@ private:
         bool     lastStable;        // last debounced state (true = pressed)
         bool     lastRaw;           // last raw reading
         uint32_t lastChangeMs;      // for debounce timing
+        uint32_t pressStartMs;      // when press began
+        bool     wifiTriggered;     // whether 3s WiFi toggle fired
+        bool     standbyTriggered;  // whether 5s standby fired
     };
 
-    BtnState _touch { AURORA_BTN_TOUCH_PIN, false, false, 0 };
-
-    bool checkBtn(BtnState& b);
+    BtnState _touch { AURORA_BTN_TOUCH_PIN, false, false, 0, 0, false, false };
+    BtnState _multi { AURORA_BTN_MULTI_PIN, false, false, 0, 0, false, false };
+    
+    // Optional slide switch on GPIO10
+    bool     _switchLastStable { false };
+    bool     _switchLastRaw { false };
+    uint32_t _switchChangeMs { 0 };
 };
 
 #endif // AURORA_BUTTONS_H

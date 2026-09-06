@@ -15,6 +15,7 @@
 #include <ESPAsyncWebServer.h>
 #include <AsyncTCP.h>
 #include <ArduinoJson.h>
+#include <Preferences.h>
 
 #include "config.h"
 #include "state.h"
@@ -103,7 +104,7 @@ static void pushHelloTo(AsyncWebSocketClient* c) {
 }
 
 // ----------------------------------------------------------------------------
-//  WS event handler
+//  WebSocket event handler
 // ----------------------------------------------------------------------------
 static void onWsEvent(AsyncWebSocket* server,
                       AsyncWebSocketClient* client,
@@ -111,27 +112,31 @@ static void onWsEvent(AsyncWebSocket* server,
                       void* arg,
                       uint8_t* data,
                       size_t len) {
+    (void)server;
     switch (type) {
-        case WS_EVT_CONNECT:
-            DBG_PRINTF("[WS] client %u connected (total=%u)\n",
-                       client->id(), server->count());
-            pushHelloTo(client);
-            //  Push an immediate state frame so the UI is never blank.
-            g_pushNow = true;
+        case WS_EVT_CONNECT: {
+            DBG_PRINTF("[WS] client #%u connected from %s\n",
+                       client->id(), client->remoteIP().toString().c_str());
+            char buf[256];
+            size_t n = buildHelloJson(buf, sizeof(buf));
+            client->text(buf, n);
+
+            char stateBuf[512];
+            size_t sn = buildStateJson(stateBuf, sizeof(stateBuf));
+            client->text(stateBuf, sn);
             break;
+        }
 
         case WS_EVT_DISCONNECT:
-            DBG_PRINTF("[WS] client %u disconnected (total=%u)\n",
-                       client->id(), server->count());
+            DBG_PRINTF("[WS] client #%u disconnected\n", client->id());
             break;
 
         case WS_EVT_DATA: {
             AwsFrameInfo* info = (AwsFrameInfo*)arg;
-            if (info->final && info->index == 0 && info->len == len &&
-                info->opcode == WS_TEXT) {
-                //  Try to parse the frame. We only reply to {"type":"ping"}.
-                StaticJsonDocument<128> doc;
-                if (deserializeJson(doc, data, len) == DeserializationError::Ok) {
+            if (info->final && info->index == 0 && info->len == len && info->opcode == WS_TEXT) {
+                StaticJsonDocument<256> doc;
+                DeserializationError err = deserializeJson(doc, data, len);
+                if (!err) {
                     const char* t = doc["type"] | "";
                     if (strcmp(t, "ping") == 0) {
                         StaticJsonDocument<64> pong;
@@ -142,8 +147,8 @@ static void onWsEvent(AsyncWebSocket* server,
                     } else if (strcmp(t, "time_sync") == 0) {
                         uint32_t clientEpoch = doc["epoch"] | 0;
                         if (clientEpoch > 1700000000) {
-                            AuroraState::instance().setEpoch(clientEpoch);
-                            DBG_PRINTF("[CLK] synced from client: epoch=%u\n", (unsigned)clientEpoch);
+                            AuroraState::instance().setEpoch(clientEpoch, TimeSyncSource::BROWSER_SYNC);
+                            DBG_PRINTF("[CLK] WebSocket time sync from client: epoch=%u\n", (unsigned)clientEpoch);
                             g_pushNow = true;
                         }
                     } else if (strcmp(t, "heart_tap") == 0) {
@@ -224,6 +229,42 @@ bool begin() {
 
     //  1. /api/state — JSON snapshot for first-paint (registered BEFORE serveStatic)
     server.on("/api/state", HTTP_GET, handleApiState);
+
+    //  Fast HTTP time sync (fires immediately on phone connection before WebSocket)
+    server.on("/api/sync_time", HTTP_GET, [](AsyncWebServerRequest* req) {
+        if (req->hasParam("epoch")) {
+            uint32_t clientEpoch = req->getParam("epoch")->value().toInt();
+            if (clientEpoch > 1700000000) {
+                AuroraState::instance().setEpoch(clientEpoch, TimeSyncSource::BROWSER_SYNC);
+                DBG_PRINTF("[CLK] Fast HTTP time sync from client: epoch=%u\n", (unsigned)clientEpoch);
+                aurora_web::requestImmediatePush();
+            }
+        }
+        AsyncWebServerResponse* r = req->beginResponse(200, "text/plain", "OK");
+        r->addHeader("Cache-Control", "no-store");
+        req->send(r);
+    });
+
+    //  Station WiFi Configuration endpoint (allows saving home WiFi for background NTP)
+    server.on("/api/wifi_sta", HTTP_POST, [](AsyncWebServerRequest* req) {
+        if (req->hasParam("ssid", true)) {
+            String ssid = req->getParam("ssid", true)->value();
+            String pass = req->hasParam("pass", true) ? req->getParam("pass", true)->value() : "";
+            Preferences prefs;
+            if (prefs.begin("aurora", false)) {
+                prefs.putString("sta_ssid", ssid);
+                prefs.putString("sta_pass", pass);
+                prefs.end();
+                DBG_PRINTF("[WIFI] Saved Station credentials: %s\n", ssid.c_str());
+                WiFi.mode(WIFI_AP_STA);
+                WiFi.begin(ssid.c_str(), pass.c_str());
+                configTime(AURORA_TIMEZONE_OFFSET_SEC, 0, "pool.ntp.org", "time.google.com");
+            }
+            req->send(200, "text/plain", "SAVED");
+            return;
+        }
+        req->send(400, "text/plain", "MISSING_SSID");
+    });
 
     //  2. /version — tiny endpoint for connectivity checks
     server.on("/version", HTTP_GET, [](AsyncWebServerRequest* req) {

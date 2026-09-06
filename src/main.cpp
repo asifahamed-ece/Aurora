@@ -167,10 +167,11 @@ void setup() {
         while (true) { delay(1000); }
     }
 
-    // --- Clock: seed with compile-time epoch ---
-    AuroraState::instance().setEpoch(compileEpoch());
-    DBG_PRINTF("[CLK] epoch=%u (%s)\n",
-               (unsigned)AuroraState::instance().epoch(), __DATE__);
+    // --- Clock: Initialize ESP32 Hardware RTC (retains time across wake/reset) ---
+    AuroraState::instance().initTime(compileEpoch());
+    DBG_PRINTF("[CLK] Local time: epoch=%u (IST: +5:30, Source: %s)\n",
+               (unsigned)AuroraState::instance().localEpoch(),
+               AuroraState::instance().timeSourceString());
 
     DBG_PRINTLN();
     DBG_PRINTF("[SYS] SSID: %s  pass: %s  http://%u.%u.%u.%u/\n",
@@ -196,28 +197,67 @@ void loop() {
     aurora_wifi::loop();
     aurora_web::loop();
 
-    // --- Physical touch button input (GPIO0: Warm Touch) ---
+    // --- Button & Power Switch Inputs ---
     uint8_t events = buttons.update();
-    if (events & BTN_TOUCH) {
-        AuroraState::instance().bumpTouches();
+    if (events != BTN_NONE) {
+        // Button 1 (GPIO0): Warm Touch sensor
+        if (events & BTN_TOUCH) {
+            AuroraState::instance().bumpTouches();
+        }
+
+        // Button 2 (GPIO2 Short Press): Mode Cycle
+        if (events & BTN_MODE_CYCLE) {
+            DBG_PRINTLN(F("[BTN] Mode cycle requested"));
+        }
+
+        // Button 2 (GPIO2 Hold 3s): WiFi SoftAP Toggle
+        if (events & BTN_WIFI_TOGGLE) {
+            bool nextWifi = !AuroraState::instance().wifiOn();
+            AuroraState::instance().setWifiOn(nextWifi);
+            if (nextWifi) {
+                WiFi.mode(WIFI_AP);
+                display.popup("WiFi Hotspot ON", AURORA_POPUP_DURATION_MS);
+            } else {
+                WiFi.mode(WIFI_OFF);
+                display.popup("WiFi Hotspot OFF", AURORA_POPUP_DURATION_MS);
+            }
+            aurora_web::requestImmediatePush();
+        }
+
+        // Deep Sleep Standby: Button 2 Hold 5s OR Slide Switch OFF (GPIO10)
+        if (events & BTN_STANDBY) {
+            display.popup("Goodnight... zZZ", 1500);
+            delay(1500);
+            display.sleep();
+            ledcWrite(0, 0);
+            AuroraState::instance().enterDeepSleep();
+        }
+    }
+
+    // --- React to touches from physical button OR phone web dashboard ---
+    if (AuroraState::instance().hasPendingTouch()) {
+        AuroraState::instance().clearPendingTouch();
         display.triggerWarmTouch();
         s_midnightAckDoy = aurora_clock::dayOfYear(AuroraState::instance().epoch());
-        DBG_PRINTF("[TOUCH] Warm Touch recorded! Total: %u\n",
+        DBG_PRINTF("[TOUCH] Warm Touch triggered! Total: %u\n",
                    (unsigned)AuroraState::instance().touches());
         aurora_web::requestImmediatePush();
     }
 
-    // --- Midnight Check (12:00 AM) -> Message of the Day Reminder ---
-    uint32_t epoch = AuroraState::instance().epoch();
-    if (epoch > 0) {
-        uint32_t h = (epoch / 3600) % 24;
-        uint16_t doy = aurora_clock::dayOfYear(epoch);
+    // --- Midnight Check (12:00 AM IST) -> Message of the Day Reminder ---
+    uint32_t localEpoch = AuroraState::instance().localEpoch();
+    if (localEpoch > 0) {
+        uint32_t h = (localEpoch / 3600) % 24;
+        uint16_t doy = aurora_clock::dayOfYear(AuroraState::instance().epoch());
         if (h == 0 && s_midnightAckDoy != doy) {
             display.setMidnightReminder(true);
         } else if (h != 0 && display.isMidnightReminderActive()) {
             display.setMidnightReminder(false);
         }
     }
+
+    // --- Periodic NVS Epoch Backup (every 60s) ---
+    AuroraState::instance().savePeriodicEpoch();
 
     // --- Deskmate Attention Check (5+ hours without touch -> Lonely/Sad) ---
     if (!display.isMidnightReminderActive() && display.currentMood() != DeskmateMood::LOVE_TOUCHED) {
@@ -253,7 +293,7 @@ void loop() {
             if (s == BatStatus::BatStatus_LOW) {
                 display.popup("Battery Hungry~", AURORA_POPUP_DURATION_MS);
             } else if (s == BatStatus::BatStatus_CRITICAL) {
-                display.popup("Please Charge Me <3", AURORA_POPUP_DURATION_MS);
+                display.popup("Please Charge Me", AURORA_POPUP_DURATION_MS);
             }
         }
     }
@@ -265,11 +305,12 @@ void loop() {
     if (now - s_lastHeartMs >= (uint32_t)AURORA_HEARTBEAT_MS) {
         s_lastHeartMs = now;
         uint32_t uptime = (now - s_bootMs) / 1000;
-        DBG_PRINTF("[SYS] heartbeat -- uptime=%lus freeHeap=%u bat=%dmV(%s)\n",
+        DBG_PRINTF("[SYS] heartbeat -- uptime=%lus freeHeap=%u bat=%dmV(%s) clk=%s\n",
                    (unsigned long)uptime,
                    (unsigned)ESP.getFreeHeap(),
                    battery.voltageMillivolts(),
-                   battery.statusString());
+                   battery.statusString(),
+                   AuroraState::instance().timeSourceString());
     }
 
     // Yield to the AsyncTCP stack (no delay() so WS server stays responsive)

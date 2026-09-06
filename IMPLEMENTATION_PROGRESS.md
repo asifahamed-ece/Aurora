@@ -420,6 +420,20 @@ if (strncmp(url, "/api", 4) == 0 || strncmp(url, "/ws", 3) == 0) { ... }
 
 ---
 
+## Block 6 — ESP32 Hardware RTC, Deep Sleep Standby & Time Synchronization *(COMPLETED Sept 7, 2026)*
+
+| Item | Status | Notes |
+|---|---|---|
+| **ESP32 Native Hardware RTC (`settimeofday`)** | ✅ PASSED | Real-time POSIX RTC integration; maintains precise time across soft resets and sleep |
+| **Deep Sleep Standby (~5 µA)** | ✅ PASSED | Button 2 hold (>=5s) or slide switch (GPIO10) enters Deep Sleep; internal RTC keeps ticking in background |
+| **Dual-Button Wakeup from Deep Sleep** | ✅ PASSED | Both Button 1 (GPIO0 Warm Touch) and Button 2 (GPIO2 Multi) wake chip in milliseconds |
+| **NVS Flash Periodic Time Backup** | ✅ PASSED | Periodically commits epoch to NVS flash every 60s; cold boot restores last known time instead of resetting to compile date |
+| **Instant HTTP Browser Time Sync** | ✅ PASSED | Immediate `/api/sync_time` GET on phone page load locks hardware RTC before WebSocket connects |
+| **Background NTP Auto-Sync (`WIFI_AP_STA`)** | ✅ PASSED | Connects to home/hotspot WiFi station in background and synchronizes atomic time via SNTP (`pool.ntp.org`) |
+| **Station WiFi Setup API** | ✅ PASSED | `/api/wifi_sta` endpoint allows user to configure and save home WiFi credentials from phone |
+
+---
+
 ## Screenshots & Visual Assets
 
 All high-resolution dashboard screenshots are saved in [`aurora-firmware/screenshots/`](screenshots/):

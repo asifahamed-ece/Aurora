@@ -590,3 +590,13 @@ void AuroraDisplay::clear() {
 void AuroraDisplay::display() {
     _u8g2.sendBuffer();
 }
+
+void AuroraDisplay::sleep() {
+    _u8g2.clearBuffer();
+    _u8g2.sendBuffer();
+    _u8g2.setPowerSave(1); // Turn off OLED display panel & internal charge pump (0 uA)
+}
+
+void AuroraDisplay::wake() {
+    _u8g2.setPowerSave(0); // Power on OLED panel
+}

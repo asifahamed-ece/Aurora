@@ -103,6 +103,16 @@ public:
      */
     void display();
 
+    /**
+     * Put OLED panel into deep hardware power-down (0 uA).
+     */
+    void sleep();
+
+    /**
+     * Wake OLED panel from hardware power-down.
+     */
+    void wake();
+
 private:
     // Popup state
     bool     _popupActive;
