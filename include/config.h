@@ -119,9 +119,9 @@
 #define AURORA_BAT_ADC_MAX_MV     3300 // ESP32-C3 ADC reference ~3.3V
 #define AURORA_BAT_SAMPLES        8    // Number of ADC samples to average (noise reduction)
 
-#define AURORA_BAT_OK_MV          3500 // Above this, "OK" -- fully charged LiPo
-#define AURORA_BAT_LOW_MV         3300 // Below this, show "LOW" warning
-#define AURORA_BAT_CRITICAL_MV    3000 // Below this, show "CRITICAL" and dim LEDs
+#define AURORA_BAT_OK_MV          3600 // Above this, "OK" -- fully charged LiPo
+#define AURORA_BAT_LOW_MV         3400 // Below this, show "LOW" warning
+#define AURORA_BAT_CRITICAL_MV    3100 // Below this, show "CRITICAL" and dim LEDs
 #define AURORA_BAT_DEAD_MV        2800 // Below this, refuse to boot (deep sleep)
 
 // Battery status thresholds for display / behavior.
