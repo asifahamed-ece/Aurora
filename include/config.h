@@ -90,7 +90,7 @@
 // GPIO4 is unused on most C3 boards; it has no special boot restrictions.
 #define AURORA_LED_PIN        4
 // Pattern period in ms -- how long one full "chaser cycle" takes.
-#define AURORA_LED_CHASER_PERIOD_MS 1200
+#define AURORA_LED_CHASER_PERIOD_MS 1500
 
 // --- Buttons (active LOW with pull-up; press = LOW) ---
 // GPIO0 has an external 10k pull-up to keep boot mode safe.
@@ -100,7 +100,7 @@
 #define AURORA_BTN_WIFI_PIN   2     // 4th button -- toggles WiFi AP
 
 // Debounce time in ms. 50 ms is enough for tactile switches.
-#define AURORA_BTN_DEBOUNCE_MS  50
+#define AURORA_BTN_DEBOUNCE_MS  40
 
 // ----------------------------------------------------------------------------
 //  Battery monitor (voltage divider on ADC1_CH3 = GPIO3)
