@@ -64,7 +64,7 @@
 //  Build info
 // ----------------------------------------------------------------------------
 #define AURORA_PROJECT_NAME  "Aurora"
-#define AURORA_VERSION       "0.4.0"
+#define AURORA_VERSION       "0.5.0"
 #define AURORA_DEDICATEE     "Chandni"
 // AURORA_BUILD_BLOCK is supplied by the PlatformIO env's -D flag
 // (e.g. -DAURORA_BUILD_BLOCK=\"Block1-Breadboard\"). A sensible fallback
@@ -136,7 +136,7 @@ enum class BatStatus : uint8_t {
 // ----------------------------------------------------------------------------
 //  Timing constants
 // ----------------------------------------------------------------------------
-#define AURORA_HEARTBEAT_MS    1000    // Serial "alive" print interval
+#define AURORA_HEARTBEAT_MS    2000    // Serial "alive" print interval
 #define AURORA_OLED_REFRESH_MS 100     // Don't redraw OLED more than 10x/sec
 #define AURORA_LED_REFRESH_MS  30      // LED animation frame interval
 
