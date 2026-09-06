@@ -1,6 +1,6 @@
 # Aurora — Implementation Progress Tracker
 
-> **Owner:** Asif (ECE final-year) • **Partner:** Claudyy (vibe-coding the firmware)
+> **Owner:** Asif (ECE final-year) • **AI Partner:** Claude Code
 > **Goal:** A hand-built ESP32-C3 birthday gift for a CSE classmate, due Sept 10, 2026.
 > **Approach:** 6 integration blocks. Each block ends with a working thing you can test on hardware.
 
