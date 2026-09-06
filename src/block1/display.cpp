@@ -1,104 +1,122 @@
 /**
  *  Aurora — Birthday Gift Firmware
- *  File: src/display.cpp
+ *  File: src/block1/display.cpp
+ *
+ *  OLED display driver using U8g2 library.
+ *  Supports both SSD1306 (0.96") and SH1106 (1.3") displays.
  */
 
 #include "display.h"
 
+// U8g2 library include
+#include <U8g2lib.h>
+
+// Create the U8g2 display object based on driver selection
+// For SH1106 1.3" 128x64 I2C:
+#if AURORA_OLED_DRIVER == 1
+// SH1106 128x64 noname F-HW_I2C constructor
+// U8G2_SH1106_128X64_NONAME_F_HW_I2C(u8g2_cb_t rotation, uint8_t reset = U8X8_PIN_NONE)
+U8G2_SH1106_128X64_NONAME_F_HW_I2C _u8g2(U8G2_R0);
+#else
+// SSD1306 128x64 noname F-HW_I2C constructor
+U8G2_SSD1306_128X64_NONAME_F_HW_I2C _u8g2(U8G2_R0);
+#endif
+
 bool AuroraDisplay::begin() {
-    // Initialize the I2C bus with our custom pins + fast-mode frequency.
-    Wire.begin(AURORA_OLED_SDA_PIN, AURORA_OLED_SCL_PIN, AURORA_OLED_I2C_FREQ);
+    // Initialize the I2C bus with our custom pins.
+    Wire.begin(AURORA_OLED_SDA_PIN, AURORA_OLED_SCL_PIN);
 
-    _oled = Adafruit_SSD1306(AURORA_OLED_WIDTH, AURORA_OLED_HEIGHT,
-                             &Wire, AURORA_OLED_RESET);
-
-    if (!_oled.begin(SSD1306_SWITCHCAPVCC, AURORA_OLED_ADDR)) {
-        DBG_PRINTLN(F("[OLED] begin() FAILED — check wiring and I2C address"));
-        return false;
+    // Scan for I2C devices and report what we find
+    DBG_PRINTLN(F("[OLED] I2C Scanner - looking for devices..."));
+    for (byte address = 0; address < 127; address++) {
+        Wire.beginTransmission(address);
+        if (Wire.endTransmission() == 0) {
+            DBG_PRINTF("[OLED] I2C device found at 0x%02X\n", address);
+        }
     }
 
-    _oled.clearDisplay();
-    _oled.display();
+    // Initialize the U8g2 display
+    _u8g2.setBusClock(400000);  // 400kHz I2C
+    _u8g2.begin();
+
     _popupActive = false;
     _popupEndsAtMs = 0;
 
-    DBG_PRINTF("[OLED] begin() OK — %dx%d at 0x%02X, %d kHz\n",
-               AURORA_OLED_WIDTH, AURORA_OLED_HEIGHT,
-               AURORA_OLED_ADDR, AURORA_OLED_I2C_FREQ / 1000);
+    const char* driver = AURORA_OLED_DRIVER == 1 ? "SH1106" : "SSD1306";
+    DBG_PRINTF("[OLED] begin() OK — %s %dx%d at 0x%02X\n",
+               driver, AURORA_OLED_WIDTH, AURORA_OLED_HEIGHT, AURORA_OLED_ADDR);
     return true;
 }
 
 void AuroraDisplay::showBootScreen() {
-    _oled.clearDisplay();
-    _oled.setTextSize(2);
-    _oled.setTextColor(SSD1306_WHITE);
-    _oled.setCursor(20, 5);
-    _oled.print(F("Aurora"));
+    _u8g2.clearBuffer();
+    _u8g2.setFont(u8g2_font_ncenB14_tr);
+    _u8g2.setDrawColor(1);
 
-    _oled.setTextSize(1);
-    _oled.setCursor(10, 30);
-    _oled.print(AURORA_VERSION);
+    // Center "Aurora" text
+    const char* title = "Aurora";
+    int titleWidth = _u8g2.getStrWidth(title);
+    int titleX = (AURORA_OLED_WIDTH - titleWidth) / 2;
+    _u8g2.drawStr(titleX, 20, title);
 
-    _oled.setCursor(10, 44);
-    _oled.print(AURORA_BUILD_BLOCK);
+    // Version and build block
+    _u8g2.setFont(u8g2_font_5x7_tf);
+    _u8g2.drawStr(10, 36, AURORA_VERSION);
+    _u8g2.drawStr(10, 48, AURORA_BUILD_BLOCK);
 
-    _oled.display();
+    _u8g2.sendBuffer();
 }
 
 void AuroraDisplay::showStatusScreen(const char* line1, const char* line2, const char* line3) {
     // If a popup is active, don't overwrite it.
     if (_popupActive && millis() < _popupEndsAtMs) return;
 
-    _oled.clearDisplay();
-    _oled.setTextSize(1);
-    _oled.setTextColor(SSD1306_WHITE);
-    _oled.setCursor(0, 0);
-    if (line1) _oled.print(line1);
-    _oled.setCursor(0, 18);
-    if (line2) _oled.print(line2);
-    _oled.setCursor(0, 36);
-    if (line3) _oled.print(line3);
-    _oled.display();
+    _u8g2.clearBuffer();
+    _u8g2.setFont(u8g2_font_5x7_tf);
+    _u8g2.setDrawColor(1);
+
+    if (line1) _u8g2.drawStr(0, 8, line1);
+    if (line2) _u8g2.drawStr(0, 24, line2);
+    if (line3) _u8g2.drawStr(0, 40, line3);
+
+    _u8g2.sendBuffer();
 }
 
 void AuroraDisplay::showCenteredText(const char* text, int16_t y, uint8_t textSize) {
-    _oled.setTextSize(textSize);
-    _oled.setTextColor(SSD1306_WHITE);
+    // Select font based on size
+    if (textSize >= 2) {
+        _u8g2.setFont(u8g2_font_ncenB14_tr);
+    } else {
+        _u8g2.setFont(u8g2_font_5x7_tf);
+    }
 
-    int16_t x1, y1;
-    uint16_t w, h;
-    _oled.getTextBounds(text, 0, y, &x1, &y1, &w, &h);
-    int16_t x = (AURORA_OLED_WIDTH - (int)w) / 2;
+    int textWidth = _u8g2.getStrWidth(text);
+    int x = (AURORA_OLED_WIDTH - textWidth) / 2;
     if (x < 0) x = 0;
-    _oled.setCursor(x, y);
-    _oled.print(text);
+    _u8g2.drawStr(x, y + 8, text);
 }
 
 void AuroraDisplay::popup(const char* text, uint32_t durationMs) {
-    _oled.clearDisplay();
+    _u8g2.clearBuffer();
+    _u8g2.setDrawColor(1);
 
-    // Inverted (white text on black) header bar for the popup frame
-    _oled.fillRect(0, 0, AURORA_OLED_WIDTH, 12, SSD1306_WHITE);
-    _oled.setTextSize(1);
-    _oled.setTextColor(SSD1306_BLACK);   // black on the white header
-    _oled.setCursor(2, 2);
-    _oled.print(F("! Notice"));
+    // Header bar (inverted - white background)
+    _u8g2.drawBox(0, 0, AURORA_OLED_WIDTH, 12);
 
-    // Main message in the body
-    _oled.setTextColor(SSD1306_WHITE);
-    _oled.setTextSize(2);
+    // Header text (black on white)
+    _u8g2.setDrawColor(0);  // black
+    _u8g2.setFont(u8g2_font_5x7_tf);
+    _u8g2.drawStr(2, 9, "! Notice");
 
-    // Center the text vertically in the body area
-    int16_t x1, y1;
-    uint16_t w, h;
-    _oled.getTextBounds(text, 0, 0, &x1, &y1, &w, &h);
-    int16_t x = (AURORA_OLED_WIDTH - (int)w) / 2;
-    int16_t y = 24;
+    // Main message (white text)
+    _u8g2.setDrawColor(1);  // white
+    _u8g2.setFont(u8g2_font_ncenB14_tr);
+    int textWidth = _u8g2.getStrWidth(text);
+    int x = (AURORA_OLED_WIDTH - textWidth) / 2;
     if (x < 0) x = 0;
-    _oled.setCursor(x, y);
-    _oled.print(text);
+    _u8g2.drawStr(x, 38, text);
 
-    _oled.display();
+    _u8g2.sendBuffer();
 
     _popupActive = true;
     _popupEndsAtMs = millis() + durationMs;
@@ -119,9 +137,9 @@ void AuroraDisplay::dismissPopup() {
 }
 
 void AuroraDisplay::clear() {
-    _oled.clearDisplay();
+    _u8g2.clearBuffer();
 }
 
 void AuroraDisplay::display() {
-    _oled.display();
+    _u8g2.sendBuffer();
 }

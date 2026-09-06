@@ -122,9 +122,9 @@ void setup() {
     // --- Display (OLED) ---
     if (!display.begin()) {
         DBG_PRINTLN(F("[FATAL] OLED failed. Check wiring:"));
-        DBG_PRINTLN(F("        SDA=GPIO6, SCL=GPIO7, VCC=3.3V, GND=GND"));
-        DBG_PRINTLN(F("        If nothing shows, try changing AURORA_OLED_ADDR"));
-        DBG_PRINTLN(F("        in include/config.h from 0x3C to 0x3D"));
+        DBG_PRINTLN(F("        SDA=GPIO8, SCL=GPIO9, VCC=3.3V, GND=GND"));
+        DBG_PRINTLN(F("        If horizontal lines: set AURORA_OLED_DRIVER=1 in config.h for SH1106"));
+        DBG_PRINTLN(F("        Also try changing AURORA_OLED_ADDR from 0x3D to 0x3C"));
         while (true) { delay(1000); }
     }
     display.showBootScreen();
