@@ -13,7 +13,7 @@ This is an ESP32-C3 firmware project for an Aurora birthday gift. The project us
 ### Building
 - `pio run` - Build the firmware
 - `pio run -t upload` - Build and upload firmware to ESP32-C3
-- `pio run -t uploadfs` - Build and upload LittleFS image (dashboard files)
+- `pio run -t uploadfs` - Upload LittleFS image (dashboard files)
 - `pio run -t clean` - Clean build artifacts
 - `pio run -e esp32c3_test` - Build test variant
 
