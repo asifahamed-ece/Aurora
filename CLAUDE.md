@@ -53,8 +53,10 @@ aurora-firmware-deskmate/
 
 ### Hardware Configuration
 - **OLED Display**: SDA=GPIO8, SCL=GPIO9 (I2C at 400kHz, 128x64 SSD1306, `AURORA_OLED_DRIVER 0`).
-- **Button 0 (GPIO0)**: Dedicated Warm Touch & Screen Mode Cycle button (`AURORA_BTN_TOUCH_PIN`) with 10kΩ external pull-up. Each press cycles screens (Deskmate -> Clock & Date -> Thought of Day -> Heartbeat Pulse), records Warm Touches, and triggers happy love reactions.
-- **Button 2 (GPIO2)**: Dedicated WiFi SoftAP toggle switch (`AURORA_BTN_MULTI_PIN`). Simple press toggles WiFi SoftAP on/off with visual popup.
+- **Button 0 (GPIO0)**: Dedicated Warm Touch sensor (`AURORA_BTN_TOUCH_PIN`) with 10kΩ external pull-up. Single tap records Warm Touches ONLY and triggers blushing love animation & floating hearts.
+- **Button 2 (GPIO2)**: Multi-Function Button (`AURORA_BTN_MULTI_PIN`):
+  - **Short Press (< 3s)**: Cycles OLED display modes (Clock, Face, Thought, Pulse).
+  - **Long Press (>= 3s)**: Toggles WiFi SoftAP on/off with visual popup.
 - **Power Switch (GPIO10)**: Hardware Power Toggle Switch (`AURORA_SLEEP_SWITCH_PIN`). Toggled OFF (GND) -> displays "Goodnight... zZZ" and enters sleep with the internal ESP32 Hardware RTC running continuously in the backend. Toggled ON (HIGH) -> wakes up immediately with exact time intact.
 - **LED Breathing Chaser**: GPIO4 via 220Ω resistor. Breathing period adjusts dynamically based on Aurora's mood (800ms excited heartbeat when touched, 1500ms normal, 3200ms slow lonely breath).
 - **Battery ADC**: GPIO3 via 100kΩ/100kΩ voltage divider.

@@ -3,9 +3,9 @@
  *  File: src/block1/buttons.cpp
  *
  *  Button and Power Switch input handlers:
- *    - Button 0 (GPIO0): Warm Touch & OLED Mode Cycle (Clock, Face, Thought, Pulse)
- *    - Button 2 (GPIO2): WiFi AP Toggle Switch (simple press toggles WiFi AP)
- *    - Switch (GPIO10): Power Toggle Switch (toggled OFF -> Goodnight & Sleep with RTC)
+ *    - Button 0 (GPIO0): Dedicated Warm Touch sensor (single tap = warm touch only)
+ *    - Button 2 (GPIO2): Mode cycle (< 3s) & WiFi SoftAP toggle (>= 3s)
+ *    - Switch (GPIO10): Hardware Power Switch (toggled OFF -> Goodnight & Sleep with RTC)
  */
 
 #include "buttons.h"
@@ -16,10 +16,10 @@ void AuroraButtons::begin() {
     _touch.lastStable = _touch.lastRaw;
     _touch.lastChangeMs = millis();
 
-    pinMode(_wifi.pin, INPUT_PULLUP);
-    _wifi.lastRaw = digitalRead(_wifi.pin);
-    _wifi.lastStable = _wifi.lastRaw;
-    _wifi.lastChangeMs = millis();
+    pinMode(_multi.pin, INPUT_PULLUP);
+    _multi.lastRaw = digitalRead(_multi.pin);
+    _multi.lastStable = _multi.lastRaw;
+    _multi.lastChangeMs = millis();
 
 #ifdef AURORA_SLEEP_SWITCH_PIN
     if (AURORA_SLEEP_SWITCH_PIN >= 0) {
@@ -30,7 +30,7 @@ void AuroraButtons::begin() {
     }
 #endif
 
-    DBG_PRINTLN(F("[BTN] begin() OK — GPIO0: Touch & Screen Cycle, GPIO2: WiFi Toggle, GPIO10: Power Switch"));
+    DBG_PRINTLN(F("[BTN] begin() OK — GPIO0: Warm Touch ONLY, GPIO2: Mode (<3s) & WiFi (>=3s), GPIO10: Power Switch"));
 }
 
 bool AuroraButtons::isPowerSwitchOff() const {
@@ -47,7 +47,7 @@ uint8_t AuroraButtons::update() {
     uint32_t now = millis();
 
     // ------------------------------------------------------------------------
-    // 1. Button 0 (GPIO0): Dedicated Warm Touch & Screen Mode Cycle
+    // 1. Button 0 (GPIO0): Dedicated Warm Touch Sensor (SINGLE TAP = WARM TOUCH ONLY)
     // ------------------------------------------------------------------------
     bool touchRaw = (digitalRead(_touch.pin) == LOW); // LOW = pressed
     if (touchRaw != _touch.lastRaw) {
@@ -57,7 +57,7 @@ uint8_t AuroraButtons::update() {
     if ((now - _touch.lastChangeMs) >= (uint32_t)AURORA_BTN_DEBOUNCE_MS) {
         if (touchRaw != _touch.lastStable) {
             if (!_touch.lastStable && touchRaw) {
-                // Fresh press on Button 0: triggers warm touch & mode cycle
+                // Single tapping on Button 0: records Warm Touch ONLY
                 events |= BTN_TOUCH;
             }
             _touch.lastStable = touchRaw;
@@ -65,20 +65,34 @@ uint8_t AuroraButtons::update() {
     }
 
     // ------------------------------------------------------------------------
-    // 2. Button 2 (GPIO2): Dedicated WiFi AP Toggle Switch (Classic simple press)
+    // 2. Button 2 (GPIO2): Mode Cycle (< 3s) & WiFi SoftAP Toggle (>= 3s)
     // ------------------------------------------------------------------------
-    bool wifiRaw = (digitalRead(_wifi.pin) == LOW); // LOW = pressed
-    if (wifiRaw != _wifi.lastRaw) {
-        _wifi.lastChangeMs = now;
-        _wifi.lastRaw = wifiRaw;
+    bool multiRaw = (digitalRead(_multi.pin) == LOW); // LOW = pressed
+    if (multiRaw != _multi.lastRaw) {
+        _multi.lastChangeMs = now;
+        _multi.lastRaw = multiRaw;
     }
-    if ((now - _wifi.lastChangeMs) >= (uint32_t)AURORA_BTN_DEBOUNCE_MS) {
-        if (wifiRaw != _wifi.lastStable) {
-            if (!_wifi.lastStable && wifiRaw) {
-                // Fresh press on Button 2: toggles WiFi SoftAP
-                events |= BTN_WIFI_TOGGLE;
+    if ((now - _multi.lastChangeMs) >= (uint32_t)AURORA_BTN_DEBOUNCE_MS) {
+        if (multiRaw != _multi.lastStable) {
+            if (!_multi.lastStable && multiRaw) {
+                // Press started
+                _multi.pressStartMs = now;
+                _multi.longPressTriggered = false;
+            } else if (_multi.lastStable && !multiRaw) {
+                // Released! If held less than 3s, cycle display modes
+                if (!_multi.longPressTriggered) {
+                    events |= BTN_MODE_CYCLE;
+                }
             }
-            _wifi.lastStable = wifiRaw;
+            _multi.lastStable = multiRaw;
+        }
+    }
+
+    // Check while Button 2 is held down
+    if (_multi.lastStable && !_multi.longPressTriggered) {
+        if ((now - _multi.pressStartMs) >= (uint32_t)AURORA_BTN_WIFI_HOLD_MS) {
+            _multi.longPressTriggered = true;
+            events |= BTN_WIFI_TOGGLE; // Held >= 3 seconds: toggle WiFi SoftAP
         }
     }
 

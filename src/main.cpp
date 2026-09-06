@@ -206,18 +206,23 @@ void loop() {
     // --- Button & Power Switch Inputs ---
     uint8_t events = buttons.update();
     if (events != BTN_NONE) {
-        // Button 0 (GPIO0): Warm Touch & OLED Mode Cycle (Clock, Face, Thought, Pulse)
+        // Button 0 (GPIO0): Dedicated Warm Touch ONLY (single tap)
         if (events & BTN_TOUCH) {
             AuroraState::instance().bumpTouches();
-            display.cycleScreenMode();
             display.triggerWarmTouch();
             s_midnightAckDoy = aurora_clock::dayOfYear(AuroraState::instance().epoch());
-            DBG_PRINTF("[TOUCH] Button 0 pressed: Mode=%d TotalTouches=%u\n",
-                       (int)display.screenMode(), (unsigned)AuroraState::instance().touches());
+            DBG_PRINTF("[TOUCH] Warm Touch on GPIO0! TotalTouches=%u\n",
+                       (unsigned)AuroraState::instance().touches());
             aurora_web::requestImmediatePush();
         }
 
-        // Button 2 (GPIO2): Dedicated WiFi SoftAP Toggle Switch
+        // Button 2 (GPIO2 Short Press < 3s): Cycle OLED display modes (Clock, Face, Thought, Pulse)
+        if (events & BTN_MODE_CYCLE) {
+            display.cycleScreenMode();
+            DBG_PRINTF("[MODE] Screen mode cycled to %d on GPIO2\n", (int)display.screenMode());
+        }
+
+        // Button 2 (GPIO2 Long Press >= 3s): Toggle WiFi SoftAP
         if (events & BTN_WIFI_TOGGLE) {
             bool nextWifi = !AuroraState::instance().wifiOn();
             AuroraState::instance().setWifiOn(nextWifi);
