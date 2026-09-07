@@ -2,12 +2,23 @@
  *  Aurora — Birthday Gift Firmware
  *  File: include/buttons.h
  *
- *  Button and Power Switch input with software debouncing:
- *    - Button 0 (GPIO0): Dedicated Warm Touch sensor (single tap = warm touch only)
- *    - Button 2 (GPIO2): Multi-function button:
- *        - Short press (< 3s): Cycles OLED display modes (Clock, Face, Thought, Pulse)
- *        - Long press (>= 3s): Toggles WiFi SoftAP ON / OFF
- *    - Switch (GPIO10): Hardware Power Switch (toggled OFF -> Goodnight & Sleep with RTC)
+ *  Button input with software debouncing.
+ *
+ *  Block 1 scope (each pin is single-purpose):
+ *    - GPIO0  -> BTN_TOUCH       (Warm Touch on the deskmate)
+ *    - GPIO2  -> BTN_MODE_CYCLE  (cycle OLED screen modes)
+ *
+ *  Design notes:
+ *    - Pressing a button pulls the pin to GND (active LOW).
+ *    - Debounce uses AURORA_BTN_DEBOUNCE_MS (80 ms) for both pins.
+ *    - No long-press / WiFi-toggle is wired to any button; the multi
+ *      pin is just a mode cycle.
+ *
+ *  Press detection logic:
+ *    We fire on the 0->1 transition (release), not the 1->0 (press).
+ *    Rationale: tactile button mechanical bounce is worse on the press
+ *    edge than the release edge, and the user perception of "I pressed
+ *    a button" maps well to the release event after a clean press.
  */
 
 #ifndef AURORA_BUTTONS_H
@@ -19,10 +30,8 @@
 // Event types emitted by the button manager.
 enum ButtonEvent : uint8_t {
     BTN_NONE        = 0b0000,
-    BTN_TOUCH       = 0b0001,  // Button 0 (GPIO0): Dedicated Warm Touch ONLY
-    BTN_MODE_CYCLE  = 0b0010,  // Button 2 (GPIO2): Short press (< 3s) -> cycle display mode
-    BTN_WIFI_TOGGLE = 0b0100,  // Button 2 (GPIO2): Long press (>= 3s) -> toggle WiFi SoftAP
-    BTN_STANDBY     = 0b1000   // Switch (GPIO10): Toggled OFF -> Sleep with RTC active
+    BTN_TOUCH       = 0b0001,  // GPIO0 touch button (Warm Touch)
+    BTN_MODE_CYCLE  = 0b0010   // GPIO2 push button (cycle OLED mode)
 };
 
 class AuroraButtons {
@@ -33,32 +42,23 @@ public:
     void begin();
 
     /**
-     * Poll buttons and emit events (debounced).
+     * Poll all buttons and emit fresh press events.
      */
     uint8_t update();
-
-    /**
-     * Check if the hardware power switch is in the OFF state.
-     */
-    bool isPowerSwitchOff() const;
 
 private:
     struct BtnState {
         uint8_t  pin;
-        bool     lastStable;        // last debounced state (true = pressed)
-        bool     lastRaw;           // last raw reading
-        uint32_t lastChangeMs;      // for debounce timing
-        uint32_t pressStartMs;      // when press began
-        bool     longPressTriggered;// whether 3s WiFi toggle fired
+        uint8_t  eventOnPress;     // which ButtonEvent to emit on a clean release
+        bool     lastStable;       // last debounced state (true = pressed)
+        bool     lastRaw;          // last raw reading
+        uint32_t lastChangeMs;     // for debounce timing
     };
 
-    BtnState _touch { AURORA_BTN_TOUCH_PIN, false, false, 0, 0, false };
-    BtnState _multi { AURORA_BTN_MULTI_PIN, false, false, 0, 0, false };
-    
-    // Hardware Power Toggle Switch on GPIO10
-    bool     _switchLastStable { false };
-    bool     _switchLastRaw { false };
-    uint32_t _switchChangeMs { 0 };
+    BtnState _touch { AURORA_BTN_TOUCH_PIN, BTN_TOUCH,      false, false, 0 };
+    BtnState _multi { AURORA_BTN_MULTI_PIN, BTN_MODE_CYCLE, false, false, 0 };
+
+    uint8_t checkBtn(BtnState& b);
 };
 
 #endif // AURORA_BUTTONS_H

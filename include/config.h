@@ -87,15 +87,12 @@
 #define AURORA_OLED_ADDR      0x3C
 // Display driver type:
 //   0 = SSD1306 (for 0.96" displays, most common)
-//   1 = SH1106 (for 1.3" displays)
-#define AURORA_OLED_DRIVER    0
+//   1 = SH1106 (for 1.3" displays - many Chinese 1.3" OLEDs use this!)
+#define AURORA_OLED_DRIVER    1  // <-- SET TO 1 IF USING 1.3" SH1106 DISPLAY
 #define AURORA_OLED_WIDTH     128
 #define AURORA_OLED_HEIGHT    64
 #define AURORA_OLED_RESET     -1         // -1 = no reset pin (use Arduino reset)
 #define AURORA_OLED_I2C_FREQ  400000    // 400 kHz fast-mode I2C (SSD1306 supports it)
-
-// Timezone offset for Indian Standard Time (IST): UTC + 5:30 (5h 30m = 19800 seconds)
-#define AURORA_TIMEZONE_OFFSET_SEC 19800
 
 // --- LED chaser (single LED or LED strip via MOSFET) ---
 // GPIO4 is unused on most C3 boards; it has no special boot restrictions.
@@ -104,38 +101,20 @@
 #define AURORA_LED_CHASER_PERIOD_MS 1500
 
 // --- Buttons (active LOW with pull-up; press = LOW) ---
-// Button 1 (GPIO0): Dedicated Warm Touch sensor (external 10k pull-up)
-#define AURORA_BTN_TOUCH_PIN       0
+// Button 1: Single touch button (GPIO0) - Records Warm Touches & Deskmate petting
+// GPIO0 has an external 10k pull-up to keep boot mode safe.
+#define AURORA_BTN_TOUCH_PIN        0
 
-// Button 2 (GPIO2): Multi-function push button (internal pull-up)
-//   - Short press (< 3s): Cycles OLED display modes
-//   - Long press (3s - 5s): Toggles WiFi SoftAP on/off
-//   - Very long press (>= 5s): Enters Deep Sleep standby (RTC active)
-#define AURORA_BTN_MULTI_PIN       2
-#define AURORA_BTN_WIFI_HOLD_MS    3000
-#define AURORA_BTN_STANDBY_HOLD_MS 5000
+// Button 2: Mode-cycle push button (GPIO2)
+// Single press: cycles through OLED screen modes
+// (DESKMATE -> CLOCK_DATE -> DAILY_QUOTE -> HEARTBEAT_KEEPSAKE -> wrap).
+// This button has no other function. WiFi toggling is handled elsewhere.
+#define AURORA_BTN_MULTI_PIN        2
 
-// Optional Hardware Power Slide Switch (GPIO10 with internal pull-up)
-// If wired between GPIO10 and GND:
-//   - Slide OFF (GND / LOW) -> ESP32 enters Deep Sleep standby with RTC ticking (~5uA)
-//   - Slide ON (OPEN / HIGH) -> ESP32 wakes up immediately with exact time intact
-#define AURORA_SLEEP_SWITCH_PIN    10
-
-// Debounce time in ms. 80 ms gives a more satisfying "click" feel.
-#define AURORA_BTN_DEBOUNCE_MS     80
-
-// --- RTC & Time Synchronization ---
-// RTC memory magic number to verify valid RTC state across soft resets / deep sleep
-#define AURORA_RTC_MAGIC           0xA0B1C2D3
-
-// Optional Station WiFi credentials for background NTP time sync (pool.ntp.org)
-// Can also be configured dynamically via the web dashboard at 192.168.4.1
-#ifndef AURORA_STA_SSID
-#define AURORA_STA_SSID            ""
-#endif
-#ifndef AURORA_STA_PASS
-#define AURORA_STA_PASS            ""
-#endif
+// Debounce time in ms, applied to BOTH GPIO0 (warm touch) and GPIO2 (mode
+// cycle). 80 ms is a comfortable margin for tactile switches and keeps
+// both buttons consistent.
+#define AURORA_BTN_DEBOUNCE_MS      80
 
 // --- Deskmate Pet & Attention Timing ---
 // 5 hours of no touch -> Deskmate feels lonely and needs attention
