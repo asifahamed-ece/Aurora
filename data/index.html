@@ -2032,14 +2032,6 @@
         }
       }
 
-      // Early HTTP fast time sync (synchronizes ESP32 hardware RTC immediately on page load)
-      (function syncTimeEarly() {
-        try {
-          const epoch = Math.floor(Date.now() / 1000);
-          fetch('/api/sync_time?epoch=' + epoch, { cache: 'no-store' }).catch(() => {});
-        } catch (_) {}
-      })();
-
       function connectWs() {
         const proto = location.protocol === 'https:' ? 'wss' : 'ws';
         const url = proto + '://' + location.host + '/ws';
