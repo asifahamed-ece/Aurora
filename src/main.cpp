@@ -134,14 +134,8 @@ void setup() {
     chaser.begin();
     chaser.setPattern(ChaserPattern::BREATHE);
 
-    // --- Buttons & Power Switch ---
+    // --- Buttons ---
     buttons.begin();
-    if (buttons.isPowerSwitchOff()) {
-        display.sleep();
-        ledcWrite(0, 0);
-        AuroraState::instance().enterSleep();
-        display.wake();
-    }
 
     // --- Battery ---
     battery.begin();
@@ -173,11 +167,10 @@ void setup() {
         while (true) { delay(1000); }
     }
 
-    // --- Clock: Initialize ESP32 Hardware RTC (retains time across wake/reset) ---
-    AuroraState::instance().initTime(compileEpoch());
-    DBG_PRINTF("[CLK] Local time: epoch=%u (IST: +5:30, Source: %s)\n",
-               (unsigned)AuroraState::instance().localEpoch(),
-               AuroraState::instance().timeSourceString());
+    // --- Clock: seed with compile-time epoch ---
+    AuroraState::instance().setEpoch(compileEpoch());
+    DBG_PRINTF("[CLK] epoch=%u (%s)\n",
+               (unsigned)AuroraState::instance().epoch(), __DATE__);
 
     DBG_PRINTLN();
     DBG_PRINTF("[SYS] SSID: %s  pass: %s  http://%u.%u.%u.%u/\n",
@@ -203,76 +196,40 @@ void loop() {
     aurora_wifi::loop();
     aurora_web::loop();
 
-    // --- Button & Power Switch Inputs ---
+    // --- Physical button inputs ---
+    // Each GPIO is single-purpose:
+    //   GPIO0 -> BTN_TOUCH      (Warm Touch on the deskmate)
+    //   GPIO2 -> BTN_MODE_CYCLE (cycle OLED screen modes)
     uint8_t events = buttons.update();
     if (events != BTN_NONE) {
-        // Button 0 (GPIO0): Dedicated Warm Touch ONLY (single tap)
+        // GPIO0: Warm Touch sensor
         if (events & BTN_TOUCH) {
             AuroraState::instance().bumpTouches();
             display.triggerWarmTouch();
             s_midnightAckDoy = aurora_clock::dayOfYear(AuroraState::instance().epoch());
-            DBG_PRINTF("[TOUCH] Warm Touch on GPIO0! TotalTouches=%u\n",
+            DBG_PRINTF("[TOUCH] Warm Touch recorded! Total: %u\n",
                        (unsigned)AuroraState::instance().touches());
             aurora_web::requestImmediatePush();
         }
 
-        // Button 2 (GPIO2 Short Press < 3s): Cycle OLED display modes (Clock, Face, Thought, Pulse)
+        // GPIO2: Cycle OLED display modes
         if (events & BTN_MODE_CYCLE) {
             display.cycleScreenMode();
-            DBG_PRINTF("[MODE] Screen mode cycled to %d on GPIO2\n", (int)display.screenMode());
-        }
-
-        // Button 2 (GPIO2 Long Press >= 3s): Toggle WiFi SoftAP
-        if (events & BTN_WIFI_TOGGLE) {
-            bool nextWifi = !AuroraState::instance().wifiOn();
-            AuroraState::instance().setWifiOn(nextWifi);
-            if (nextWifi) {
-                WiFi.mode(WIFI_AP);
-                display.popup("WiFi Hotspot ON", AURORA_POPUP_DURATION_MS);
-            } else {
-                WiFi.mode(WIFI_OFF);
-                display.popup("WiFi Hotspot OFF", AURORA_POPUP_DURATION_MS);
-            }
-            aurora_web::requestImmediatePush();
-        }
-
-        // Switch (GPIO10): Hardware Power Switch Toggled OFF -> Sleep with RTC active
-        if (events & BTN_STANDBY) {
-            display.popup("Goodnight... zZZ", 1500);
-            delay(1500);
-            display.sleep();
-            ledcWrite(0, 0);
-            AuroraState::instance().enterSleep();
-            // Once awakened (switch turned back ON or touched):
-            display.wake();
-            display.popup("Welcome back~", 1500);
+            DBG_PRINTF("[BTN] Mode cycled to: %s\n", display.screenModeName());
         }
     }
 
-    // --- React to touches from physical button OR phone web dashboard ---
-    if (AuroraState::instance().hasPendingTouch()) {
-        AuroraState::instance().clearPendingTouch();
-        display.triggerWarmTouch();
-        s_midnightAckDoy = aurora_clock::dayOfYear(AuroraState::instance().epoch());
-        DBG_PRINTF("[TOUCH] Warm Touch triggered! Total: %u\n",
-                   (unsigned)AuroraState::instance().touches());
-        aurora_web::requestImmediatePush();
-    }
-
-    // --- Midnight Check (12:00 AM IST) -> Message of the Day Reminder ---
-    uint32_t localEpoch = AuroraState::instance().localEpoch();
-    if (localEpoch > 0) {
-        uint32_t h = (localEpoch / 3600) % 24;
-        uint16_t doy = aurora_clock::dayOfYear(AuroraState::instance().epoch());
+    // --- Midnight Check (12:00 AM) -> Message of the Day Reminder ---
+    uint32_t epoch = AuroraState::instance().epoch();
+    if (epoch > 0) {
+        uint32_t h = (epoch / 3600) % 24;
+        uint16_t doy = aurora_clock::dayOfYear(epoch);
         if (h == 0 && s_midnightAckDoy != doy) {
             display.setMidnightReminder(true);
         } else if (h != 0 && display.isMidnightReminderActive()) {
             display.setMidnightReminder(false);
         }
     }
-
-    // --- Periodic NVS Epoch Backup (every 60s) ---
-    AuroraState::instance().savePeriodicEpoch();
 
     // --- Deskmate Attention Check (5+ hours without touch -> Lonely/Sad) ---
     if (!display.isMidnightReminderActive() && display.currentMood() != DeskmateMood::LOVE_TOUCHED) {
@@ -308,7 +265,7 @@ void loop() {
             if (s == BatStatus::BatStatus_LOW) {
                 display.popup("Battery Hungry~", AURORA_POPUP_DURATION_MS);
             } else if (s == BatStatus::BatStatus_CRITICAL) {
-                display.popup("Please Charge Me", AURORA_POPUP_DURATION_MS);
+                display.popup("Please Charge Me <3", AURORA_POPUP_DURATION_MS);
             }
         }
     }
@@ -320,12 +277,11 @@ void loop() {
     if (now - s_lastHeartMs >= (uint32_t)AURORA_HEARTBEAT_MS) {
         s_lastHeartMs = now;
         uint32_t uptime = (now - s_bootMs) / 1000;
-        DBG_PRINTF("[SYS] heartbeat -- uptime=%lus freeHeap=%u bat=%dmV(%s) clk=%s\n",
+        DBG_PRINTF("[SYS] heartbeat -- uptime=%lus freeHeap=%u bat=%dmV(%s)\n",
                    (unsigned long)uptime,
                    (unsigned)ESP.getFreeHeap(),
                    battery.voltageMillivolts(),
-                   battery.statusString(),
-                   AuroraState::instance().timeSourceString());
+                   battery.statusString());
     }
 
     // Yield to the AsyncTCP stack (no delay() so WS server stays responsive)
