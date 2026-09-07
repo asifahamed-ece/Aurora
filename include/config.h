@@ -21,10 +21,10 @@
  *
  *  Pin map (shared by both blocks):
  *
- *      ESP32-C3          OLED (SSD1306)        LED Chaser            Buttons
+ *      ESP32-C3          OLED (SSD1306/SH1106)   LED Chaser            Buttons
  *      ------            ---------------         -----------            -------
- *      GPIO6   --------> SDA
- *      GPIO7   --------> SCL
+ *      GPIO8   --------> SDA   (AURORA_OLED_SDA_PIN)
+ *      GPIO9   --------> SCL   (AURORA_OLED_SCL_PIN)
  *      3.3V    --------> VCC                    220 ohm -> LED -> GPIO4
  *      GND     --------> GND                  LED cathode -> GND
  *
