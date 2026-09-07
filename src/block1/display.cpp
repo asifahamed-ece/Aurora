@@ -360,6 +360,24 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
     int dw = _u8g2.getStrWidth(dateBuf);
     _u8g2.drawStr((AURORA_OLED_WIDTH - dw) / 2, 58, dateBuf);
 
+    // 4. First-boot dashboard sync hint (one-time, only on this mode)
+    //    Shown only while the device is still waiting for its first
+    //    time_sync frame. The 64px-tall OLED leaves just one 5x7 line of
+    //    room below the date, so we keep the message short and add a
+    //    small heart as a soft visual anchor.
+    if (AuroraState::instance().firstSyncHintActive()) {
+        const char* hint = "Open 192.168.4.1";
+        _u8g2.setFont(u8g2_font_5x7_tf);
+        int hw = _u8g2.getStrWidth(hint);
+        // Centre the text but leave room for a small heart on the left.
+        int hx = (AURORA_OLED_WIDTH - hw) / 2 + 4;
+        if (hx < 12) hx = 12;
+        if (hx + hw > AURORA_OLED_WIDTH - 6) hx = AURORA_OLED_WIDTH - 6 - hw;
+        _u8g2.drawStr(hx, 63, hint);
+        // Tiny heart on the left side as a romantic anchor
+        drawHeart(hx - 7, 60, 2);
+    }
+
     // Update floating hearts if active
     updateAndDrawHearts(now);
 }

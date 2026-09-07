@@ -62,6 +62,13 @@ public:
     uint16_t midnightAckDoy() const { return _midnightAckDoy; }
     void     setMidnightAckDoy(uint16_t doy);
 
+    // ---- First-boot dashboard sync hint (persisted to NVS) ----
+    //  True until the dashboard sends its first real time_sync frame.
+    //  Lets the OLED show a one-time hint telling Chandni to connect
+    //  her phone to "Aurora" WiFi and open 192.168.4.1 for clock sync.
+    bool     firstSyncHintActive() const { return !_firstSyncDismissed; }
+    void     dismissFirstSyncHint();
+
 private:
     AuroraState();
 
@@ -78,6 +85,7 @@ private:
     uint32_t  _epochBaseMs;
     uint32_t  _bootCount;
     uint16_t  _midnightAckDoy;
+    bool      _firstSyncDismissed;
 };
 
 #endif // AURORA_BLOCK4_STATE_H

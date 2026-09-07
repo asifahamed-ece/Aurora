@@ -138,6 +138,10 @@ static void onWsEvent(AsyncWebSocket* server,
                         if (clientEpoch > 1700000000) {
                             AuroraState::instance().setEpoch(clientEpoch);
                             DBG_PRINTF("[CLK] synced from client: epoch=%u\n", (unsigned)clientEpoch);
+                            // A real time_sync means the dashboard is alive
+                            // and the clock is now accurate — dismiss the
+                            // one-time first-boot hint, if still showing.
+                            AuroraState::instance().dismissFirstSyncHint();
                             g_pushNow = true;
                         }
                     } else if (strcmp(t, "heart_tap") == 0) {
