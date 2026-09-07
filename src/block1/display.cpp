@@ -341,35 +341,35 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
 
     _u8g2.drawHLine(6, 13, 116);
 
-    // 2. Large Curvy Digital Clock (Center)
+    // 2. Digital Clock (Center) — 7x14 keeps the time clearly readable
+    //    while leaving room for the wrapped dashboard-sync hint below.
     char timeBuf[8];
     snprintf(timeBuf, sizeof(timeBuf), "%02lu%c%02lu",
              (unsigned long)h, (now % 1000 < 500 ? ':' : ' '), (unsigned long)m);
-    _u8g2.setFont(u8g2_font_logisoso24_tn);
+    _u8g2.setFont(u8g2_font_7x14_tr);
     int tw = _u8g2.getStrWidth(timeBuf);
     _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 42, timeBuf);
 
     // Decorative corner hearts
-    drawHeart(12, 30, 4);
-    drawHeart(116, 30, 4);
+    drawHeart(12, 32, 3);
+    drawHeart(116, 32, 3);
 
-    // 3. Bottom line: date by default, dashboard-sync hint before first sync.
-    //    The hint sits in the same vertical slot as the date would, so the
-    //    transition between "unsynced" and "synced" feels like a natural swap
-    //    rather than a new element appearing. After a real time_sync frame
-    //    from the dashboard, the date returns for the rest of the session.
-    _u8g2.setFont(u8g2_font_6x10_tr);
+    // 3. Bottom area: wrapped sync hint before first time_sync, else the date.
+    //    Layout math: greeting sits at y=10 (5x7), clock baseline at y=42
+    //    (7x14, glyphs descend to ~y=45). That leaves the bottom band
+    //    y=48..63 (15px) for two 5x7 lines at lineHeight=9 — fits cleanly.
+    //    The wrapped text uses the same 5x7 font as the greeting so the
+    //    hint and greeting read as one voice. drawWrappedText() also
+    //    centres each line and bounds the width to 114px to avoid RHS
+    //    clipping on the small OLED.
     if (AuroraState::instance().firstSyncHintActive()) {
-        const char* hint = "Open 192.168.4.1";
-        int bw = _u8g2.getStrWidth(hint);
-        int bx = (AURORA_OLED_WIDTH - bw) / 2;
-        if (bx < 6) bx = 6;
-        if (bx + bw > AURORA_OLED_WIDTH - 6) bx = AURORA_OLED_WIDTH - 6 - bw;
-        _u8g2.drawStr(bx, 58, hint);
+        const char* hint = "To Update Time Open 192.168.4.1";
+        drawWrappedText(hint, 52, 2, 9);
     } else {
         char dateBuf[24];
         aurora_clock::formatDate(dateBuf, sizeof(dateBuf), epoch);
         int dw = _u8g2.getStrWidth(dateBuf);
+        _u8g2.setFont(u8g2_font_6x10_tr);
         _u8g2.drawStr((AURORA_OLED_WIDTH - dw) / 2, 58, dateBuf);
     }
 
