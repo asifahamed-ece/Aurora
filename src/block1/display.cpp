@@ -341,30 +341,37 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
 
     _u8g2.drawHLine(6, 13, 116);
 
-    // 2. Digital Clock (Center) — 7x14 keeps the time clearly readable
-    //    while leaving room for the wrapped dashboard-sync hint below.
-    char timeBuf[8];
+    // 2. Digital Clock (Center). When the dashboard hasn't synced time
+    //    yet, drop from the default 24px to 20px so the bottom band has
+    //    room for the two-line "Open 192.168.4.1" warning. Once a real
+    //    time_sync frame arrives, the clock returns to its full 24px
+    //    presence and the bottom band only carries the date.
+    bool    hintActive = AuroraState::instance().firstSyncHintActive();
+    char    timeBuf[8];
     snprintf(timeBuf, sizeof(timeBuf), "%02lu%c%02lu",
              (unsigned long)h, (now % 1000 < 500 ? ':' : ' '), (unsigned long)m);
-    _u8g2.setFont(u8g2_font_7x14_tr);
+    _u8g2.setFont(hintActive ? u8g2_font_logisoso20_tn : u8g2_font_logisoso24_tn);
     int tw = _u8g2.getStrWidth(timeBuf);
     _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 42, timeBuf);
 
-    // Decorative corner hearts
-    drawHeart(12, 32, 3);
-    drawHeart(116, 32, 3);
+    // Decorative corner hearts — sit at the bottom corners of the clock
+    // band so they don't overlap either the 24px or the 20px glyphs
+    // (y=18..46 for 24px, y=22..45 for 20px — y=36 lands just under both).
+    drawHeart(12, 36, 3);
+    drawHeart(116, 36, 3);
 
-    // 3. Bottom area: wrapped sync hint before first time_sync, else the date.
-    //    Layout math: greeting sits at y=10 (5x7), clock baseline at y=42
-    //    (7x14, glyphs descend to ~y=45). That leaves the bottom band
-    //    y=48..63 (15px) for two 5x7 lines at lineHeight=9 — fits cleanly.
-    //    The wrapped text uses the same 5x7 font as the greeting so the
-    //    hint and greeting read as one voice. drawWrappedText() also
-    //    centres each line and bounds the width to 114px to avoid RHS
-    //    clipping on the small OLED.
-    if (AuroraState::instance().firstSyncHintActive()) {
+    // 3. Bottom band: two-line sync warning before first time_sync, else
+    //    the date. Layout math (with greeting at y=10 and hline at y=13):
+    //      - 24px clock: glyphs end ~y=46 → bottom slot y=48..63 (15px)
+    //                    for the date at y=58 (6x10).
+    //      - 20px clock: glyphs end ~y=45 → bottom slot y=46..63 (17px)
+    //                    for two 5x7 lines at lineHeight=9
+    //                    (baselines y=53 and y=62).
+    //    drawWrappedText() also enforces a 114px strict width bound so
+    //    no RHS clipping on the small OLED.
+    if (hintActive) {
         const char* hint = "To Update Time Open 192.168.4.1";
-        drawWrappedText(hint, 52, 2, 9);
+        drawWrappedText(hint, 53, 2, 9);
     } else {
         char dateBuf[24];
         aurora_clock::formatDate(dateBuf, sizeof(dateBuf), epoch);
