@@ -1,0 +1,97 @@
+# ============================================================================
+#  Aurora — Birthday Gift Firmware
+#  .gitignore for PlatformIO / ESP32-C3 Arduino project
+# ============================================================================
+
+# ----------------------------------------------------------------------------
+# PlatformIO build artifacts
+# ----------------------------------------------------------------------------
+.pio/
+.pioenvs/
+.piolibdeps/
+.vscode/.browse.VC.db
+.vscode/.browse.VC.db-shm
+.vscode/.browse.VC.db-wal
+.vscode/c_cpp_properties.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# ----------------------------------------------------------------------------
+# Compiled binaries and objects
+# ----------------------------------------------------------------------------
+*.o
+*.obj
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+*.d
+*.dblite
+*.a
+*.so
+*.lo
+*.la
+
+# ----------------------------------------------------------------------------
+# Firmware / LittleFS images (rebuilt from source)
+# ----------------------------------------------------------------------------
+firmware.bin
+firmware.elf
+littlefs.bin
+
+# ----------------------------------------------------------------------------
+# IDE / editor cruft
+# ----------------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.bak
+*.tmp
+*.orig
+
+# ----------------------------------------------------------------------------
+# OS-specific
+# ----------------------------------------------------------------------------
+.DS_Store
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+
+# ----------------------------------------------------------------------------
+# Secrets / local overrides (defensive — keep WiFi password overrides out of git)
+# ----------------------------------------------------------------------------
+secrets.h
+local.ini
+.env
+
+# ----------------------------------------------------------------------------
+# Serial monitor / debug dumps
+# ----------------------------------------------------------------------------
+*.log
+*.dump
+
+# ----------------------------------------------------------------------------
+# Python (PlatformIO uses a tiny venv in some setups)
+# ----------------------------------------------------------------------------
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# ----------------------------------------------------------------------------
+# Screenshots — keep directory structure, ignore the actual images so
+# debug captures don't leak test fixtures.
+# ----------------------------------------------------------------------------
+screenshots/*.png
+screenshots/*.jpg
+screenshots/*.jpeg
+# Allow a README inside screenshots/ to remain
+!screenshots/README.md
+!screenshots/.gitkeep
