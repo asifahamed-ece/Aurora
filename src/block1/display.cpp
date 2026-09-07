@@ -42,14 +42,6 @@ static constexpr uint8_t NUM_TOUCH_REACTIONS = sizeof(kTouchReactions) / sizeof(
 bool AuroraDisplay::begin() {
     Wire.begin(AURORA_OLED_SDA_PIN, AURORA_OLED_SCL_PIN);
 
-    DBG_PRINTLN(F("[OLED] I2C Scanner - looking for devices..."));
-    for (byte address = 0; address < 127; address++) {
-        Wire.beginTransmission(address);
-        if (Wire.endTransmission() == 0) {
-            DBG_PRINTF("[OLED] I2C device found at 0x%02X\n", address);
-        }
-    }
-
     _u8g2.setBusClock(400000);  // 400kHz I2C
     _u8g2.begin();
 
@@ -494,7 +486,7 @@ void AuroraDisplay::drawWrappedText(const char* text, int startY, int maxLines, 
     int y = startY;
 
     const char* ptr = text;
-    char lineBuf[36];
+    char lineBuf[64];
     int lineBufLen = 0;
     lineBuf[0] = '\0';
 
@@ -508,7 +500,7 @@ void AuroraDisplay::drawWrappedText(const char* text, int startY, int maxLines, 
         while (*ptr && *ptr != ' ') ptr++;
         int wordLen = ptr - wordStart;
 
-        char testBuf[36];
+        char testBuf[64];
         if (lineBufLen == 0) {
             snprintf(testBuf, sizeof(testBuf), "%.*s", wordLen, wordStart);
         } else {
