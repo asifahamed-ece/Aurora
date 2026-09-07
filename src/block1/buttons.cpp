@@ -20,35 +20,38 @@
 
 void AuroraButtons::begin() {
     pinMode(_touch.pin, INPUT_PULLUP);
-    _touch.lastRaw    = digitalRead(_touch.pin);
+    _touch.lastRaw    = (digitalRead(_touch.pin) == LOW);
     _touch.lastStable = _touch.lastRaw;
     _touch.lastChangeMs = millis();
+    _touch.pressStartMs = 0;
+    _touch.longFired = false;
 
     pinMode(_multi.pin, INPUT_PULLUP);
-    _multi.lastRaw    = digitalRead(_multi.pin);
+    _multi.lastRaw    = (digitalRead(_multi.pin) == LOW);
     _multi.lastStable = _multi.lastRaw;
     _multi.lastChangeMs = millis();
+    _multi.pressStartMs = 0;
+    _multi.longFired = false;
 
-    DBG_PRINTF("[BTN] begin() OK — Touch on GPIO%d (BTN_TOUCH), Multi on GPIO%d (BTN_MODE_CYCLE), debounce %ums\n",
+    DBG_PRINTF("[BTN] begin() OK — Touch on GPIO%d (BTN_TOUCH), Multi on GPIO%d (short=MODE_CYCLE, 3s=WIFI_TOGGLE), debounce %ums\n",
                AURORA_BTN_TOUCH_PIN, AURORA_BTN_MULTI_PIN,
                (unsigned)AURORA_BTN_DEBOUNCE_MS);
 }
 
-uint8_t AuroraButtons::checkBtn(BtnState& b) {
-    // Helper that updates a button's debounce state and returns the
-    // ButtonEvent for a fresh press, or BTN_NONE.
+uint8_t AuroraButtons::checkTouch(BtnState& b) {
     bool raw = (digitalRead(b.pin) == LOW);  // LOW = pressed (active-low)
     uint8_t event = BTN_NONE;
+    uint32_t now = millis();
 
     if (raw != b.lastRaw) {
-        b.lastChangeMs = millis();
+        b.lastChangeMs = now;
         b.lastRaw = raw;
     }
 
-    if ((millis() - b.lastChangeMs) >= (uint32_t)AURORA_BTN_DEBOUNCE_MS) {
+    if ((now - b.lastChangeMs) >= (uint32_t)AURORA_BTN_DEBOUNCE_MS) {
         if (raw != b.lastStable) {
-            // State changed after debounce window — emit on 0->1 (release).
-            if (b.lastStable == false && raw == true) {
+            // Emit on press edge (unpressed -> pressed)
+            if (!b.lastStable && raw) {
                 event = b.eventOnPress;
             }
             b.lastStable = raw;
@@ -57,9 +60,49 @@ uint8_t AuroraButtons::checkBtn(BtnState& b) {
     return event;
 }
 
+uint8_t AuroraButtons::checkMulti(BtnState& b) {
+    bool raw = (digitalRead(b.pin) == LOW);  // LOW = pressed (active-low)
+    uint8_t event = BTN_NONE;
+    uint32_t now = millis();
+
+    if (raw != b.lastRaw) {
+        b.lastChangeMs = now;
+        b.lastRaw = raw;
+    }
+
+    if ((now - b.lastChangeMs) >= (uint32_t)AURORA_BTN_DEBOUNCE_MS) {
+        if (raw != b.lastStable) {
+            if (!b.lastStable && raw) {
+                // Just pressed
+                b.pressStartMs = now;
+                b.longFired = false;
+            } else if (b.lastStable && !raw) {
+                // Just released
+                if (!b.longFired && (now - b.pressStartMs < 3000)) {
+                    // Clean short press
+                    event = BTN_MODE_CYCLE;
+                }
+                b.longFired = false;
+            }
+            b.lastStable = raw;
+        }
+    }
+
+    // Check for 3-second long press while button is held down
+    if (b.lastStable && !b.longFired) {
+        if ((now - b.pressStartMs) >= 3000) {
+            b.longFired = true;
+            event = BTN_WIFI_TOGGLE;
+        }
+    }
+
+    return event;
+}
+
 uint8_t AuroraButtons::update() {
     uint8_t events = BTN_NONE;
-    events |= checkBtn(_touch);
-    events |= checkBtn(_multi);
+    events |= checkTouch(_touch);
+    events |= checkMulti(_multi);
     return events;
 }
+

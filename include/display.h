@@ -197,12 +197,16 @@ private:
     void drawMouth(int cx, int cy, DeskmateMood mood);
     void drawMidnightScreen(uint32_t now);
 
+    // Heartbeat state & dynamic pulse
+    uint32_t _excitedUntilMs;
+    uint16_t getBpm(uint32_t now) const;
+
     // Sub-renderers for the other screen modes
     void renderModeBadge(uint32_t now);
     void renderClockDate(uint32_t now);
     void renderDailyQuote(uint32_t now);
     void renderHeartbeat(uint32_t now);
-    void drawPulseWave(int startX, int endX, int centerY);
+    void drawPulseWave(int startX, int endX, int centerY, uint32_t now, uint16_t bpm);
     void drawWrappedText(const char* text, int startY, int maxLines, int lineHeight);
 };
 

@@ -18,6 +18,7 @@ AuroraState::AuroraState()
     : _batMv(0), _batPct(0), _batStatus(BatStatus::BatStatus_OK),
       _wifiOn(false), _ledOn(true),
       _touches(0), _lastTouchMs(0), _lastTouchEpoch(0),
+      _pendingTouchReaction(false),
       _btnUp(0), _btnSel(0), _btnDown(0), _btnWifi(0),
       _epoch(0), _epochBaseMs(0), _bootCount(0) {}
 
@@ -57,6 +58,7 @@ void AuroraState::bumpTouches() {
     _touches++;
     _lastTouchMs = millis();
     _lastTouchEpoch = epoch();
+    _pendingTouchReaction = true;
     saveKey("touches", _touches);
     if (_lastTouchEpoch > 0) {
         saveKey("last_touch", _lastTouchEpoch);

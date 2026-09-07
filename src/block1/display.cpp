@@ -6,7 +6,7 @@
  *  - Mode 1: Animated Deskmate Companion ("Aurora")
  *  - Mode 2: Clock, Date & Contextual Greeting
  *  - Mode 3: Daily Thought / Affirmation Card
- *  - Mode 4: Heartbeat Keepsake & ECG Pulse
+ *  - Mode 4: Heartbeat Keepsake & Animated ECG Pulse
  *  Supports both SSD1306 (0.96") and SH1106 (1.3") displays with U8g2.
  */
 
@@ -26,15 +26,15 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C _u8g2(U8G2_R0);
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C _u8g2(U8G2_R0);
 #endif
 
-// Romantic rotating reactions for Warm Touches
+// Romantic rotating reactions for Warm Touches (clean wording, no ASCII <3)
 static const char* const kTouchReactions[] = {
     "Warm Touch felt!",
     "Aurora loves you!",
     "You're my favorite",
     "Stay cozy, Chandni",
-    "So warm and sweet <3",
-    "Made with love for you",
-    "Hehehe, thank you! <3",
+    "So warm and sweet",
+    "Made with love",
+    "Hehehe, thank you!",
     "You light up my world"
 };
 static constexpr uint8_t NUM_TOUCH_REACTIONS = sizeof(kTouchReactions) / sizeof(kTouchReactions[0]);
@@ -64,6 +64,7 @@ bool AuroraDisplay::begin() {
     _moodStartMs = millis();
     _lastFrameMs = 0;
     _loveUntilMs = 0;
+    _excitedUntilMs = 0;
     _midnightReminder = false;
     _touchReactionIdx = 0;
 
@@ -163,19 +164,20 @@ void AuroraDisplay::drawHeart(int cx, int cy, int size) {
 void AuroraDisplay::triggerWarmTouch() {
     _mood = DeskmateMood::LOVE_TOUCHED;
     _moodStartMs = millis();
-    _loveUntilMs = millis() + 7000; // Love reaction lasts 7 seconds
-    _midnightReminder = false;      // Touch clears midnight reminder
+    _loveUntilMs = millis() + 7000;      // Love reaction lasts 7 seconds
+    _excitedUntilMs = millis() + 8000;   // Accelerated heartbeat lasts 8 seconds
+    _midnightReminder = false;           // Touch clears midnight reminder
 
     _touchReactionIdx = (_touchReactionIdx + 1) % NUM_TOUCH_REACTIONS;
 
-    // Spawn an instant celebratory burst of floating hearts
+    // Instant celebratory burst of floating hearts
     spawnHeart(24,  56, random(6, 10), 2200);
     spawnHeart(64,  58, random(8, 12), 2600);
     spawnHeart(104, 56, random(6, 10), 2400);
     spawnHeart(40,  62, random(7, 11), 2000);
     spawnHeart(88,  62, random(7, 11), 2100);
 
-    DBG_PRINTLN(F("[TOUCH] Warm Touch triggered! Love mood active <3"));
+    DBG_PRINTLN(F("[TOUCH] Warm Touch triggered! Love mood & excited pulse active"));
 }
 
 void AuroraDisplay::setMood(DeskmateMood mood) {
@@ -190,6 +192,14 @@ void AuroraDisplay::setMood(DeskmateMood mood) {
 
 void AuroraDisplay::setMidnightReminder(bool active) {
     _midnightReminder = active;
+}
+
+uint16_t AuroraDisplay::getBpm(uint32_t now) const {
+    if (now < _excitedUntilMs) {
+        float prog = (float)(_excitedUntilMs - now) / 8000.0f;
+        return 72 + (uint16_t)(prog * 48.0f); // Decays smoothly from 120 down to 72 BPM
+    }
+    return 72;
 }
 
 void AuroraDisplay::update() {
@@ -312,46 +322,50 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
     uint32_t h = (epoch / 3600) % 24;
     uint32_t m = (epoch / 60) % 60;
 
-    // 1. Contextual Greeting Header (Top)
+    // 1. Contextual Greeting Header (Top) - Clean, measured, no ASCII <3
     const char* greeting;
     if (aurora_clock::isBirthday(epoch)) {
-        greeting = "* Happy Birthday Chandni! *";
+        greeting = "Happy Birthday Chandni!";
     } else if (h >= 5 && h < 12) {
-        greeting = "Good morning, Chandni <3";
+        greeting = "Good Morning, Chandni";
     } else if (h >= 12 && h < 17) {
-        greeting = "Good afternoon, Chandni <3";
+        greeting = "Good Afternoon, Chandni";
     } else if (h >= 17 && h < 22) {
-        greeting = "Good evening, Chandni <3";
+        greeting = "Good Evening, Chandni";
     } else {
-        greeting = "Sweet dreams, Moon <3";
+        greeting = "Sweet Dreams, Moon";
     }
 
-    _u8g2.setFont(u8g2_font_6x10_tr);
+    _u8g2.setFont(u8g2_font_5x7_tf);
     int gw = _u8g2.getStrWidth(greeting);
     int gx = (AURORA_OLED_WIDTH - gw) / 2;
-    if (gx < 2) gx = 2;
-    _u8g2.drawStr(gx, 11, greeting);
-    _u8g2.drawHLine(6, 14, 116);
+    if (gx < 10) gx = 10;
+    _u8g2.drawStr(gx, 10, greeting);
+
+    // Cute mini graphic hearts flanking greeting
+    drawHeart(gx - 6, 8, 3);
+    drawHeart(gx + gw + 6, 8, 3);
+
+    _u8g2.drawHLine(6, 13, 116);
 
     // 2. Large Curvy Digital Clock (Center)
     char timeBuf[8];
-    // Blinking colon every 500ms
     snprintf(timeBuf, sizeof(timeBuf), "%02lu%c%02lu",
              (unsigned long)h, (now % 1000 < 500 ? ':' : ' '), (unsigned long)m);
     _u8g2.setFont(u8g2_font_logisoso24_tn);
     int tw = _u8g2.getStrWidth(timeBuf);
-    _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 43, timeBuf);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 42, timeBuf);
 
     // Decorative corner hearts
-    drawHeart(12, 31, 5);
-    drawHeart(116, 31, 5);
+    drawHeart(12, 30, 4);
+    drawHeart(116, 30, 4);
 
     // 3. Date at Bottom
     char dateBuf[24];
     aurora_clock::formatDate(dateBuf, sizeof(dateBuf), epoch);
     _u8g2.setFont(u8g2_font_6x10_tr);
     int dw = _u8g2.getStrWidth(dateBuf);
-    _u8g2.drawStr((AURORA_OLED_WIDTH - dw) / 2, 59, dateBuf);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - dw) / 2, 58, dateBuf);
 
     // Update floating hearts if active
     updateAndDrawHearts(now);
@@ -363,86 +377,110 @@ void AuroraDisplay::renderDailyQuote(uint32_t now) {
     uint8_t msgIdx = aurora_messages::indexForDoy(doy);
     const char* msg = aurora_messages::kMessages[msgIdx];
 
-    // Header
+    // Header - Clean, measured, mini hearts
     _u8g2.setFont(u8g2_font_6x10_tr);
-    const char* header = "[ Today's Thought <3 ]";
+    const char* header = "Today's Thought";
     int hw = _u8g2.getStrWidth(header);
-    _u8g2.drawStr((AURORA_OLED_WIDTH - hw) / 2, 10, header);
-    _u8g2.drawHLine(4, 13, 120);
+    int hx = (AURORA_OLED_WIDTH - hw) / 2;
+    _u8g2.drawStr(hx, 10, header);
 
-    // Word-wrapped quote text
+    drawHeart(hx - 7, 7, 3);
+    drawHeart(hx + hw + 7, 7, 3);
+
+    _u8g2.drawHLine(6, 13, 116);
+
+    // Word-wrapped quote text (bounded strictly to 114px width)
     drawWrappedText(msg, 24, 4, 10);
+
+    // Mini decorative heart in bottom right corner
+    drawHeart(118, 59, 3);
 
     // Floating hearts
     updateAndDrawHearts(now);
 }
 
-void AuroraDisplay::drawPulseWave(int startX, int endX, int centerY) {
-    int curX = startX;
+void AuroraDisplay::drawPulseWave(int startX, int endX, int centerY, uint32_t now, uint16_t bpm) {
+    int w = endX - startX;
+    if (w <= 0) return;
+    uint32_t cycleMs = 60000 / (bpm > 0 ? bpm : 72);
 
-    // Flat baseline
-    _u8g2.drawLine(curX, centerY, curX + 16, centerY);
-    curX += 16;
+    // Continuous real-time horizontal scrolling wave
+    uint32_t offset = (uint32_t)((uint64_t)now * w / cycleMs);
 
-    // Small P wave
-    _u8g2.drawLine(curX, centerY, curX + 4, centerY - 3);
-    _u8g2.drawLine(curX + 4, centerY - 3, curX + 8, centerY);
-    curX += 8;
+    auto getWaveY = [&](int p) -> int {
+        // Canonical ECG wave mapped across [0, w-1]
+        if (p < 14) return 0;
+        if (p <= 20) {
+            float f = (float)(p - 14) / 6.0f;
+            return -(int)(sinf(f * 3.14159f) * 3.0f);
+        }
+        if (p <= 24) return 0;
+        if (p <= 26) return 2;
+        if (p <= 30) {
+            int spike = (bpm > 90) ? 17 : 14;
+            return -spike;
+        }
+        if (p <= 33) return 7;
+        if (p <= 38) return 0;
+        if (p <= 50) {
+            float f = (float)(p - 39) / 11.0f;
+            return -(int)(sinf(f * 3.14159f) * 4.0f);
+        }
+        return 0;
+    };
 
-    // Flat segment
-    _u8g2.drawLine(curX, centerY, curX + 4, centerY);
-    curX += 4;
-
-    // Q dip
-    _u8g2.drawLine(curX, centerY, curX + 2, centerY + 2);
-    curX += 2;
-
-    // R sharp spike up
-    _u8g2.drawLine(curX, centerY + 2, curX + 6, centerY - 15);
-    curX += 6;
-
-    // S sharp spike down
-    _u8g2.drawLine(curX, centerY - 15, curX + 6, centerY + 9);
-    curX += 6;
-
-    // Return to baseline
-    _u8g2.drawLine(curX, centerY + 9, curX + 4, centerY);
-    curX += 4;
-
-    // T wave
-    _u8g2.drawLine(curX, centerY, curX + 6, centerY - 4);
-    _u8g2.drawLine(curX + 6, centerY - 4, curX + 12, centerY);
-    curX += 12;
-
-    // Return flat line to endX
-    if (curX < endX) {
-        _u8g2.drawLine(curX, centerY, endX, centerY);
+    int prevY = centerY + getWaveY(offset % w);
+    for (int i = 0; i < w; i++) {
+        int p = (i + offset) % w;
+        int y = centerY + getWaveY(p);
+        if (i > 0) {
+            _u8g2.drawLine(startX + i - 1, prevY, startX + i, y);
+        }
+        prevY = y;
     }
 }
 
 void AuroraDisplay::renderHeartbeat(uint32_t now) {
-    // 1. Pulsing Beating Heart on the left
-    float beat = sinf((float)(now % 800) / 800.0f * 6.28318f);
-    int heartSize = 16 + (int)(beat * 3.5f);
-    drawHeart(26, 26, heartSize);
+    uint16_t bpm = getBpm(now);
+    uint32_t cycleMs = 60000 / bpm;
+    float phase = (float)(now % cycleMs) / (float)cycleMs;
 
-    // 2. ECG pulse line on the right
-    drawPulseWave(50, 122, 26);
+    // 1. Realistic pulsating lub-dub double thump:
+    float thump = 0.0f;
+    if (phase < 0.22f) {
+        thump = sinf(phase / 0.22f * 3.14159f);
+    } else if (phase >= 0.25f && phase < 0.45f) {
+        thump = sinf((phase - 0.25f) / 0.20f * 3.14159f) * 0.65f;
+    }
+    int heartSize = 14 + (int)(thump * (bpm > 90 ? 6.0f : 4.0f));
+    drawHeart(24, 25, heartSize);
 
+    // 2. Animated moving ECG wave on the right
+    drawPulseWave(48, 122, 25, now, bpm);
+
+    // 3. BPM text & live beating indicator icon
     _u8g2.setFont(u8g2_font_5x7_tf);
-    _u8g2.drawStr(98, 12, "72 bpm");
+    char bpmBuf[16];
+    snprintf(bpmBuf, sizeof(bpmBuf), "%u bpm", bpm);
+    int bw = _u8g2.getStrWidth(bpmBuf);
+    _u8g2.drawStr(122 - bw, 10, bpmBuf);
+    drawHeart(122 - bw - 6, 8, 3); // mini heart next to bpm
 
     _u8g2.drawHLine(6, 44, 116);
 
-    // 3. Lifetime Keepsake Touches Counter at Bottom
+    // 4. Lifetime Keepsake Touches Counter at Bottom (NO <3, cute mini hearts)
     char buf[32];
-    snprintf(buf, sizeof(buf), "<3 %lu Warm Touches <3",
+    snprintf(buf, sizeof(buf), "Warm Touches: %lu",
              (unsigned long)AuroraState::instance().touches());
-    _u8g2.setFont(u8g2_font_6x12_tr);
-    int bw = _u8g2.getStrWidth(buf);
-    int bx = (AURORA_OLED_WIDTH - bw) / 2;
-    if (bx < 2) bx = 2;
-    _u8g2.drawStr(bx, 58, buf);
+    _u8g2.setFont(u8g2_font_6x10_tr);
+    int tw = _u8g2.getStrWidth(buf);
+    int tx = (AURORA_OLED_WIDTH - tw) / 2;
+    if (tx < 12) tx = 12;
+    _u8g2.drawStr(tx, 58, buf);
+
+    // Mini heart icons flanking counter
+    drawHeart(tx - 6, 55, 3);
+    drawHeart(tx + tw + 6, 55, 3);
 
     // Floating hearts
     updateAndDrawHearts(now);
@@ -451,28 +489,26 @@ void AuroraDisplay::renderHeartbeat(uint32_t now) {
 void AuroraDisplay::drawWrappedText(const char* text, int startY, int maxLines, int lineHeight) {
     _u8g2.setFont(u8g2_font_5x7_tf);
 
-    const int maxLineWidth = 122;
+    const int maxLineWidth = 114; // Strictly bounded for safe display margins
     int line = 0;
     int y = startY;
 
     const char* ptr = text;
-    char lineBuf[32];
+    char lineBuf[36];
     int lineBufLen = 0;
+    lineBuf[0] = '\0';
 
     while (*ptr && line < maxLines) {
-        // Skip leading space on new line
         if (lineBufLen == 0 && *ptr == ' ') {
             ptr++;
             continue;
         }
 
-        // Find next word
         const char* wordStart = ptr;
         while (*ptr && *ptr != ' ') ptr++;
         int wordLen = ptr - wordStart;
 
-        // Check if word fits on current line
-        char testBuf[32];
+        char testBuf[36];
         if (lineBufLen == 0) {
             snprintf(testBuf, sizeof(testBuf), "%.*s", wordLen, wordStart);
         } else {
@@ -480,25 +516,33 @@ void AuroraDisplay::drawWrappedText(const char* text, int startY, int maxLines, 
         }
 
         if (_u8g2.getStrWidth(testBuf) <= maxLineWidth) {
-            // Fits on current line
             strncpy(lineBuf, testBuf, sizeof(lineBuf) - 1);
             lineBuf[sizeof(lineBuf) - 1] = '\0';
             lineBufLen = strlen(lineBuf);
             if (*ptr == ' ') ptr++;
         } else {
-            // Line full, print lineBuf
             if (lineBufLen > 0) {
+                // If on last allowed line and more text remains, append "..."
+                if (line == maxLines - 1 && *ptr) {
+                    if (lineBufLen <= (int)sizeof(lineBuf) - 4) {
+                        strcat(lineBuf, "...");
+                    }
+                }
                 int lw = _u8g2.getStrWidth(lineBuf);
-                _u8g2.drawStr((AURORA_OLED_WIDTH - lw) / 2, y, lineBuf);
+                int lx = (AURORA_OLED_WIDTH - lw) / 2;
+                if (lx < 6) lx = 6;
+                _u8g2.drawStr(lx, y, lineBuf);
                 line++;
                 y += lineHeight;
                 lineBufLen = 0;
                 lineBuf[0] = '\0';
             } else {
-                // Single word exceeds line width, force print
                 strncpy(lineBuf, testBuf, sizeof(lineBuf) - 1);
                 lineBuf[sizeof(lineBuf) - 1] = '\0';
-                _u8g2.drawStr(2, y, lineBuf);
+                int lw = _u8g2.getStrWidth(lineBuf);
+                int lx = (AURORA_OLED_WIDTH - lw) / 2;
+                if (lx < 6) lx = 6;
+                _u8g2.drawStr(lx, y, lineBuf);
                 line++;
                 y += lineHeight;
                 lineBufLen = 0;
@@ -508,10 +552,11 @@ void AuroraDisplay::drawWrappedText(const char* text, int startY, int maxLines, 
         }
     }
 
-    // Print remaining line if space exists
     if (lineBufLen > 0 && line < maxLines) {
         int lw = _u8g2.getStrWidth(lineBuf);
-        _u8g2.drawStr((AURORA_OLED_WIDTH - lw) / 2, y, lineBuf);
+        int lx = (AURORA_OLED_WIDTH - lw) / 2;
+        if (lx < 6) lx = 6;
+        _u8g2.drawStr(lx, y, lineBuf);
     }
 }
 
@@ -526,19 +571,22 @@ void AuroraDisplay::renderDeskmate(uint32_t now) {
             drawCheeks(cx1, cx2, cy);
             drawMouth(64, 46, DeskmateMood::LOVE_TOUCHED);
 
-            // Continuously spawn hearts during love mood
             if (random(0, 6) == 0) {
                 spawnHeart(random(16, 112), 62, random(5, 9), 2000);
             }
             updateAndDrawHearts(now);
 
-            // Centered romantic reaction banner at bottom
-            _u8g2.setFont(u8g2_font_6x12_tr);
+            // Centered romantic reaction banner at bottom (safe width, mini hearts)
+            _u8g2.setFont(u8g2_font_5x7_tf);
             const char* quote = kTouchReactions[_touchReactionIdx];
             int w = _u8g2.getStrWidth(quote);
             int x = (AURORA_OLED_WIDTH - w) / 2;
-            if (x < 2) x = 2;
-            _u8g2.drawStr(x, 62, quote);
+            if (x < 10) x = 10;
+            _u8g2.drawStr(x, 60, quote);
+
+            // Mini hearts flanking quote
+            drawHeart(x - 6, 58, 3);
+            drawHeart(x + w + 6, 58, 3);
             break;
         }
 
@@ -558,12 +606,15 @@ void AuroraDisplay::renderDeskmate(uint32_t now) {
             drawSadEyes(cx1, cx2, cy, now);
             drawMouth(64, 47, DeskmateMood::LONELY_SAD);
 
-            _u8g2.setFont(u8g2_font_6x12_tr);
+            _u8g2.setFont(u8g2_font_5x7_tf);
             const char* sadPrompt = "Miss you... Touch me?";
             int w = _u8g2.getStrWidth(sadPrompt);
             int x = (AURORA_OLED_WIDTH - w) / 2;
-            if (x < 2) x = 2;
-            _u8g2.drawStr(x, 62, sadPrompt);
+            if (x < 10) x = 10;
+            _u8g2.drawStr(x, 60, sadPrompt);
+
+            drawHeart(x - 6, 58, 3);
+            drawHeart(x + w + 6, 58, 3);
             break;
         }
 
@@ -694,10 +745,13 @@ void AuroraDisplay::drawMouth(int cx, int cy, DeskmateMood mood) {
 }
 
 void AuroraDisplay::drawMidnightScreen(uint32_t now) {
-    _u8g2.setFont(u8g2_font_7x14_tr);
+    _u8g2.setFont(u8g2_font_6x10_tr);
     const char* title = "12:00 Midnight!";
     int tw = _u8g2.getStrWidth(title);
-    _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 13, title);
+    int tx = (AURORA_OLED_WIDTH - tw) / 2;
+    _u8g2.drawStr(tx, 11, title);
+    drawHeart(tx - 6, 8, 3);
+    drawHeart(tx + tw + 6, 8, 3);
 
     int envX = 48;
     int envY = 18;
@@ -724,15 +778,14 @@ void AuroraDisplay::drawMidnightScreen(uint32_t now) {
         _u8g2.drawPixel(95, 31);
     }
 
-    _u8g2.setFont(u8g2_font_6x12_tr);
+    _u8g2.setFont(u8g2_font_5x7_tf);
     const char* sub = "Daily Message Ready!";
     int sw = _u8g2.getStrWidth(sub);
-    _u8g2.drawStr((AURORA_OLED_WIDTH - sw) / 2, 49, sub);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - sw) / 2, 48, sub);
 
-    _u8g2.setFont(u8g2_font_5x7_tf);
-    const char* prompt = "< Touch to open >";
+    const char* prompt = "Touch button to open";
     int pw = _u8g2.getStrWidth(prompt);
-    _u8g2.drawStr((AURORA_OLED_WIDTH - pw) / 2, 60, prompt);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - pw) / 2, 59, prompt);
 }
 
 void AuroraDisplay::showBootScreen() {
@@ -747,10 +800,13 @@ void AuroraDisplay::showBootScreen() {
 
     drawHeart(64, 36, 12);
 
-    _u8g2.setFont(u8g2_font_6x12_tr);
-    const char* sub = "For Chandni <3";
+    _u8g2.setFont(u8g2_font_6x10_tr);
+    const char* sub = "For Chandni";
     int sw = _u8g2.getStrWidth(sub);
-    _u8g2.drawStr((AURORA_OLED_WIDTH - sw) / 2, 58, sub);
+    int sx = (AURORA_OLED_WIDTH - sw) / 2;
+    _u8g2.drawStr(sx, 58, sub);
+    drawHeart(sx - 7, 55, 4);
+    drawHeart(sx + sw + 7, 55, 4);
 
     _u8g2.sendBuffer();
 }
@@ -759,26 +815,26 @@ void AuroraDisplay::showStatusScreen(const char* line1, const char* line2, const
     if (_popupActive && millis() < _popupEndsAtMs) return;
 
     _u8g2.clearBuffer();
-    _u8g2.setFont(u8g2_font_6x12_tr);
+    _u8g2.setFont(u8g2_font_5x7_tf);
     _u8g2.setDrawColor(1);
 
-    if (line1) _u8g2.drawStr(2, 14, line1);
-    if (line2) _u8g2.drawStr(2, 34, line2);
-    if (line3) _u8g2.drawStr(2, 54, line3);
+    if (line1) _u8g2.drawStr(4, 14, line1);
+    if (line2) _u8g2.drawStr(4, 34, line2);
+    if (line3) _u8g2.drawStr(4, 54, line3);
 
     _u8g2.sendBuffer();
 }
 
 void AuroraDisplay::showCenteredText(const char* text, int16_t y, uint8_t textSize) {
     if (textSize >= 2) {
-        _u8g2.setFont(u8g2_font_7x14_tr);
+        _u8g2.setFont(u8g2_font_6x10_tr);
     } else {
-        _u8g2.setFont(u8g2_font_6x12_tr);
+        _u8g2.setFont(u8g2_font_5x7_tf);
     }
 
     int textWidth = _u8g2.getStrWidth(text);
     int x = (AURORA_OLED_WIDTH - textWidth) / 2;
-    if (x < 2) x = 2;
+    if (x < 4) x = 4;
     _u8g2.drawStr(x, y + 8, text);
 }
 
@@ -791,25 +847,21 @@ void AuroraDisplay::popup(const char* text, uint32_t durationMs) {
 
     // Header text (black on white)
     _u8g2.setDrawColor(0);  // black
-    _u8g2.setFont(u8g2_font_6x10_tr);
-    _u8g2.drawStr(4, 9, "! Notice");
+    _u8g2.setFont(u8g2_font_5x7_tf);
+    _u8g2.drawStr(6, 9, "! Notice");
 
     // Main message (white text)
     _u8g2.setDrawColor(1);  // white
 
-    // Dynamically choose font based on text width to ensure NO clipping on RHS!
-    _u8g2.setFont(u8g2_font_7x14_tr);
+    // Dynamically choose font based on text width to ensure NO clipping on RHS
+    _u8g2.setFont(u8g2_font_6x10_tr);
     int textWidth = _u8g2.getStrWidth(text);
-    if (textWidth > 122) {
-        _u8g2.setFont(u8g2_font_6x12_tr);
+    if (textWidth > 116) {
+        _u8g2.setFont(u8g2_font_5x7_tf);
         textWidth = _u8g2.getStrWidth(text);
-        if (textWidth > 122) {
-            _u8g2.setFont(u8g2_font_5x7_tf);
-            textWidth = _u8g2.getStrWidth(text);
-        }
     }
     int x = (AURORA_OLED_WIDTH - textWidth) / 2;
-    if (x < 2) x = 2;
+    if (x < 4) x = 4;
     _u8g2.drawStr(x, 38, text);
 
     _u8g2.sendBuffer();

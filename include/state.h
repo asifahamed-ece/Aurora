@@ -42,6 +42,13 @@ public:
     uint32_t lastTouchEpoch() const { return _lastTouchEpoch; }
     uint32_t msSinceLastTouch() const { return millis() - _lastTouchMs; }
     float    hoursSinceLastTouch() const { return (float)(millis() - _lastTouchMs) / 3600000.0f; }
+    bool     consumePendingTouch() {
+        if (_pendingTouchReaction) {
+            _pendingTouchReaction = false;
+            return true;
+        }
+        return false;
+    }
 
     // Legacy aliases for physical buttons
     void    bumpBtnUp()    { bumpTouches(); }
@@ -72,6 +79,7 @@ private:
     uint32_t  _touches;
     uint32_t  _lastTouchMs;
     uint32_t  _lastTouchEpoch;
+    bool      _pendingTouchReaction;
     uint32_t  _btnUp;
     uint32_t  _btnSel;
     uint32_t  _btnDown;

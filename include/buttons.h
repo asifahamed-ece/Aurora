@@ -27,11 +27,11 @@
 #include <Arduino.h>
 #include "config.h"
 
-// Event types emitted by the button manager.
 enum ButtonEvent : uint8_t {
     BTN_NONE        = 0b0000,
     BTN_TOUCH       = 0b0001,  // GPIO0 touch button (Warm Touch)
-    BTN_MODE_CYCLE  = 0b0010   // GPIO2 push button (cycle OLED mode)
+    BTN_MODE_CYCLE  = 0b0010,  // GPIO2 push button short press (cycle OLED mode)
+    BTN_WIFI_TOGGLE = 0b0100   // GPIO2 push button long press 3s (toggle WiFi AP)
 };
 
 class AuroraButtons {
@@ -49,16 +49,19 @@ public:
 private:
     struct BtnState {
         uint8_t  pin;
-        uint8_t  eventOnPress;     // which ButtonEvent to emit on a clean release
+        uint8_t  eventOnPress;     // which ButtonEvent to emit
         bool     lastStable;       // last debounced state (true = pressed)
         bool     lastRaw;          // last raw reading
         uint32_t lastChangeMs;     // for debounce timing
+        uint32_t pressStartMs;     // when button was first pressed
+        bool     longFired;        // whether 3s long press has already triggered
     };
 
-    BtnState _touch { AURORA_BTN_TOUCH_PIN, BTN_TOUCH,      false, false, 0 };
-    BtnState _multi { AURORA_BTN_MULTI_PIN, BTN_MODE_CYCLE, false, false, 0 };
+    BtnState _touch { AURORA_BTN_TOUCH_PIN, BTN_TOUCH,      false, false, 0, 0, false };
+    BtnState _multi { AURORA_BTN_MULTI_PIN, BTN_MODE_CYCLE, false, false, 0, 0, false };
 
-    uint8_t checkBtn(BtnState& b);
+    uint8_t checkTouch(BtnState& b);
+    uint8_t checkMulti(BtnState& b);
 };
 
 #endif // AURORA_BUTTONS_H

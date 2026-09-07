@@ -197,26 +197,44 @@ void loop() {
     aurora_web::loop();
 
     // --- Physical button inputs ---
-    // Each GPIO is single-purpose:
-    //   GPIO0 -> BTN_TOUCH      (Warm Touch on the deskmate)
-    //   GPIO2 -> BTN_MODE_CYCLE (cycle OLED screen modes)
     uint8_t events = buttons.update();
     if (events != BTN_NONE) {
-        // GPIO0: Warm Touch sensor
+        // Button 1 (GPIO0): Warm Touch sensor
         if (events & BTN_TOUCH) {
             AuroraState::instance().bumpTouches();
-            display.triggerWarmTouch();
-            s_midnightAckDoy = aurora_clock::dayOfYear(AuroraState::instance().epoch());
-            DBG_PRINTF("[TOUCH] Warm Touch recorded! Total: %u\n",
+            DBG_PRINTF("[TOUCH] Physical Warm Touch recorded! Total: %u\n",
                        (unsigned)AuroraState::instance().touches());
             aurora_web::requestImmediatePush();
         }
 
-        // GPIO2: Cycle OLED display modes
+        // Button 2 (GPIO2 Short Press): Cycle OLED display modes
         if (events & BTN_MODE_CYCLE) {
             display.cycleScreenMode();
             DBG_PRINTF("[BTN] Mode cycled to: %s\n", display.screenModeName());
         }
+
+        // Button 2 (GPIO2 3-Second Long Press): Toggle WiFi Hotspot
+        if (events & BTN_WIFI_TOGGLE) {
+            bool nextWifi = !AuroraState::instance().wifiOn();
+            AuroraState::instance().setWifiOn(nextWifi);
+            if (nextWifi) {
+                aurora_wifi::begin();
+                display.popup("WiFi Hotspot ON", 2500);
+                DBG_PRINTLN(F("[BTN] WiFi AP turned ON (3s hold)"));
+            } else {
+                WiFi.softAPdisconnect(true);
+                display.popup("WiFi Hotspot OFF", 2500);
+                DBG_PRINTLN(F("[BTN] WiFi AP turned OFF (3s hold)"));
+            }
+            aurora_web::requestImmediatePush();
+        }
+    }
+
+    // --- React to Warm Touches (from physical button OR from Web Dashboard) ---
+    if (AuroraState::instance().consumePendingTouch()) {
+        display.triggerWarmTouch();
+        s_midnightAckDoy = aurora_clock::dayOfYear(AuroraState::instance().epoch());
+        aurora_web::requestImmediatePush();
     }
 
     // --- Midnight Check (12:00 AM) -> Message of the Day Reminder ---
