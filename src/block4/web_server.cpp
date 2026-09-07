@@ -62,12 +62,6 @@ static size_t buildStateJson(char* out, size_t outSize) {
     doc["led"]  = st.ledOn() ? "on" : "off";
     doc["touches"] = st.touches();
 
-    JsonObject btns = doc.createNestedObject("btns");
-    btns["up"]   = st.btnUp();
-    btns["sel"]  = st.btnSel();
-    btns["down"] = st.btnDown();
-    btns["wifi"] = st.btnWifi();
-
     size_t n = serializeJson(doc, out, outSize);
     return n;
 }
@@ -281,6 +275,8 @@ bool begin() {
 }
 
 void loop() {
+    if (!AuroraState::instance().wifiOn()) return;
+
     uint32_t now = millis();
     if (g_pushNow || (now - g_lastPush) >= (uint32_t)AURORA_WS_PUSH_MS) {
         g_lastPush  = now;
