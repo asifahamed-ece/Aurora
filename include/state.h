@@ -62,12 +62,13 @@ public:
     uint16_t midnightAckDoy() const { return _midnightAckDoy; }
     void     setMidnightAckDoy(uint16_t doy);
 
-    // ---- First-boot dashboard sync hint (persisted to NVS) ----
-    //  True until the dashboard sends its first real time_sync frame.
-    //  Lets the OLED show a one-time hint telling Chandni to connect
-    //  her phone to "Aurora" WiFi and open 192.168.4.1 for clock sync.
-    bool     firstSyncHintActive() const { return !_firstSyncDismissed; }
-    void     dismissFirstSyncHint();
+    // ---- Dashboard sync hint (per-session, not persisted) ----
+    //  True at boot. The OLED uses this to show "Open 192.168.4.1" in
+    //  place of the date until the dashboard sends a real time_sync
+    //  frame in this session. Resets to true on every power-cycle, so
+    //  the hint keeps prompting until Chandni actually opens the app.
+    bool     firstSyncHintActive() const { return !_timeSyncedFromClient; }
+    void     markTimeSyncedFromClient();
 
 private:
     AuroraState();
@@ -85,7 +86,7 @@ private:
     uint32_t  _epochBaseMs;
     uint32_t  _bootCount;
     uint16_t  _midnightAckDoy;
-    bool      _firstSyncDismissed;
+    bool      _timeSyncedFromClient;
 };
 
 #endif // AURORA_BLOCK4_STATE_H

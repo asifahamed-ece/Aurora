@@ -353,35 +353,24 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
     drawHeart(12, 30, 4);
     drawHeart(116, 30, 4);
 
-    // 3. Date at Bottom
-    char dateBuf[24];
-    aurora_clock::formatDate(dateBuf, sizeof(dateBuf), epoch);
+    // 3. Bottom line: date by default, dashboard-sync hint before first sync.
+    //    The hint sits in the same vertical slot as the date would, so the
+    //    transition between "unsynced" and "synced" feels like a natural swap
+    //    rather than a new element appearing. After a real time_sync frame
+    //    from the dashboard, the date returns for the rest of the session.
     _u8g2.setFont(u8g2_font_6x10_tr);
-    int dw = _u8g2.getStrWidth(dateBuf);
-    _u8g2.drawStr((AURORA_OLED_WIDTH - dw) / 2, 58, dateBuf);
-
-    // 4. First-boot dashboard sync hint (one-time, only on this mode)
-    //    Shown only while the device is still waiting for its first
-    //    time_sync frame. The 64px-tall OLED leaves just one 5x7 line of
-    //    room below the date, so we keep the message short and add a
-    //    small heart as a soft visual anchor.
     if (AuroraState::instance().firstSyncHintActive()) {
         const char* hint = "Open 192.168.4.1";
-        _u8g2.setFont(u8g2_font_5x7_tf);
-        int hw = _u8g2.getStrWidth(hint);
-        // Centre the text but leave room for a small heart on the left.
-        int hx = (AURORA_OLED_WIDTH - hw) / 2 + 4;
-        if (hx < 12) hx = 12;
-        if (hx + hw > AURORA_OLED_WIDTH - 6) hx = AURORA_OLED_WIDTH - 6 - hw;
-        _u8g2.drawStr(hx, 63, hint);
-        // Tiny heart on the left side as a romantic anchor
-        drawHeart(hx - 7, 60, 2);
-        // Log once per ~5s so we can confirm the render path is active
-        static uint32_t s_lastHintLogMs = 0;
-        if (millis() - s_lastHintLogMs > 5000) {
-            s_lastHintLogMs = millis();
-            DBG_PRINTF("[HINT] drawing first-sync hint (hx=%d hw=%d)\n", hx, hw);
-        }
+        int bw = _u8g2.getStrWidth(hint);
+        int bx = (AURORA_OLED_WIDTH - bw) / 2;
+        if (bx < 6) bx = 6;
+        if (bx + bw > AURORA_OLED_WIDTH - 6) bx = AURORA_OLED_WIDTH - 6 - bw;
+        _u8g2.drawStr(bx, 58, hint);
+    } else {
+        char dateBuf[24];
+        aurora_clock::formatDate(dateBuf, sizeof(dateBuf), epoch);
+        int dw = _u8g2.getStrWidth(dateBuf);
+        _u8g2.drawStr((AURORA_OLED_WIDTH - dw) / 2, 58, dateBuf);
     }
 
     // Update floating hearts if active

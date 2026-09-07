@@ -20,7 +20,7 @@ AuroraState::AuroraState()
       _touches(0), _lastTouchMs(0), _lastTouchEpoch(0),
       _pendingTouchReaction(false),
       _epoch(0), _epochBaseMs(0), _bootCount(0), _midnightAckDoy(0),
-      _firstSyncDismissed(false) {}
+      _timeSyncedFromClient(false) {}
 
 void AuroraState::setEpoch(uint32_t epoch) {
     if (epoch == _epoch) return;  // no change → no NVS wear
@@ -59,14 +59,13 @@ void AuroraState::begin() {
             _epoch      = savedEpoch;
             _epochBaseMs = millis();
         }
-        // First-sync hint: dismissed flag persists forever once set. A
-        // freshly-erased NVS shows the hint; subsequent boots don't.
-        _firstSyncDismissed = prefs.getUChar("first_hint", 0) != 0;
+        // _timeSyncedFromClient defaults to false in the ctor — the hint
+        // shows until the dashboard sends a real time_sync this session.
         prefs.end();
     }
     DBG_PRINTF("[NVS] Loaded keepsake stats: WarmTouches=%u (boot #%u, lastTouchEpoch=%u epoch=%u firstSyncHint=%s)\n",
                _touches, _bootCount, _lastTouchEpoch, (unsigned)_epoch,
-               _firstSyncDismissed ? "dismissed" : "ACTIVE");
+               _timeSyncedFromClient ? "dismissed" : "ACTIVE");
 }
 
 void AuroraState::bumpTouches() {
@@ -95,15 +94,10 @@ void AuroraState::setMidnightAckDoy(uint16_t doy) {
     }
 }
 
-void AuroraState::dismissFirstSyncHint() {
-    if (_firstSyncDismissed) return;  // already gone — avoid NVS wear
-    _firstSyncDismissed = true;
-    Preferences prefs;
-    if (prefs.begin("aurora", false)) {
-        prefs.putUChar("first_hint", 1);
-        prefs.end();
-    }
-    DBG_PRINTLN(F("[NVS] First-sync hint dismissed"));
+void AuroraState::markTimeSyncedFromClient() {
+    if (_timeSyncedFromClient) return;  // already marked — no-op
+    _timeSyncedFromClient = true;
+    DBG_PRINTLN(F("[HINT] Dashboard time_sync received — hiding sync hint"));
 }
 
 const char* AuroraState::batteryStatusString() const {

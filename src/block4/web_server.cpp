@@ -139,9 +139,9 @@ static void onWsEvent(AsyncWebSocket* server,
                             AuroraState::instance().setEpoch(clientEpoch);
                             DBG_PRINTF("[CLK] synced from client: epoch=%u\n", (unsigned)clientEpoch);
                             // A real time_sync means the dashboard is alive
-                            // and the clock is now accurate — dismiss the
-                            // one-time first-boot hint, if still showing.
-                            AuroraState::instance().dismissFirstSyncHint();
+                            // and the clock is now accurate — hide the sync
+                            // hint for the rest of this boot session.
+                            AuroraState::instance().markTimeSyncedFromClient();
                             g_pushNow = true;
                         }
                     } else if (strcmp(t, "heart_tap") == 0) {
