@@ -48,6 +48,11 @@ public:
     uint16_t voltageMillivolts() const { return _voltageMv; }
 
     /**
+     * Get estimated battery percentage (0-100%).
+     */
+    uint8_t batteryPct() const;
+
+    /**
      * Get the battery status (OK / LOW / CRITICAL / DEAD) based on the
      * most recent reading. DEAD is only returned here if the voltage is
      * actually below the dead threshold — boot-time check is separate.

@@ -43,8 +43,18 @@ void AuroraBattery::update() {
     }
 }
 
-const char* AuroraBattery::statusString() const {
-    if (!_initialized) return "N/A";
+uint8_t AuroraBattery::batteryPct() const {
+    // Map 3.0V (0%) → 4.2V (100%) — 1200mV usable LiPo span.
+    // Uses a simple linear approximation; accurate enough without eFuse
+    // calibration for the 1.5V–2.1V ADC range we actually measure.
+    if (!_initialized || _voltageMv == 0) return 0;
+    int32_t pct = ((int32_t)_voltageMv - 3000) * 100 / 1200;
+    if (pct < 0)   return 0;
+    if (pct > 100) return 100;
+    return (uint8_t)pct;
+}
+
+const char* AuroraBattery::statusString() const {    if (!_initialized) return "N/A";
     switch (_status) {
         case BatStatus::BatStatus_OK:       return "OK";
         case BatStatus::BatStatus_LOW:      return "LOW";
