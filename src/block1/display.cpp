@@ -315,64 +315,48 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
     uint32_t h = (local / 3600) % 24;
     uint32_t m = (local / 60) % 60;
 
-    // 1. Contextual Greeting Header (Top) - Clean, measured, no ASCII <3
-    const char* greeting;
-    if (aurora_clock::isBirthday(epoch)) {
-        greeting = "Happy Birthday Chandni!";
-    } else if (h >= 5 && h < 12) {
-        greeting = "Good Morning, Chandni";
-    } else if (h >= 12 && h < 17) {
-        greeting = "Good Afternoon, Chandni";
-    } else if (h >= 17 && h < 22) {
-        greeting = "Good Evening, Chandni";
-    } else {
-        greeting = "Sweet Dreams, Moon";
-    }
-
-    _u8g2.setFont(u8g2_font_5x7_tf);
-    int gw = _u8g2.getStrWidth(greeting);
-    int gx = (AURORA_OLED_WIDTH - gw) / 2;
-    if (gx < 10) gx = 10;
-    _u8g2.drawStr(gx, 10, greeting);
-
-    // Cute mini graphic hearts flanking greeting
-    drawHeart(gx - 6, 8, 3);
-    drawHeart(gx + gw + 6, 8, 3);
-
-    _u8g2.drawHLine(6, 13, 116);
-
-    // 2. Digital Clock (Center). When the dashboard hasn't synced time
-    //    yet, drop from the default 24px to 20px so the bottom band has
-    //    room for the two-line "Open 192.168.4.1" warning. Once a real
-    //    time_sync frame arrives, the clock returns to its full 24px
-    //    presence and the bottom band only carries the date.
+    // Two layouts:
+    //   - Unsynced (hint active):  16px clock at the top + a 4-line
+    //     wrapped notification in 6x10 filling the bottom 2/3 of the
+    //     screen. The clock is intentionally small so the message
+    //     reads as the headline. The greeting was removed to give
+    //     the message more vertical room and keep the focus on the
+    //     action Chandni needs to take.
+    //   - Synced:                   24px clock centred + date below.
+    //     No greeting, no message — the time is the headline.
     bool    hintActive = AuroraState::instance().firstSyncHintActive();
     char    timeBuf[8];
     snprintf(timeBuf, sizeof(timeBuf), "%02lu%c%02lu",
              (unsigned long)h, (now % 1000 < 500 ? ':' : ' '), (unsigned long)m);
-    _u8g2.setFont(hintActive ? u8g2_font_logisoso20_tn : u8g2_font_logisoso24_tn);
-    int tw = _u8g2.getStrWidth(timeBuf);
-    _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 42, timeBuf);
 
-    // Decorative corner hearts — sit at the bottom corners of the clock
-    // band so they don't overlap either the 24px or the 20px glyphs
-    // (y=18..46 for 24px, y=22..45 for 20px — y=36 lands just under both).
-    drawHeart(12, 36, 3);
-    drawHeart(116, 36, 3);
-
-    // 3. Bottom band: two-line sync warning before first time_sync, else
-    //    the date. Layout math (with greeting at y=10 and hline at y=13):
-    //      - 24px clock: glyphs end ~y=46 → bottom slot y=48..63 (15px)
-    //                    for the date at y=58 (6x10).
-    //      - 20px clock: glyphs end ~y=45 → bottom slot y=46..63 (17px)
-    //                    for two 5x7 lines at lineHeight=9
-    //                    (baselines y=53 and y=62).
-    //    drawWrappedText() also enforces a 114px strict width bound so
-    //    no RHS clipping on the small OLED.
     if (hintActive) {
-        const char* hint = "To Update Time Open 192.168.4.1";
-        drawWrappedText(hint, 53, 2, 9);
+        // Compact 16px clock at the top (logisoso16, ~16px ascent).
+        // Baseline at y=16 puts glyphs y=0..16 so the message area
+        // below is wide and clean.
+        _u8g2.setFont(u8g2_font_logisoso16_tn);
+        int tw = _u8g2.getStrWidth(timeBuf);
+        _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 16, timeBuf);
+
+        // 4-line notification in 6x10, lineHeight=10. Baselines at
+        // y=26, 36, 46, 56. With 6x10 ascent=10 and descent=2, each
+        // line's top sits 10px above its baseline, so lines step
+        // y=16, 26, 36, 46 — non-overlapping, with a clean 1px gap
+        // between each. Last line descender ends ~y=58, 6px from the
+        // bottom edge. drawWrappedText() also bounds the width to
+        // 114px so no RHS clipping.
+        const char* msg = "Open WiFi, Connect Aurora and Open 192.168.4.1 to Sync Data.";
+        drawWrappedText(msg, 26, 4, 10);
     } else {
+        // Big 24px clock centred (unchanged presence)
+        _u8g2.setFont(u8g2_font_logisoso24_tn);
+        int tw = _u8g2.getStrWidth(timeBuf);
+        _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 42, timeBuf);
+
+        // Decorative corner hearts sit just under the 24px glyphs
+        drawHeart(12, 36, 3);
+        drawHeart(116, 36, 3);
+
+        // Date at the original slot
         char dateBuf[24];
         aurora_clock::formatDate(dateBuf, sizeof(dateBuf), epoch);
         int dw = _u8g2.getStrWidth(dateBuf);
