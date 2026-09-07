@@ -29,7 +29,7 @@ The firmware combines:
 aurora-firmware-deskmate/
 ├── src/                  # Main source code
 │   ├── main.cpp          # Main firmware setup and loop
-│   └── block1/           # Display, buttons, LED chaser, battery driver
+│   ├── block1/           # Display, buttons, LED chaser, battery driver
 │   └── block4/           # WiFi AP, AsyncWebServer, state, messages, clock
 ├── include/              # Header files (config.h, display.h, buttons.h, etc.)
 ├── lib/                  # External libraries (vendored ESPAsyncWebServer-aurora)
@@ -52,33 +52,20 @@ aurora-firmware-deskmate/
 ## Architecture Highlights
 
 ### Hardware Configuration
-- **OLED Display**: SDA=GPIO8, SCL=GPIO9 (I2C at 400kHz, 128x64 SSD1306, `AURORA_OLED_DRIVER 0`).
-- **Button 0 (GPIO0)**: Dedicated Warm Touch sensor (`AURORA_BTN_TOUCH_PIN`) with 10kΩ external pull-up. Single tap records Warm Touches ONLY and triggers blushing love animation & floating hearts.
-- **Button 2 (GPIO2)**: Multi-Function Button (`AURORA_BTN_MULTI_PIN`):
-  - **Short Press (< 3s)**: Cycles OLED display modes (Clock, Face, Thought, Pulse).
-  - **Long Press (>= 3s)**: Toggles WiFi SoftAP on/off with visual popup.
-- **Power Switch (GPIO10)**: Hardware Power Toggle Switch (`AURORA_SLEEP_SWITCH_PIN`). Toggled OFF (GND) -> displays "Goodnight... zZZ" and enters sleep with the internal ESP32 Hardware RTC running continuously in the backend. Toggled ON (HIGH) -> wakes up immediately with exact time intact.
+- **OLED Display**: SDA=GPIO8, SCL=GPIO9 (I2C at 400kHz, 128x64, supports SSD1306 and SH1106).
+- **Single Touch Button**: GPIO0 (`AURORA_BTN_TOUCH_PIN`) with 10kΩ external pull-up. Records Warm Touches, wakes/cheers up the deskmate, and opens midnight reminders.
 - **LED Breathing Chaser**: GPIO4 via 220Ω resistor. Breathing period adjusts dynamically based on Aurora's mood (800ms excited heartbeat when touched, 1500ms normal, 3200ms slow lonely breath).
 - **Battery ADC**: GPIO3 via 100kΩ/100kΩ voltage divider.
-
-### OLED Display Modes (`ScreenMode`)
-1. `DESKMATE`: Interactive animated living pet ("Aurora") with blinking, gazing, heart eyes, tear drops, floating particles, and mood reactions.
-2. `CLOCK_DATE`: Digital clock and calendar synced to Indian Standard Time (IST, UTC+5:30) with time-appropriate greeting banners.
-3. `DAILY_THOUGHT`: Displays one of 30 curated daily romantic thoughts with safe word-wrap margins and flanking heart icons.
-4. `PULSE_METER`: Dynamic Heartbeat Keepsake Pulse Meter featuring real-time animated sweeping ECG line and dynamic BPM (72 BPM base, accelerates to 118 BPM excited flutter on touch from button or dashboard).
 
 ### Deskmate Character States (`DeskmateMood`)
 - `IDLE_NORMAL`: Organic blinking, eye gaze saccades, cat smile `w`.
 - `HAPPY`: Bouncy arched eyes `^ ^`, blushing cheeks `///`, open smile `\_/`.
-- `LOVE_TOUCHED`: Beating heart eyes, floating hearts rising up, blushing cheeks, rotating romantic quote banner.
+- `LOVE_TOUCHED`: Beating heart eyes `<3 <3`, floating hearts rising up, blushing cheeks, rotating romantic quote banner.
 - `LONELY_SAD`: Triggered after 5+ hours without a Warm Touch. Droopy eyes, downward quivering mouth, sliding teardrop, prompt `"Miss you... Touch me?"`.
-- `MIDNIGHT_REMINDER`: Triggered at 00:00 IST (12:00 AM midnight). Animated love envelope with wax seal, sparkles, and prompt to check phone dashboard for the Daily Message.
+- `MIDNIGHT_REMINDER`: Triggered at 00:00 (12:00 AM midnight). Animated love envelope with wax seal, sparkles, and prompt to check phone dashboard for the Daily Message.
 - `SLEEPING`: Peaceful closed curved eyes with floating `"z Z Z"` bubbles.
 
 ## Important Notes
 
-- **Timezone**: Indian Standard Time (IST, UTC+5:30, `AURORA_TIMEZONE_OFFSET_SEC 19800`).
-- **Internal Hardware RTC**: POSIX `settimeofday` and `time(nullptr)` driven by ESP32 internal 64-bit microsecond timer. Ticks continuously in the background even when switched OFF into sleep mode.
-- **Two-Way Touch Synchronization**: Touches from the phone dashboard (`192.168.4.1`) set `_pendingTouch` in `AuroraState`, immediately triggering the OLED Deskmate love animation, heart eyes, floating hearts, and ECG pulse acceleration.
-- **Typography & Clean UI**: All literal `<3` text characters have been replaced with drawn heart shapes (`drawHeart()`) or clean typography.
-- **Text Bounds & Wrapping**: Safe 112px line width and word-wrap buffering in `drawWrappedText()` ensure words are never dropped and text never clips off the right side of the OLED.
+- All technical metrics (client count, raw AP stats, touch counters) are hidden from the OLED to preserve a soft, romantic companion experience. Technical statistics remain accessible via the web dashboard at `192.168.4.1`.
+- Text width bounds checking (`_u8g2.getStrWidth()`) is strictly enforced in `popup()` and message banners to prevent RHS screen clipping.
