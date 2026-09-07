@@ -149,7 +149,7 @@ void setup() {
     // --- State: initial battery reading ---
     AuroraState::instance().setBattery(
         battery.voltageMillivolts(),
-        100,  // rough -- percentage is less critical on the OLED
+        battery.batteryPct(),
         battery.status()
     );
 
@@ -186,7 +186,6 @@ void setup() {
 static uint32_t s_lastBatMs      = 0;
 static uint32_t s_lastHeartMs    = 0;
 static uint32_t s_bootMs         = 0;
-static uint16_t s_midnightAckDoy = 0;
 
 void loop() {
     uint32_t now = millis();
@@ -233,7 +232,7 @@ void loop() {
     // --- React to Warm Touches (from physical button OR from Web Dashboard) ---
     if (AuroraState::instance().consumePendingTouch()) {
         display.triggerWarmTouch();
-        s_midnightAckDoy = aurora_clock::dayOfYear(AuroraState::instance().epoch());
+        AuroraState::instance().setMidnightAckDoy(aurora_clock::dayOfYear(AuroraState::instance().epoch()));
         aurora_web::requestImmediatePush();
     }
 
@@ -242,7 +241,7 @@ void loop() {
     if (epoch > 0) {
         uint32_t h = (epoch / 3600) % 24;
         uint16_t doy = aurora_clock::dayOfYear(epoch);
-        if (h == 0 && s_midnightAckDoy != doy) {
+        if (h == 0 && AuroraState::instance().midnightAckDoy() != doy) {
             display.setMidnightReminder(true);
         } else if (h != 0 && display.isMidnightReminderActive()) {
             display.setMidnightReminder(false);
@@ -273,7 +272,7 @@ void loop() {
         battery.update();
         AuroraState::instance().setBattery(
             battery.voltageMillivolts(),
-            100,
+            battery.batteryPct(),
             battery.status()
         );
 
