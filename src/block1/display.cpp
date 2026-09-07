@@ -376,6 +376,12 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
         _u8g2.drawStr(hx, 63, hint);
         // Tiny heart on the left side as a romantic anchor
         drawHeart(hx - 7, 60, 2);
+        // Log once per ~5s so we can confirm the render path is active
+        static uint32_t s_lastHintLogMs = 0;
+        if (millis() - s_lastHintLogMs > 5000) {
+            s_lastHintLogMs = millis();
+            DBG_PRINTF("[HINT] drawing first-sync hint (hx=%d hw=%d)\n", hx, hw);
+        }
     }
 
     // Update floating hearts if active

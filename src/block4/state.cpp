@@ -64,8 +64,9 @@ void AuroraState::begin() {
         _firstSyncDismissed = prefs.getUChar("first_hint", 0) != 0;
         prefs.end();
     }
-    DBG_PRINTF("[NVS] Loaded keepsake stats: WarmTouches=%u (boot #%u, lastTouchEpoch=%u epoch=%u)\n",
-               _touches, _bootCount, _lastTouchEpoch, (unsigned)_epoch);
+    DBG_PRINTF("[NVS] Loaded keepsake stats: WarmTouches=%u (boot #%u, lastTouchEpoch=%u epoch=%u firstSyncHint=%s)\n",
+               _touches, _bootCount, _lastTouchEpoch, (unsigned)_epoch,
+               _firstSyncDismissed ? "dismissed" : "ACTIVE");
 }
 
 void AuroraState::bumpTouches() {
