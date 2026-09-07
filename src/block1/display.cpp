@@ -786,7 +786,7 @@ void AuroraDisplay::showBootScreen() {
     _u8g2.setFont(u8g2_font_7x14_tr);
     _u8g2.setDrawColor(1);
 
-    const char* title = "Aurora Deskmate";
+    const char* title = "Aurora";
     int titleWidth = _u8g2.getStrWidth(title);
     int titleX = (AURORA_OLED_WIDTH - titleWidth) / 2;
     _u8g2.drawStr(titleX, 22, title);
@@ -794,7 +794,7 @@ void AuroraDisplay::showBootScreen() {
     drawHeart(64, 36, 12);
 
     _u8g2.setFont(u8g2_font_6x10_tr);
-    const char* sub = "For Chandni";
+    const char* sub = "Crafted for You !";
     int sw = _u8g2.getStrWidth(sub);
     int sx = (AURORA_OLED_WIDTH - sw) / 2;
     _u8g2.drawStr(sx, 58, sub);
