@@ -15,17 +15,21 @@
 
 namespace aurora_clock {
 
-//  Day-of-year for an epoch (1..366). Uses UTC; matches the JS `Date` math
-//  the client uses as a fallback so the two stay in sync.
+//  Convert a stored UTC epoch to local (IST) epoch. All display helpers apply
+//  this internally; callers that do their own hour math should use it too.
+uint32_t toLocal(uint32_t epoch);
+
+//  Day-of-year for an epoch (1..366). Uses local time (IST) so the OLED and
+//  dashboard both show Chandni's Sep 10 birthday on the right day.
 uint16_t dayOfYear(uint32_t epoch);
 
-//  24-hour time as "HH:MM:SS" (8 chars + NUL).
+//  24-hour time as "HH:MM:SS" (8 chars + NUL). Local time (IST).
 void     formatTime(char* out, size_t outSize, uint32_t epoch);
 
-//  Short date as "Sat, 5 Sep" (12 chars + NUL).
+//  Short date as "Sat, 5 Sep" (12 chars + NUL). Local date (IST).
 void     formatDate(char* out, size_t outSize, uint32_t epoch);
 
-//  Checks if the epoch falls on Chandni's birthday (Sep 10)
+//  Checks if the local date falls on Chandni's birthday (Sep 10)
 bool     isBirthday(uint32_t epoch);
 
 //  Calculates the age Chandni enters on Sep 10 of this epoch's year (born Sep 10, 2004)

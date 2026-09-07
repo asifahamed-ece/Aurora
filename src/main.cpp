@@ -245,7 +245,8 @@ void loop() {
     // --- Midnight Check (12:00 AM) -> Message of the Day Reminder ---
     uint32_t epoch = AuroraState::instance().epoch();
     if (epoch > 0) {
-        uint32_t h = (epoch / 3600) % 24;
+        uint32_t local = aurora_clock::toLocal(epoch);
+        uint32_t h = (local / 3600) % 24;
         uint16_t doy = aurora_clock::dayOfYear(epoch);
         if (h == 0 && AuroraState::instance().midnightAckDoy() != doy) {
             display.setMidnightReminder(true);

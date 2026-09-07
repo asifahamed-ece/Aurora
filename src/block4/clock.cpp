@@ -5,10 +5,17 @@
  *
  *  Time math is intentionally hand-rolled (no <ctime>) — the C3 is short
  *  on flash, and we only need a handful of fields, not the whole libc.
+ *
+ *  The dashboard and any NTP source feed us raw UTC seconds. We display
+ *  everything in IST (UTC+5:30) by adding kIstOffsetSec at the boundary.
+ *  Internal storage stays in UTC so a future timezone change is one constant.
  */
 #include "clock.h"
 
 namespace aurora_clock {
+
+// IST = UTC+5:30 = 19800 seconds. Single source of truth for the offset.
+static constexpr uint32_t kIstOffsetSec = 5UL * 3600UL + 30UL * 60UL;
 
 static const char* kDayShort[7]   = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 static const char* kMonthShort[12] = {
@@ -35,9 +42,15 @@ static uint32_t daysToYearStart(uint16_t year) {
     return days;
 }
 
+// Public: convert stored UTC epoch to local epoch (IST).
+uint32_t toLocal(uint32_t epoch) {
+    return epoch + kIstOffsetSec;
+}
+
 uint16_t dayOfYear(uint32_t epoch) {
+    uint32_t local = toLocal(epoch);
     //  Split into date + time-of-day.
-    uint32_t days = epoch / 86400;
+    uint32_t days = local / 86400;
     uint16_t y = 1970;
     while (true) {
         uint32_t yd = isLeap(y) ? 366 : 365;
@@ -57,15 +70,17 @@ uint16_t dayOfYear(uint32_t epoch) {
 }
 
 void formatTime(char* out, size_t outSize, uint32_t epoch) {
-    uint32_t s  = epoch % 60;
-    uint32_t m  = (epoch / 60) % 60;
-    uint32_t h  = (epoch / 3600) % 24;
+    uint32_t local = toLocal(epoch);
+    uint32_t s  = local % 60;
+    uint32_t m  = (local / 60) % 60;
+    uint32_t h  = (local / 3600) % 24;
     snprintf(out, outSize, "%02lu:%02lu:%02lu",
              (unsigned long)h, (unsigned long)m, (unsigned long)s);
 }
 
 void formatDate(char* out, size_t outSize, uint32_t epoch) {
-    uint32_t days = epoch / 86400;
+    uint32_t local = toLocal(epoch);
+    uint32_t days = local / 86400;
     uint16_t y = 1970;
     while (true) {
         uint32_t yd = isLeap(y) ? 366 : 365;
@@ -81,13 +96,14 @@ void formatDate(char* out, size_t outSize, uint32_t epoch) {
         days -= md;
     }
     uint8_t day = (uint8_t)(days + 1);
-    uint8_t dow = (uint8_t)((epoch / 86400 + 4) % 7);   // 1970-01-01 was Thursday (4)
+    uint8_t dow = (uint8_t)((local / 86400 + 4) % 7);   // 1970-01-01 was Thursday (4)
     snprintf(out, outSize, "%s, %u %s",
              kDayShort[dow], (unsigned)day, kMonthShort[m]);
 }
 
 bool isBirthday(uint32_t epoch) {
-    uint32_t days = epoch / 86400;
+    uint32_t local = toLocal(epoch);
+    uint32_t days = local / 86400;
     uint16_t y = 1970;
     while (true) {
         uint32_t yd = isLeap(y) ? 366 : 365;
@@ -108,7 +124,8 @@ bool isBirthday(uint32_t epoch) {
 }
 
 uint8_t birthdayAge(uint32_t epoch) {
-    uint32_t days = epoch / 86400;
+    uint32_t local = toLocal(epoch);
+    uint32_t days = local / 86400;
     uint16_t y = 1970;
     while (true) {
         uint32_t yd = isLeap(y) ? 366 : 365;

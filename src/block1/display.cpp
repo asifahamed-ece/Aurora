@@ -311,8 +311,9 @@ void AuroraDisplay::renderModeBadge(uint32_t now) {
 
 void AuroraDisplay::renderClockDate(uint32_t now) {
     uint32_t epoch = AuroraState::instance().epoch();
-    uint32_t h = (epoch / 3600) % 24;
-    uint32_t m = (epoch / 60) % 60;
+    uint32_t local = aurora_clock::toLocal(epoch);
+    uint32_t h = (local / 3600) % 24;
+    uint32_t m = (local / 60) % 60;
 
     // 1. Contextual Greeting Header (Top) - Clean, measured, no ASCII <3
     const char* greeting;
