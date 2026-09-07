@@ -22,8 +22,11 @@ AuroraState::AuroraState()
       _epoch(0), _epochBaseMs(0), _bootCount(0), _midnightAckDoy(0) {}
 
 void AuroraState::setEpoch(uint32_t epoch) {
+    if (epoch == _epoch) return;  // no change → no NVS wear
     _epoch = epoch;
     _epochBaseMs = millis();
+    // Persist so the next boot doesn't restart from a stale compile-time seed
+    saveKey("epoch", _epoch);
 }
 
 uint32_t AuroraState::epoch() const {
@@ -48,10 +51,17 @@ void AuroraState::begin() {
         _bootCount = prefs.getUInt("boot_cnt", 0) + 1;
         prefs.putUInt("boot_cnt", _bootCount);
         _midnightAckDoy = prefs.getUShort("mid_ack", 0);
+        // Restore last-known epoch if any (post 2024 sanity check so a wiped
+        // NVS doesn't seed us with 0, which would brick the date math).
+        uint32_t savedEpoch = prefs.getUInt("epoch", 0);
+        if (savedEpoch > 1700000000UL) {
+            _epoch      = savedEpoch;
+            _epochBaseMs = millis();
+        }
         prefs.end();
     }
-    DBG_PRINTF("[NVS] Loaded keepsake stats: WarmTouches=%u (boot #%u, lastTouchEpoch=%u)\n",
-               _touches, _bootCount, _lastTouchEpoch);
+    DBG_PRINTF("[NVS] Loaded keepsake stats: WarmTouches=%u (boot #%u, lastTouchEpoch=%u epoch=%u)\n",
+               _touches, _bootCount, _lastTouchEpoch, (unsigned)_epoch);
 }
 
 void AuroraState::bumpTouches() {

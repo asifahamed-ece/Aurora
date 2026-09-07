@@ -167,10 +167,16 @@ void setup() {
         while (true) { delay(1000); }
     }
 
-    // --- Clock: seed with compile-time epoch ---
-    AuroraState::instance().setEpoch(compileEpoch());
-    DBG_PRINTF("[CLK] epoch=%u (%s)\n",
-               (unsigned)AuroraState::instance().epoch(), __DATE__);
+    // --- Clock: prefer last-saved epoch (from NVS); fall back to compile time ---
+    uint32_t seededEpoch = AuroraState::instance().epoch();
+    if (seededEpoch == 0) {
+        seededEpoch = compileEpoch();
+        AuroraState::instance().setEpoch(seededEpoch);
+        DBG_PRINTF("[CLK] seeded from compile time: epoch=%u (%s)\n",
+                   (unsigned)seededEpoch, __DATE__);
+    } else {
+        DBG_PRINTF("[CLK] restored from NVS: epoch=%u\n", (unsigned)seededEpoch);
+    }
 
     DBG_PRINTLN();
     DBG_PRINTF("[SYS] SSID: %s  pass: %s  http://%u.%u.%u.%u/\n",
