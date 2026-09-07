@@ -19,8 +19,7 @@ AuroraState::AuroraState()
       _wifiOn(false), _ledOn(true),
       _touches(0), _lastTouchMs(0), _lastTouchEpoch(0),
       _pendingTouchReaction(false),
-      _btnUp(0), _btnSel(0), _btnDown(0), _btnWifi(0),
-      _epoch(0), _epochBaseMs(0), _bootCount(0) {}
+      _epoch(0), _epochBaseMs(0), _bootCount(0), _midnightAckDoy(0) {}
 
 void AuroraState::setEpoch(uint32_t epoch) {
     _epoch = epoch;
@@ -38,16 +37,17 @@ void AuroraState::begin() {
     if (prefs.begin("aurora", false)) {
         _touches        = prefs.getUInt("touches", 0);
         _lastTouchEpoch = prefs.getUInt("last_touch", 0);
-        _btnUp          = prefs.getUInt("btn_up", 0);
-        _btnSel         = prefs.getUInt("btn_sel", 0);
-        _btnDown        = prefs.getUInt("btn_down", 0);
-        _btnWifi        = prefs.getUInt("btn_wifi", 0);
-        if (_touches == 0 && (_btnUp || _btnSel || _btnDown || _btnWifi)) {
-            _touches = _btnUp + _btnSel + _btnDown + _btnWifi;
+        uint32_t btnUp   = prefs.getUInt("btn_up", 0);
+        uint32_t btnSel  = prefs.getUInt("btn_sel", 0);
+        uint32_t btnDown = prefs.getUInt("btn_down", 0);
+        uint32_t btnWifi = prefs.getUInt("btn_wifi", 0);
+        if (_touches == 0 && (btnUp || btnSel || btnDown || btnWifi)) {
+            _touches = btnUp + btnSel + btnDown + btnWifi;
             prefs.putUInt("touches", _touches);
         }
         _bootCount = prefs.getUInt("boot_cnt", 0) + 1;
         prefs.putUInt("boot_cnt", _bootCount);
+        _midnightAckDoy = prefs.getUShort("mid_ack", 0);
         prefs.end();
     }
     DBG_PRINTF("[NVS] Loaded keepsake stats: WarmTouches=%u (boot #%u, lastTouchEpoch=%u)\n",
@@ -69,6 +69,15 @@ void AuroraState::setBattery(uint16_t mv, uint8_t pct, BatStatus s) {
     _batMv     = mv;
     _batPct    = pct;
     _batStatus = s;
+}
+
+void AuroraState::setMidnightAckDoy(uint16_t doy) {
+    _midnightAckDoy = doy;
+    Preferences prefs;
+    if (prefs.begin("aurora", false)) {
+        prefs.putUShort("mid_ack", doy);
+        prefs.end();
+    }
 }
 
 const char* AuroraState::batteryStatusString() const {

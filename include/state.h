@@ -50,16 +50,6 @@ public:
         return false;
     }
 
-    // Legacy aliases for physical buttons
-    void    bumpBtnUp()    { bumpTouches(); }
-    void    bumpBtnSel()   { bumpTouches(); }
-    void    bumpBtnDown()  { bumpTouches(); }
-    void    bumpBtnWifi()  { bumpTouches(); }
-    uint32_t btnUp()    const { return _touches; }
-    uint32_t btnSel()   const { return _touches; }
-    uint32_t btnDown()  const { return _touches; }
-    uint32_t btnWifi()  const { return _touches; }
-
     // ---- Time (dynamically advances with millis) ----
     void     setEpoch(uint32_t epoch);
     uint32_t epoch() const;
@@ -67,6 +57,10 @@ public:
     // ---- Boot count (for diagnostics) ----
     uint32_t bootCount()       const { return _bootCount; }
     void     incBootCount()         { _bootCount++; }
+
+    // ---- Midnight Ack DOY (persisted to NVS) ----
+    uint16_t midnightAckDoy() const { return _midnightAckDoy; }
+    void     setMidnightAckDoy(uint16_t doy);
 
 private:
     AuroraState();
@@ -80,13 +74,10 @@ private:
     uint32_t  _lastTouchMs;
     uint32_t  _lastTouchEpoch;
     bool      _pendingTouchReaction;
-    uint32_t  _btnUp;
-    uint32_t  _btnSel;
-    uint32_t  _btnDown;
-    uint32_t  _btnWifi;
     uint32_t  _epoch;
     uint32_t  _epochBaseMs;
     uint32_t  _bootCount;
+    uint16_t  _midnightAckDoy;
 };
 
 #endif // AURORA_BLOCK4_STATE_H
