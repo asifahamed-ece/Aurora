@@ -2,7 +2,11 @@
  *  Aurora — Birthday Gift Firmware
  *  File: src/block1/display.cpp
  *
- *  OLED display driver and Animated Deskmate ("Aurora") Character Engine.
+ *  OLED display driver and multi-mode engine:
+ *  - Mode 1: Animated Deskmate Companion ("Aurora")
+ *  - Mode 2: Clock, Date & Contextual Greeting
+ *  - Mode 3: Daily Thought / Affirmation Card
+ *  - Mode 4: Heartbeat Keepsake & ECG Pulse
  *  Supports both SSD1306 (0.96") and SH1106 (1.3") displays with U8g2.
  */
 
@@ -22,15 +26,15 @@ U8G2_SH1106_128X64_NONAME_F_HW_I2C _u8g2(U8G2_R0);
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C _u8g2(U8G2_R0);
 #endif
 
-// Romantic rotating reactions for Warm Touches (Clean typography, no <3)
+// Romantic rotating reactions for Warm Touches
 static const char* const kTouchReactions[] = {
     "Warm Touch felt!",
     "Aurora loves you!",
     "You're my favorite",
     "Stay cozy, Chandni",
-    "So warm and sweet",
+    "So warm and sweet <3",
     "Made with love for you",
-    "Hehehe, thank you!",
+    "Hehehe, thank you! <3",
     "You light up my world"
 };
 static constexpr uint8_t NUM_TOUCH_REACTIONS = sizeof(kTouchReactions) / sizeof(kTouchReactions[0]);
@@ -52,7 +56,10 @@ bool AuroraDisplay::begin() {
     _popupActive = false;
     _popupEndsAtMs = 0;
 
-    // Initialize Deskmate State
+    // Initialize Modes & Deskmate State
+    _screenMode = ScreenMode::DESKMATE;
+    _modeBadgeUntilMs = 0;
+
     _mood = DeskmateMood::IDLE_NORMAL;
     _moodStartMs = millis();
     _lastFrameMs = 0;
@@ -76,9 +83,30 @@ bool AuroraDisplay::begin() {
     initHearts();
 
     const char* driver = AURORA_OLED_DRIVER == 1 ? "SH1106" : "SSD1306";
-    DBG_PRINTF("[OLED] begin() OK — %s %dx%d (Deskmate Engine Ready)\n",
+    DBG_PRINTF("[OLED] begin() OK — %s %dx%d (Multi-mode Engine Ready)\n",
                driver, AURORA_OLED_WIDTH, AURORA_OLED_HEIGHT);
     return true;
+}
+
+void AuroraDisplay::setScreenMode(ScreenMode mode) {
+    _screenMode = mode;
+    _modeBadgeUntilMs = millis() + 1200; // Display toast badge for 1.2s
+    DBG_PRINTF("[OLED] Screen Mode changed to %d (%s)\n", (int)_screenMode, screenModeName());
+}
+
+void AuroraDisplay::cycleScreenMode() {
+    uint8_t next = ((uint8_t)_screenMode + 1) % 4;
+    setScreenMode((ScreenMode)next);
+}
+
+const char* AuroraDisplay::screenModeName() const {
+    switch (_screenMode) {
+        case ScreenMode::DESKMATE:           return "Aurora Deskmate";
+        case ScreenMode::CLOCK_DATE:         return "Clock & Greeting";
+        case ScreenMode::DAILY_QUOTE:        return "Daily Thought";
+        case ScreenMode::HEARTBEAT_KEEPSAKE: return "Keepsake Pulse";
+    }
+    return "Aurora";
 }
 
 void AuroraDisplay::initHearts() {
@@ -140,14 +168,14 @@ void AuroraDisplay::triggerWarmTouch() {
 
     _touchReactionIdx = (_touchReactionIdx + 1) % NUM_TOUCH_REACTIONS;
 
-    // Spawn an instant celebratory burst of floating hearts!
+    // Spawn an instant celebratory burst of floating hearts
     spawnHeart(24,  56, random(6, 10), 2200);
     spawnHeart(64,  58, random(8, 12), 2600);
     spawnHeart(104, 56, random(6, 10), 2400);
     spawnHeart(40,  62, random(7, 11), 2000);
     spawnHeart(88,  62, random(7, 11), 2100);
 
-    DBG_PRINTLN(F("[DESKMATE] Warm Touch triggered! Love mood active <3"));
+    DBG_PRINTLN(F("[TOUCH] Warm Touch triggered! Love mood active <3"));
 }
 
 void AuroraDisplay::setMood(DeskmateMood mood) {
@@ -164,7 +192,7 @@ void AuroraDisplay::setMidnightReminder(bool active) {
     _midnightReminder = active;
 }
 
-void AuroraDisplay::updateDeskmate() {
+void AuroraDisplay::update() {
     uint32_t now = millis();
 
     // Check popup auto-dismiss
@@ -224,7 +252,6 @@ void AuroraDisplay::updateDeskmate() {
         _blinkDurationMs = random(140, 190);
     } else if (_isBlinking && (now - _blinkStartMs) >= _blinkDurationMs) {
         _isBlinking = false;
-        // Next blink in 2.5 to 5.5 seconds, with occasional rapid double blink
         if (random(0, 5) == 0) {
             _nextBlinkMs = now + 180; // Rapid double blink!
         } else {
@@ -232,24 +259,6 @@ void AuroraDisplay::updateDeskmate() {
         }
     }
 
-    switch (_screenMode) {
-        case ScreenMode::CLOCK_DATE:
-            renderClockDate(now);
-            break;
-        case ScreenMode::DAILY_THOUGHT:
-            renderDailyThought(now);
-            break;
-        case ScreenMode::PULSE_METER:
-            renderPulseMeter(now);
-            break;
-        case ScreenMode::DESKMATE:
-        default:
-            renderDeskmate(now);
-            break;
-    }
-}
-
-void AuroraDisplay::renderDeskmate(uint32_t now) {
     _u8g2.clearBuffer();
     _u8g2.setDrawColor(1);
 
@@ -260,6 +269,253 @@ void AuroraDisplay::renderDeskmate(uint32_t now) {
         return;
     }
 
+    // Render the active screen mode
+    switch (_screenMode) {
+        case ScreenMode::CLOCK_DATE:
+            renderClockDate(now);
+            break;
+        case ScreenMode::DAILY_QUOTE:
+            renderDailyQuote(now);
+            break;
+        case ScreenMode::HEARTBEAT_KEEPSAKE:
+            renderHeartbeat(now);
+            break;
+        case ScreenMode::DESKMATE:
+        default:
+            renderDeskmate(now);
+            break;
+    }
+
+    // Overlay mode transition badge if active
+    if (now < _modeBadgeUntilMs) {
+        renderModeBadge(now);
+    }
+
+    _u8g2.sendBuffer();
+}
+
+void AuroraDisplay::renderModeBadge(uint32_t now) {
+    const char* name = screenModeName();
+    _u8g2.setFont(u8g2_font_5x7_tf);
+    int w = _u8g2.getStrWidth(name);
+    int x = (AURORA_OLED_WIDTH - (w + 12)) / 2;
+
+    _u8g2.setDrawColor(0);
+    _u8g2.drawRBox(x, 1, w + 12, 11, 2);
+    _u8g2.setDrawColor(1);
+    _u8g2.drawRFrame(x, 1, w + 12, 11, 2);
+    _u8g2.drawStr(x + 6, 9, name);
+}
+
+void AuroraDisplay::renderClockDate(uint32_t now) {
+    uint32_t epoch = AuroraState::instance().epoch();
+    uint32_t h = (epoch / 3600) % 24;
+    uint32_t m = (epoch / 60) % 60;
+
+    // 1. Contextual Greeting Header (Top)
+    const char* greeting;
+    if (aurora_clock::isBirthday(epoch)) {
+        greeting = "* Happy Birthday Chandni! *";
+    } else if (h >= 5 && h < 12) {
+        greeting = "Good morning, Chandni <3";
+    } else if (h >= 12 && h < 17) {
+        greeting = "Good afternoon, Chandni <3";
+    } else if (h >= 17 && h < 22) {
+        greeting = "Good evening, Chandni <3";
+    } else {
+        greeting = "Sweet dreams, Moon <3";
+    }
+
+    _u8g2.setFont(u8g2_font_6x10_tr);
+    int gw = _u8g2.getStrWidth(greeting);
+    int gx = (AURORA_OLED_WIDTH - gw) / 2;
+    if (gx < 2) gx = 2;
+    _u8g2.drawStr(gx, 11, greeting);
+    _u8g2.drawHLine(6, 14, 116);
+
+    // 2. Large Curvy Digital Clock (Center)
+    char timeBuf[8];
+    // Blinking colon every 500ms
+    snprintf(timeBuf, sizeof(timeBuf), "%02lu%c%02lu",
+             (unsigned long)h, (now % 1000 < 500 ? ':' : ' '), (unsigned long)m);
+    _u8g2.setFont(u8g2_font_logisoso24_tn);
+    int tw = _u8g2.getStrWidth(timeBuf);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 43, timeBuf);
+
+    // Decorative corner hearts
+    drawHeart(12, 31, 5);
+    drawHeart(116, 31, 5);
+
+    // 3. Date at Bottom
+    char dateBuf[24];
+    aurora_clock::formatDate(dateBuf, sizeof(dateBuf), epoch);
+    _u8g2.setFont(u8g2_font_6x10_tr);
+    int dw = _u8g2.getStrWidth(dateBuf);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - dw) / 2, 59, dateBuf);
+
+    // Update floating hearts if active
+    updateAndDrawHearts(now);
+}
+
+void AuroraDisplay::renderDailyQuote(uint32_t now) {
+    uint32_t epoch = AuroraState::instance().epoch();
+    uint16_t doy = aurora_clock::dayOfYear(epoch);
+    uint8_t msgIdx = aurora_messages::indexForDoy(doy);
+    const char* msg = aurora_messages::kMessages[msgIdx];
+
+    // Header
+    _u8g2.setFont(u8g2_font_6x10_tr);
+    const char* header = "[ Today's Thought <3 ]";
+    int hw = _u8g2.getStrWidth(header);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - hw) / 2, 10, header);
+    _u8g2.drawHLine(4, 13, 120);
+
+    // Word-wrapped quote text
+    drawWrappedText(msg, 24, 4, 10);
+
+    // Floating hearts
+    updateAndDrawHearts(now);
+}
+
+void AuroraDisplay::drawPulseWave(int startX, int endX, int centerY) {
+    int curX = startX;
+
+    // Flat baseline
+    _u8g2.drawLine(curX, centerY, curX + 16, centerY);
+    curX += 16;
+
+    // Small P wave
+    _u8g2.drawLine(curX, centerY, curX + 4, centerY - 3);
+    _u8g2.drawLine(curX + 4, centerY - 3, curX + 8, centerY);
+    curX += 8;
+
+    // Flat segment
+    _u8g2.drawLine(curX, centerY, curX + 4, centerY);
+    curX += 4;
+
+    // Q dip
+    _u8g2.drawLine(curX, centerY, curX + 2, centerY + 2);
+    curX += 2;
+
+    // R sharp spike up
+    _u8g2.drawLine(curX, centerY + 2, curX + 6, centerY - 15);
+    curX += 6;
+
+    // S sharp spike down
+    _u8g2.drawLine(curX, centerY - 15, curX + 6, centerY + 9);
+    curX += 6;
+
+    // Return to baseline
+    _u8g2.drawLine(curX, centerY + 9, curX + 4, centerY);
+    curX += 4;
+
+    // T wave
+    _u8g2.drawLine(curX, centerY, curX + 6, centerY - 4);
+    _u8g2.drawLine(curX + 6, centerY - 4, curX + 12, centerY);
+    curX += 12;
+
+    // Return flat line to endX
+    if (curX < endX) {
+        _u8g2.drawLine(curX, centerY, endX, centerY);
+    }
+}
+
+void AuroraDisplay::renderHeartbeat(uint32_t now) {
+    // 1. Pulsing Beating Heart on the left
+    float beat = sinf((float)(now % 800) / 800.0f * 6.28318f);
+    int heartSize = 16 + (int)(beat * 3.5f);
+    drawHeart(26, 26, heartSize);
+
+    // 2. ECG pulse line on the right
+    drawPulseWave(50, 122, 26);
+
+    _u8g2.setFont(u8g2_font_5x7_tf);
+    _u8g2.drawStr(98, 12, "72 bpm");
+
+    _u8g2.drawHLine(6, 44, 116);
+
+    // 3. Lifetime Keepsake Touches Counter at Bottom
+    char buf[32];
+    snprintf(buf, sizeof(buf), "<3 %lu Warm Touches <3",
+             (unsigned long)AuroraState::instance().touches());
+    _u8g2.setFont(u8g2_font_6x12_tr);
+    int bw = _u8g2.getStrWidth(buf);
+    int bx = (AURORA_OLED_WIDTH - bw) / 2;
+    if (bx < 2) bx = 2;
+    _u8g2.drawStr(bx, 58, buf);
+
+    // Floating hearts
+    updateAndDrawHearts(now);
+}
+
+void AuroraDisplay::drawWrappedText(const char* text, int startY, int maxLines, int lineHeight) {
+    _u8g2.setFont(u8g2_font_5x7_tf);
+
+    const int maxLineWidth = 122;
+    int line = 0;
+    int y = startY;
+
+    const char* ptr = text;
+    char lineBuf[32];
+    int lineBufLen = 0;
+
+    while (*ptr && line < maxLines) {
+        // Skip leading space on new line
+        if (lineBufLen == 0 && *ptr == ' ') {
+            ptr++;
+            continue;
+        }
+
+        // Find next word
+        const char* wordStart = ptr;
+        while (*ptr && *ptr != ' ') ptr++;
+        int wordLen = ptr - wordStart;
+
+        // Check if word fits on current line
+        char testBuf[32];
+        if (lineBufLen == 0) {
+            snprintf(testBuf, sizeof(testBuf), "%.*s", wordLen, wordStart);
+        } else {
+            snprintf(testBuf, sizeof(testBuf), "%s %.*s", lineBuf, wordLen, wordStart);
+        }
+
+        if (_u8g2.getStrWidth(testBuf) <= maxLineWidth) {
+            // Fits on current line
+            strncpy(lineBuf, testBuf, sizeof(lineBuf) - 1);
+            lineBuf[sizeof(lineBuf) - 1] = '\0';
+            lineBufLen = strlen(lineBuf);
+            if (*ptr == ' ') ptr++;
+        } else {
+            // Line full, print lineBuf
+            if (lineBufLen > 0) {
+                int lw = _u8g2.getStrWidth(lineBuf);
+                _u8g2.drawStr((AURORA_OLED_WIDTH - lw) / 2, y, lineBuf);
+                line++;
+                y += lineHeight;
+                lineBufLen = 0;
+                lineBuf[0] = '\0';
+            } else {
+                // Single word exceeds line width, force print
+                strncpy(lineBuf, testBuf, sizeof(lineBuf) - 1);
+                lineBuf[sizeof(lineBuf) - 1] = '\0';
+                _u8g2.drawStr(2, y, lineBuf);
+                line++;
+                y += lineHeight;
+                lineBufLen = 0;
+                lineBuf[0] = '\0';
+                if (*ptr == ' ') ptr++;
+            }
+        }
+    }
+
+    // Print remaining line if space exists
+    if (lineBufLen > 0 && line < maxLines) {
+        int lw = _u8g2.getStrWidth(lineBuf);
+        _u8g2.drawStr((AURORA_OLED_WIDTH - lw) / 2, y, lineBuf);
+    }
+}
+
+void AuroraDisplay::renderDeskmate(uint32_t now) {
     int cx1 = 40 + _gazeX;
     int cx2 = 88 + _gazeX;
     int cy  = 26 + _gazeY;
@@ -276,7 +532,7 @@ void AuroraDisplay::renderDeskmate(uint32_t now) {
             }
             updateAndDrawHearts(now);
 
-            // Centered romantic reaction banner at the bottom (strictly bounds-checked)
+            // Centered romantic reaction banner at bottom
             _u8g2.setFont(u8g2_font_6x12_tr);
             const char* quote = kTouchReactions[_touchReactionIdx];
             int w = _u8g2.getStrWidth(quote);
@@ -302,7 +558,6 @@ void AuroraDisplay::renderDeskmate(uint32_t now) {
             drawSadEyes(cx1, cx2, cy, now);
             drawMouth(64, 47, DeskmateMood::LONELY_SAD);
 
-            // Gentle attention banner at bottom (guaranteed not clipped)
             _u8g2.setFont(u8g2_font_6x12_tr);
             const char* sadPrompt = "Miss you... Touch me?";
             int w = _u8g2.getStrWidth(sadPrompt);
@@ -335,8 +590,6 @@ void AuroraDisplay::renderDeskmate(uint32_t now) {
             break;
         }
     }
-
-    _u8g2.sendBuffer();
 }
 
 void AuroraDisplay::drawNormalEyes(int cx1, int cx2, int cy, int w, int h, uint8_t blinkPct) {
@@ -344,16 +597,13 @@ void AuroraDisplay::drawNormalEyes(int cx1, int cx2, int cy, int w, int h, uint8
     if (curH < 2) curH = 2;
 
     if (curH <= 3) {
-        // Closed eyelid slit
         _u8g2.drawHLine(cx1 - w / 2, cy, w);
         _u8g2.drawHLine(cx2 - w / 2, cy, w);
     } else {
         int r = curH > 8 ? 6 : (curH / 2);
-        // Rounded glowing eye boxes
         _u8g2.drawRBox(cx1 - w / 2, cy - curH / 2, w, curH, r);
         _u8g2.drawRBox(cx2 - w / 2, cy - curH / 2, w, curH, r);
 
-        // Soulful pupil highlights (cutouts in black)
         if (curH > 10) {
             _u8g2.setDrawColor(0);
             _u8g2.drawDisc(cx1 - 4, cy - curH / 5, 3, U8G2_DRAW_ALL);
@@ -366,7 +616,6 @@ void AuroraDisplay::drawNormalEyes(int cx1, int cx2, int cy, int w, int h, uint8
 }
 
 void AuroraDisplay::drawHappyEyes(int cx1, int cx2, int cy) {
-    // Cute arched anime smile eyes: ^  ^
     for (int dy = 0; dy <= 2; dy++) {
         _u8g2.drawCircle(cx1, cy + 4 + dy, 12, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
         _u8g2.drawCircle(cx2, cy + 4 + dy, 12, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
@@ -374,7 +623,6 @@ void AuroraDisplay::drawHappyEyes(int cx1, int cx2, int cy) {
 }
 
 void AuroraDisplay::drawHeartEyes(int cx1, int cx2, int cy, uint32_t now) {
-    // Pulsing heart eyes: <3  <3
     float beat = sinf((float)(now % 800) / 800.0f * 6.28318f);
     int heartSize = 16 + (int)(beat * 3.0f);
     drawHeart(cx1, cy, heartSize);
@@ -382,21 +630,17 @@ void AuroraDisplay::drawHeartEyes(int cx1, int cx2, int cy, uint32_t now) {
 }
 
 void AuroraDisplay::drawSadEyes(int cx1, int cx2, int cy, uint32_t now) {
-    // Droopy rounded eyes
     _u8g2.drawRBox(cx1 - 12, cy - 6, 24, 18, 4);
     _u8g2.drawRBox(cx2 - 12, cy - 6, 24, 18, 4);
 
-    // Slanted upper eyelid cutouts for sad expression
     _u8g2.setDrawColor(0);
     _u8g2.drawTriangle(cx1 - 14, cy - 8, cx1 + 14, cy - 8, cx1 + 14, cy + 2);
     _u8g2.drawTriangle(cx2 + 14, cy - 8, cx2 - 14, cy - 8, cx2 - 14, cy + 2);
 
-    // Sad pupil shines
     _u8g2.drawDisc(cx1, cy + 2, 2, U8G2_DRAW_ALL);
     _u8g2.drawDisc(cx2, cy + 2, 2, U8G2_DRAW_ALL);
     _u8g2.setDrawColor(1);
 
-    // Animated sliding teardrop on right cheek
     uint32_t t = (now - _tearStartMs) % 2200;
     float prog = (float)t / 2200.0f;
     int tearY = (cy + 2) + (int)(prog * 22);
@@ -407,13 +651,11 @@ void AuroraDisplay::drawSadEyes(int cx1, int cx2, int cy, uint32_t now) {
 }
 
 void AuroraDisplay::drawSleepingEyes(int cx1, int cx2, int cy, uint32_t now) {
-    // Curved resting eyes: ( -  - )
     for (int dy = 0; dy <= 2; dy++) {
         _u8g2.drawCircle(cx1, cy - 2 + dy, 11, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
         _u8g2.drawCircle(cx2, cy - 2 + dy, 11, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
     }
 
-    // Drifting "z Z Z" bubbles
     _u8g2.setFont(u8g2_font_5x7_tf);
     uint32_t phase = (now / 30) % 60;
     _u8g2.drawStr(102 + (phase / 10), 22 - (phase / 4), "z");
@@ -421,7 +663,6 @@ void AuroraDisplay::drawSleepingEyes(int cx1, int cx2, int cy, uint32_t now) {
 }
 
 void AuroraDisplay::drawCheeks(int cx1, int cx2, int cy) {
-    // Rosy blushing cheek slashes: ///
     int y = cy + 14;
     for (int i = -6; i <= 2; i += 4) {
         _u8g2.drawLine(cx1 + i - 2, y + 3, cx1 + i + 2, y - 3);
@@ -433,23 +674,19 @@ void AuroraDisplay::drawMouth(int cx, int cy, DeskmateMood mood) {
     switch (mood) {
         case DeskmateMood::LOVE_TOUCHED:
         case DeskmateMood::HAPPY:
-            // Cute open smile: \_/
             _u8g2.drawDisc(cx, cy - 1, 4, U8G2_DRAW_LOWER_LEFT | U8G2_DRAW_LOWER_RIGHT);
             break;
 
         case DeskmateMood::LONELY_SAD:
-            // Sad downward arc: n
             _u8g2.drawCircle(cx, cy + 3, 4, U8G2_DRAW_UPPER_LEFT | U8G2_DRAW_UPPER_RIGHT);
             break;
 
         case DeskmateMood::SLEEPING:
-            // Peaceful small line
             _u8g2.drawHLine(cx - 3, cy, 6);
             break;
 
         case DeskmateMood::IDLE_NORMAL:
         default:
-            // Cute cat mouth: w
             _u8g2.drawCircle(cx - 3, cy - 1, 3, U8G2_DRAW_LOWER_RIGHT | U8G2_DRAW_LOWER_LEFT);
             _u8g2.drawCircle(cx + 3, cy - 1, 3, U8G2_DRAW_LOWER_RIGHT | U8G2_DRAW_LOWER_LEFT);
             break;
@@ -457,13 +694,11 @@ void AuroraDisplay::drawMouth(int cx, int cy, DeskmateMood mood) {
 }
 
 void AuroraDisplay::drawMidnightScreen(uint32_t now) {
-    // Title
     _u8g2.setFont(u8g2_font_7x14_tr);
     const char* title = "12:00 Midnight!";
     int tw = _u8g2.getStrWidth(title);
     _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 13, title);
 
-    // Animated love envelope in the center
     int envX = 48;
     int envY = 18;
     int envW = 32;
@@ -473,12 +708,10 @@ void AuroraDisplay::drawMidnightScreen(uint32_t now) {
     _u8g2.drawLine(envX, envY, envX + envW / 2, envY + 11);
     _u8g2.drawLine(envX + envW, envY, envX + envW / 2, envY + 11);
 
-    // Heart wax seal in center
     float beat = sinf((float)(now % 900) / 900.0f * 6.28318f);
     int sealSize = 6 + (int)(beat * 1.5f);
     drawHeart(envX + envW / 2, envY + 10, sealSize);
 
-    // Glimmer sparkles around envelope
     if ((now / 200) % 2 == 0) {
         _u8g2.drawPixel(34, 22);
         _u8g2.drawPixel(34, 24);
@@ -491,7 +724,6 @@ void AuroraDisplay::drawMidnightScreen(uint32_t now) {
         _u8g2.drawPixel(95, 31);
     }
 
-    // Call-to-action text: clean, centered, no clipping
     _u8g2.setFont(u8g2_font_6x12_tr);
     const char* sub = "Daily Message Ready!";
     int sw = _u8g2.getStrWidth(sub);
@@ -604,210 +836,5 @@ void AuroraDisplay::clear() {
 }
 
 void AuroraDisplay::display() {
-    _u8g2.sendBuffer();
-}
-
-void AuroraDisplay::sleep() {
-    _u8g2.clearBuffer();
-    _u8g2.sendBuffer();
-    _u8g2.setPowerSave(1); // Turn off OLED display panel & internal charge pump (0 uA)
-}
-
-void AuroraDisplay::wake() {
-    _u8g2.setPowerSave(0); // Power on OLED panel
-}
-
-void AuroraDisplay::cycleScreenMode() {
-    uint8_t next = ((uint8_t)_screenMode + 1) % (uint8_t)ScreenMode::MODE_COUNT;
-    _screenMode = (ScreenMode)next;
-    _modeBadgeUntilMs = millis() + 900;
-}
-
-void AuroraDisplay::setScreenMode(ScreenMode mode) {
-    _screenMode = mode;
-    _modeBadgeUntilMs = millis() + 900;
-}
-
-void AuroraDisplay::drawWrappedText(int x, int y, const char* text, int maxW, int lineH) {
-    if (!text || *text == '\0') return;
-    char word[32];
-    char line[64] = {0};
-    const char* p = text;
-    int curY = y;
-
-    while (*p) {
-        while (*p == ' ') p++;
-        if (!*p) break;
-
-        int wlen = 0;
-        while (*p && *p != ' ' && *p != '\n' && wlen < 31) {
-            word[wlen++] = *p++;
-        }
-        word[wlen] = '\0';
-
-        char testLine[64];
-        if (line[0] == '\0') {
-            strncpy(testLine, word, sizeof(testLine));
-        } else {
-            snprintf(testLine, sizeof(testLine), "%s %s", line, word);
-        }
-
-        if (_u8g2.getStrWidth(testLine) <= maxW) {
-            strncpy(line, testLine, sizeof(line));
-        } else {
-            if (line[0] != '\0') {
-                _u8g2.drawStr(x, curY, line);
-                curY += lineH;
-            }
-            strncpy(line, word, sizeof(line));
-        }
-
-        if (*p == '\n') {
-            if (line[0] != '\0') {
-                _u8g2.drawStr(x, curY, line);
-                curY += lineH;
-                line[0] = '\0';
-            }
-            p++;
-        }
-    }
-
-    if (line[0] != '\0') {
-        _u8g2.drawStr(x, curY, line);
-    }
-}
-
-void AuroraDisplay::renderClockDate(uint32_t now) {
-    _u8g2.clearBuffer();
-    _u8g2.setDrawColor(1);
-
-    uint32_t localEp = AuroraState::instance().localEpoch();
-    char timeStr[16] = "--:--";
-    char dateStr[24] = "Connecting time...";
-    
-    if (localEp > 0) {
-        aurora_clock::formatTime(timeStr, sizeof(timeStr), localEp);
-        aurora_clock::formatDate(dateStr, sizeof(dateStr), localEp);
-    }
-
-    // 1. Dynamic Contextual Greeting Banner
-    _u8g2.setFont(u8g2_font_6x12_tr);
-    const char* greeting = "Sweet dreams, Moon";
-    if (localEp > 0) {
-        uint32_t h = (localEp / 3600) % 24;
-        if (aurora_clock::isBirthday(localEp)) {
-            greeting = "Happy Birthday Chandni!";
-        } else if (h >= 5 && h < 12) {
-            greeting = "Good morning, Chandni";
-        } else if (h >= 12 && h < 17) {
-            greeting = "Good afternoon, Chandni";
-        } else if (h >= 17 && h < 22) {
-            greeting = "Good evening, Chandni";
-        }
-    }
-    int gw = _u8g2.getStrWidth(greeting);
-    int gx = (AURORA_OLED_WIDTH - gw) / 2;
-    if (gx < 8) gx = 8;
-    _u8g2.drawStr(gx, 12, greeting);
-    drawHeart(gx - 6, 8, 3);
-    drawHeart(gx + gw + 6, 8, 3);
-
-    // 2. Curvy Digital Clock
-    if ((now / 500) % 2 != 0 && strlen(timeStr) >= 5) {
-        timeStr[2] = ' '; // blink colon every 500ms
-    }
-    _u8g2.setFont(u8g2_font_fur20_tn);
-    int tw = _u8g2.getStrWidth(timeStr);
-    int tx = (AURORA_OLED_WIDTH - tw) / 2;
-    _u8g2.drawStr(tx, 40, timeStr);
-
-    // 3. Formatted Calendar Date
-    _u8g2.setFont(u8g2_font_6x10_tr);
-    int dw = _u8g2.getStrWidth(dateStr);
-    int dx = (AURORA_OLED_WIDTH - dw) / 2;
-    if (dx < 4) dx = 4;
-    _u8g2.drawStr(dx, 58, dateStr);
-
-    updateAndDrawHearts(now);
-    _u8g2.sendBuffer();
-}
-
-void AuroraDisplay::renderDailyThought(uint32_t now) {
-    _u8g2.clearBuffer();
-    _u8g2.setDrawColor(1);
-
-    // Header: [ Today's Thought ] flanked by geometric hearts
-    _u8g2.setFont(u8g2_font_6x12_tr);
-    const char* header = "[ Today's Thought ]";
-    int hw = _u8g2.getStrWidth(header);
-    int hx = (AURORA_OLED_WIDTH - hw) / 2;
-    _u8g2.drawStr(hx, 11, header);
-    drawHeart(hx - 6, 7, 3);
-    drawHeart(hx + hw + 6, 7, 3);
-
-    _u8g2.drawHLine(8, 14, 112);
-
-    // Body text wrapped within 112px safe margins
-    _u8g2.setFont(u8g2_font_5x7_tf);
-    uint32_t ep = AuroraState::instance().localEpoch();
-    uint16_t doy = aurora_clock::dayOfYear(ep > 0 ? ep : 0);
-    uint8_t msgIdx = aurora_messages::indexForDoy(doy);
-    const char* msg = aurora_messages::kMessages[msgIdx];
-    drawWrappedText(8, 25, msg, 112, 9);
-
-    updateAndDrawHearts(now);
-    _u8g2.sendBuffer();
-}
-
-void AuroraDisplay::renderPulseMeter(uint32_t now) {
-    _u8g2.clearBuffer();
-    _u8g2.setDrawColor(1);
-
-    // Header
-    _u8g2.setFont(u8g2_font_6x10_tr);
-    const char* title = "Heartbeat Keepsake";
-    int tw = _u8g2.getStrWidth(title);
-    int tx = (AURORA_OLED_WIDTH - tw) / 2;
-    _u8g2.drawStr(tx, 9, title);
-
-    // Dynamic BPM: 72 steady, accelerates to 118 on touch for 7 seconds
-    bool isExcited = (now - AuroraState::instance().lastTouchMs()) < 7000;
-    uint8_t bpm = isExcited ? 118 : 72;
-    uint8_t heartSize = isExcited ? (5 + (now / 150) % 3) : (4 + (now / 350) % 2);
-
-    // Beating geometric heart
-    drawHeart(64, 23, heartSize);
-
-    // Dynamic real-time sweeping ECG line
-    int sweepX = (now / 15) % 116;
-    for (int x = 6; x < 122; x++) {
-        int relX = (x + (now / 12)) % 60;
-        int yOffset = 0;
-        if (relX >= 20 && relX < 24) yOffset = -2;      // P wave
-        else if (relX == 28) yOffset = 3;               // Q
-        else if (relX == 30) yOffset = -14;             // R peak
-        else if (relX == 32) yOffset = 6;               // S
-        else if (relX >= 36 && relX < 42) yOffset = -3; // T wave
-
-        int y = 38 + yOffset;
-        if (x != (sweepX + 6)) {
-            _u8g2.drawPixel(x, y);
-        }
-    }
-    _u8g2.drawDisc(sweepX + 6, 38, 2); // moving sweep blip
-
-    // Keepsake Warm Touches lifetime counter & BPM
-    char buf[36];
-    snprintf(buf, sizeof(buf), "%u Touches - %u BPM",
-             (unsigned)AuroraState::instance().touches(), bpm);
-    _u8g2.setFont(u8g2_font_5x7_tf);
-    int bw = _u8g2.getStrWidth(buf);
-    int bx = (AURORA_OLED_WIDTH - bw) / 2;
-    if (bx < 4) bx = 4;
-    _u8g2.drawStr(bx, 58, buf);
-    drawHeart(bx - 5, 55, 3);
-    drawHeart(bx + bw + 5, 55, 3);
-
-    updateAndDrawHearts(now);
     _u8g2.sendBuffer();
 }

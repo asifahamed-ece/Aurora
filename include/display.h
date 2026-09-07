@@ -24,23 +24,16 @@ enum class DeskmateMood : uint8_t {
     SLEEPING            // Late-night calm curved sleeping eyes, drifting z Z Z
 };
 
-// OLED Screen Display Modes (looped with Button 0 presses)
+// OLED screen modes cycled by the multi-function button (short press).
 enum class ScreenMode : uint8_t {
-    DESKMATE = 0,       // Mode 1: Animated Living Deskmate Pet Face
-    CLOCK_DATE,         // Mode 2: Large Digital Clock (IST) & Date with Contextual Greeting
-    DAILY_THOUGHT,      // Mode 3: Today's Thought of the Day (30 daily love messages)
-    PULSE_METER,        // Mode 4: Dynamic Animated Heartbeat ECG Pulse Meter
-    MODE_COUNT
+    DESKMATE = 0,         // Animated Aurora deskmate (default)
+    CLOCK_DATE,           // Large digital clock + contextual greeting + date
+    DAILY_QUOTE,          // Today's rotating daily thought
+    HEARTBEAT_KEEPSAKE    // Pulsing heart + ECG pulse + lifetime Warm Touches
 };
 
 class AuroraDisplay {
 public:
-    /**
-     * Cycle through display screens: Deskmate -> Clock -> Thought -> Pulse -> Deskmate
-     */
-    void cycleScreenMode();
-    void setScreenMode(ScreenMode mode);
-    ScreenMode screenMode() const { return _screenMode; }
     /**
      * Initialize the display hardware. Returns true on success.
      * MUST be called once in setup() before any draw call.
@@ -53,10 +46,15 @@ public:
     void showBootScreen();
 
     /**
-     * Main Deskmate animation loop update - call frequently in loop().
-     * Throttled internally to ~20 FPS.
+     * Main animation loop update - call frequently in loop().
+     * Throttled internally to ~20 FPS. Renders the active ScreenMode.
      */
-    void updateDeskmate();
+    void update();
+
+    /**
+     * Backwards-compatible alias for update(). Older callers used this name.
+     */
+    void updateDeskmate() { update(); }
 
     /**
      * Trigger a Warm Touch reaction on the deskmate!
@@ -76,6 +74,26 @@ public:
      */
     void setMidnightReminder(bool active);
     bool isMidnightReminderActive() const { return _midnightReminder; }
+
+    /**
+     * Switch to a specific ScreenMode and pop a brief badge toast.
+     */
+    void setScreenMode(ScreenMode mode);
+
+    /**
+     * Cycle to the next ScreenMode (wraps around).
+     */
+    void cycleScreenMode();
+
+    /**
+     * Human-readable name of the current ScreenMode (for serial logs).
+     */
+    const char* screenModeName() const;
+
+    /**
+     * Current ScreenMode (used by main loop for serial printouts).
+     */
+    ScreenMode currentScreenMode() const { return _screenMode; }
 
     /**
      * Utility: Draw a smooth, filled geometric heart at (cx, cy) with given size.
@@ -118,16 +136,6 @@ public:
      */
     void display();
 
-    /**
-     * Put OLED panel into deep hardware power-down (0 uA).
-     */
-    void sleep();
-
-    /**
-     * Wake OLED panel from hardware power-down.
-     */
-    void wake();
-
 private:
     // Popup state
     bool     _popupActive;
@@ -140,6 +148,10 @@ private:
     uint32_t _loveUntilMs;
     bool     _midnightReminder;
     uint8_t  _touchReactionIdx;
+
+    // Screen mode engine
+    ScreenMode _screenMode;
+    uint32_t   _modeBadgeUntilMs;
 
     // Eye gaze / saccades
     int8_t   _gazeX;
@@ -174,16 +186,8 @@ private:
     void spawnHeart(int16_t x, int16_t y, uint8_t size, uint16_t lifetimeMs);
     void updateAndDrawHearts(uint32_t now);
 
-    // Screen mode sub-renderers
-    ScreenMode _screenMode { ScreenMode::DESKMATE };
-    uint32_t   _modeBadgeUntilMs { 0 };
-
+    // Sub-renderers for deskmate states
     void renderDeskmate(uint32_t now);
-    void renderClockDate(uint32_t now);
-    void renderDailyThought(uint32_t now);
-    void renderPulseMeter(uint32_t now);
-    void drawWrappedText(int x, int y, const char* text, int maxW, int lineH);
-
     void drawNormalEyes(int cx1, int cx2, int cy, int w, int h, uint8_t blinkPct);
     void drawHappyEyes(int cx1, int cx2, int cy);
     void drawHeartEyes(int cx1, int cx2, int cy, uint32_t now);
@@ -192,6 +196,14 @@ private:
     void drawCheeks(int cx1, int cx2, int cy);
     void drawMouth(int cx, int cy, DeskmateMood mood);
     void drawMidnightScreen(uint32_t now);
+
+    // Sub-renderers for the other screen modes
+    void renderModeBadge(uint32_t now);
+    void renderClockDate(uint32_t now);
+    void renderDailyQuote(uint32_t now);
+    void renderHeartbeat(uint32_t now);
+    void drawPulseWave(int startX, int endX, int centerY);
+    void drawWrappedText(const char* text, int startY, int maxLines, int lineHeight);
 };
 
 #endif // AURORA_DISPLAY_H
