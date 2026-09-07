@@ -514,12 +514,7 @@ void AuroraDisplay::drawWrappedText(const char* text, int startY, int maxLines, 
             if (*ptr == ' ') ptr++;
         } else {
             if (lineBufLen > 0) {
-                // If on last allowed line and more text remains, append "..."
-                if (line == maxLines - 1 && *ptr) {
-                    if (lineBufLen <= (int)sizeof(lineBuf) - 4) {
-                        strcat(lineBuf, "...");
-                    }
-                }
+                // Flush the current line, then retry this word on the next line
                 int lw = _u8g2.getStrWidth(lineBuf);
                 int lx = (AURORA_OLED_WIDTH - lw) / 2;
                 if (lx < 6) lx = 6;
@@ -528,6 +523,7 @@ void AuroraDisplay::drawWrappedText(const char* text, int startY, int maxLines, 
                 y += lineHeight;
                 lineBufLen = 0;
                 lineBuf[0] = '\0';
+                ptr = wordStart;  // retry the word that didn't fit
             } else {
                 strncpy(lineBuf, testBuf, sizeof(lineBuf) - 1);
                 lineBuf[sizeof(lineBuf) - 1] = '\0';
