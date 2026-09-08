@@ -16,13 +16,13 @@ The project has been upgraded to **Aurora Deskmate Edition** in `aurora-firmware
 
 | Subsystem | Status | Notes |
 |---|---|---|
-| **OLED Deskmate Engine** | ✅ PASSED | Living OLED pet with expressive eyes (normal, happy, heart eyes + floating hearts, sad/lonely after 5+ hours, midnight reminder, sleeping) |
+| **OLED Deskmate Engine** | ✅ PASSED | Living OLED pet with expressive eyes (normal, happy, heart eyes + floating hearts, sad/lonely after 1 hour, midnight reminder, sleeping) |
 | **Dashboard Touch Reaction on OLED** | ✅ PASSED | Touches sent from mobile web dashboard now trigger the exact same excited heart-eyes reaction and accelerated heartbeat on the physical OLED deskmate. |
 | **OLED Safe Margin & Anti-Clipping** | ✅ PASSED | Strict 114-116px width clamping with multi-line word wrapping and font scaling. Safe against bezel and SH1106 column shifts. |
 | **Emoji & Pixel-Art Hearts** | ✅ PASSED | Completely eliminated literal `<3` text strings; replaced with clean romantic phrasing and rendered pixel-art graphic hearts (`drawHeart`). |
 | **Dynamic Animated Pulse Meter** | ✅ PASSED | Heartbeat Keepsake mode features an animated, travelling ECG waveform and a dynamic lub-dub pulsing heart with BPM acceleration (72 to 120 BPM upon touch). |
 | **Multi-Function Button 2 (GPIO2)** | ✅ PASSED | Short press cycles OLED display modes (Deskmate -> Clock & Date -> Daily Quote -> Heartbeat Keepsake). 3-second long press toggles WiFi AP. |
-| **Attention / Neglect System** | ✅ PASSED | Tracks elapsed time since last touch; transitions to `LONELY_SAD` with droopy eyes, quivering mouth, sliding teardrop after 5+ hours. |
+| **Attention / Neglect System** | ✅ PASSED | Tracks elapsed time since last touch; transitions to `LONELY_SAD` with droopy eyes, quivering mouth, sliding teardrop after 1 hour. |
 | **Midnight Message Reminder** | ✅ PASSED | Automatically triggers at 00:00 (12:00 AM) with animated envelope, heart seal, sparkles, and daily message prompt. |
 | **LED Heartbeat Tempo Sync** | ✅ PASSED | Syncs LED breathing period to deskmate mood (800ms excited heartbeat when touched, 1500ms normal, 3200ms slow lonely sigh). |
 | **WiFi SoftAP & Captive Portal** | ✅ PASSED | SoftAP `Aurora` (`192.168.4.1`) with AsyncWebServer, AsyncWebSocket, DNS captive portal, and zero-crash RISC-V heap protection. |
@@ -80,7 +80,7 @@ Building FS image from 'data' directory to .pio/build/esp32c3/littlefs.bin
 | Sept 6 | Block 1 + Block 4 Merge | Unified setup/loop, LittleFS filesystem mount, AsyncTCP stack size increase to 8KB |
 | Sept 6 | RISC-V Stability Patch | Vendored `ESPAsyncWebServer-aurora` pre-allocating request buffer to prevent heap crashes |
 | Sept 6 | Birthday Milestone & Letters | Chapter 22 birthday detection, opening loading curtain, 6 keepsake letters, music box |
-| Sept 6 | Deskmate Fork & Modes | Consolidated to 2 buttons; animated OLED Deskmate engine; 4 display modes; 5hr neglect mechanism, 12 AM midnight reminder. |
+| Sept 6 | Deskmate Fork & Modes | Consolidated to 2 buttons; animated OLED Deskmate engine; 4 display modes; 1hr neglect mechanism, 12 AM midnight reminder. |
 | Sept 7 | **Interactive Polish & Bug Fixes** | **Dashboard touch OLED reaction hook, strict RHS safe margins, replaced `<3` with graphic mini-hearts, dynamic scrolling ECG pulse wave with 72->120 BPM acceleration on touch, and 3-second long press for WiFi toggle.** |
 
 ---

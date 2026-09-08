@@ -5,7 +5,7 @@
  *  Unified build: Block 1 (OLED + LED + buttons + battery) + Block 4 (WiFi AP + dashboard)
  *
  *  This is the final merged firmware. It combines:
- *    - Block 1: OLED status screen, LED breathing chaser, 4-button input, battery monitor
+ *    - Block 1: OLED status screen, LED breathing chaser, 2-button input, battery monitor
  *    - Block 4: WiFi AP, AsyncWebServer, AsyncWebSocket, LittleFS dashboard
  *
  *  The OLED shows the status screen when no browser is connected to the AP.
@@ -84,11 +84,11 @@ static void refreshStatusScreen(bool force = false) {
     if (aurora_clock::isBirthday(epoch)) {
         uint8_t age = aurora_clock::birthdayAge(epoch);
         snprintf(line1, sizeof(line1), "* Happy B-Day! *");
-        snprintf(line2, sizeof(line2), "Chandni turns %u!", (unsigned)age);
+        snprintf(line2, sizeof(line2), "Saira turns %u!", (unsigned)age);
         snprintf(line3, sizeof(line3), "<3 Chapter %u <3", (unsigned)age);
     } else {
         // Line 1: project name + battery
-        snprintf(line1, sizeof(line1), "%s for Chandni", AURORA_PROJECT_NAME);
+        snprintf(line1, sizeof(line1), "%s for Saira", AURORA_PROJECT_NAME);
 
         // Line 2: Warm Touches count (persisted keepsake counter)
         snprintf(line2, sizeof(line2), "Touches: %lu",
@@ -255,7 +255,7 @@ void loop() {
         }
     }
 
-    // --- Deskmate Attention Check (5+ hours without touch -> Lonely/Sad) ---
+    // --- Deskmate Attention Check (1 hour without touch -> Lonely/Sad) ---
     if (!display.isMidnightReminderActive() && display.currentMood() != DeskmateMood::LOVE_TOUCHED) {
         uint32_t msSinceTouch = AuroraState::instance().msSinceLastTouch();
         if (msSinceTouch >= (uint32_t)AURORA_DESKMATE_NEGLECT_MS) {

@@ -7,7 +7,7 @@ This file provides guidance to Claude Code / Antigravity when working with code 
 This repository (`aurora-firmware-deskmate`) is the **Animated Romantic OLED Deskmate** firmware for the ESP32-C3 Aurora birthday gift for Chandni. The project uses PlatformIO for building and managing dependencies.
 
 The firmware combines:
-- **Block 1 Hardware & OLED Deskmate Engine**: Living animated OLED desk pet ("Aurora") with expressive eyes (normal, happy, heart eyes + floating hearts, sad/lonely after 5+ hours neglect, 12:00 AM midnight daily message reminder, sleeping), single physical touch button input on GPIO0, dynamic mood-synced breathing LED, battery monitoring, and text bounds checking (fixing RHS text clipping).
+- **Block 1 Hardware & OLED Deskmate Engine**: Living animated OLED desk pet ("Aurora") with expressive eyes (normal, happy, heart eyes + floating hearts, sad/lonely after 1 hour neglect, 12:00 AM midnight daily message reminder, sleeping), single physical touch button input on GPIO0, dynamic mood-synced breathing LED, battery monitoring, and text bounds checking (fixing RHS text clipping).
 - **Block 4 Dashboard & SoftAP**: WiFi softAP (`Aurora`), AsyncWebServer, AsyncWebSocket, and LittleFS mobile dashboard (`192.168.4.1`) serving daily messages, keepsake letters, and music box.
 
 ## Development Commands
@@ -61,7 +61,7 @@ aurora-firmware-deskmate/
 - `IDLE_NORMAL`: Organic blinking, eye gaze saccades, cat smile `w`.
 - `HAPPY`: Bouncy arched eyes `^ ^`, blushing cheeks `///`, open smile `\_/`.
 - `LOVE_TOUCHED`: Beating heart eyes `<3 <3`, floating hearts rising up, blushing cheeks, rotating romantic quote banner.
-- `LONELY_SAD`: Triggered after 5+ hours without a Warm Touch. Droopy eyes, downward quivering mouth, sliding teardrop, prompt `"Miss you... Touch me?"`.
+- `LONELY_SAD`: Triggered after 1 hour without a Warm Touch. Droopy eyes, downward quivering mouth, sliding teardrop, prompt `"Miss you... Touch me?"`.
 - `MIDNIGHT_REMINDER`: Triggered at 00:00 (12:00 AM midnight). Animated love envelope with wax seal, sparkles, and prompt to check phone dashboard for the Daily Message.
 - `SLEEPING`: Peaceful closed curved eyes with floating `"z Z Z"` bubbles.
 

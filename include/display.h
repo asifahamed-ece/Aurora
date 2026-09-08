@@ -19,7 +19,7 @@ enum class DeskmateMood : uint8_t {
     IDLE_NORMAL,        // Looking around, organic blinking, cute smile
     HAPPY,              // Bouncy happy arc eyes, blushing
     LOVE_TOUCHED,       // Beating heart eyes, floating hearts, blushing, romantic reaction
-    LONELY_SAD,         // No touch for 5+ hours: droopy sad eyes, teardrop, needs attention
+    LONELY_SAD,         // No touch for 1 hour: droopy sad eyes, teardrop, needs attention
     MIDNIGHT_REMINDER,  // 12 Midnight: animated envelope & stars, daily message reminder
     SLEEPING            // Late-night calm curved sleeping eyes, drifting z Z Z
 };

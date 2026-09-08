@@ -11,33 +11,31 @@
  *
  *  Hardware required (shared across all blocks):
  *    - ESP32-C3 (your Robu "ESP32-C3 with soldering" board)
- *    - 4x tactile push buttons
+ *    - 2x tactile push buttons
+ *       o GPIO0  -> Warm Touch (pets the deskmate)
+ *       o GPIO2  -> Mode cycle (short press) / WiFi AP toggle (3s hold)
  *    - 1x LiPo battery (3.7V) + 2x 100k resistors (voltage divider for ADC)
  *    - 1x 470 uF electrolytic capacitor (across 3.3V and GND, near C3)
- *    - 1x 10 kOhm resistor (external pull-up on GPIO0 / Up button)
+ *    - 1x 10 kOhm resistor (external pull-up on GPIO0 / Warm Touch)
  *
  *  Block 1 adds: 0.96" SSD1306 OLED (I2C) + 1 LED + 220-ohm resistor.
- *  Block 4 adds: nothing extra (dashboard runs in the browser over WiFi).
+ *  Block 4 adds: WiFi softAP + LittleFS dashboard (runs in the browser).
  *
  *  Pin map (shared by both blocks):
  *
- *      ESP32-C3          OLED (SSD1306/SH1106)   LED Chaser            Buttons
- *      ------            ---------------         -----------            -------
+ *      ESP32-C3          OLED (SSD1306/SH1106)   LED Chaser          Buttons
+ *      ------            ---------------         -----------         --------
  *      GPIO8   --------> SDA   (AURORA_OLED_SDA_PIN)
  *      GPIO9   --------> SCL   (AURORA_OLED_SCL_PIN)
  *      3.3V    --------> VCC                    220 ohm -> LED -> GPIO4
- *      GND     --------> GND                  LED cathode -> GND
+ *      GND     --------> GND                    LED cathode -> GND
  *
- *      GPIO4   ---[220 ohm]---|-----> GND  (LED chaser)
+ *      GPIO4   ---[220 ohm]---|--- LED anode   (LED cathode -> GND)
  *
- *      GPIO0   <----- Btn UP     (10k ohm pull-up to 3.3V, external)
- *      GPIO1   <----- Btn SELECT (internal pull-up)
- *      GPIO10  <----- Btn DOWN   (internal pull-up)
- *      GPIO2   <----- Btn WIFI   (internal pull-up; reserved for future
- *                                long-press detection -- for Block 1 it's
- *                                just a press button. NOTE: GPIO2 is a
- *                                strapping pin and must not be held LOW at
- *                                boot. The internal pull-up handles this.)
+ *      GPIO0   <----- BTN_TOUCH (10k ohm pull-up to 3.3V, external)
+ *      GPIO2   <----- BTN_MULTI (internal pull-up; short = OLED mode cycle,
+ *                                3 second hold = WiFi AP toggle; GPIO2 is a
+ *                                strapping pin, never hold it LOW at boot)
  *
  *      Battery Monitor:
  *      Battery+ ---[100k ohm]---+---[100k ohm]--- GND
@@ -47,8 +45,9 @@
  *      470 uF cap between 3.3V and GND (very close to the C3).
  *
  *  Note on GPIO2: This is a strapping pin. The internal pull-up keeps it
- *  HIGH at boot, which is correct. If you press the WIFI button during a
- *  reset, the boot may fail. Solution: don't hold any button during reset.
+ *  HIGH at boot, which is correct. If you hold the WiFi toggle button
+ *  (GPIO2) during a reset, the boot may fail. Solution: never hold any
+ *  button while pressing RESET or plugging in USB.
  *
  *  Note on GPIO3: GPIO3 is shared with the UART0 RX pin. While we're using
  *  USB-CDC for Serial (per platformio.ini), GPIO3 is free for ADC use. If
@@ -105,10 +104,10 @@
 // GPIO0 has an external 10k pull-up to keep boot mode safe.
 #define AURORA_BTN_TOUCH_PIN        0
 
-// Button 2: Mode-cycle push button (GPIO2)
-// Single press: cycles through OLED screen modes
+// Button 2: Mode-cycle & WiFi push button (GPIO2)
+// Single short press: cycles through OLED screen modes
 // (DESKMATE -> CLOCK_DATE -> DAILY_QUOTE -> HEARTBEAT_KEEPSAKE -> wrap).
-// This button has no other function. WiFi toggling is handled elsewhere.
+// A 3-second hold of the same button toggles the WiFi softAP on/off.
 #define AURORA_BTN_MULTI_PIN        2
 
 // Debounce time in ms, applied to BOTH GPIO0 (warm touch) and GPIO2 (mode
@@ -117,8 +116,8 @@
 #define AURORA_BTN_DEBOUNCE_MS      80
 
 // --- Deskmate Pet & Attention Timing ---
-// 5 hours of no touch -> Deskmate feels lonely and needs attention
-#define AURORA_DESKMATE_NEGLECT_MS  (5 * 3600 * 1000UL)
+// 1 hour of no touch -> Deskmate feels lonely and needs attention
+#define AURORA_DESKMATE_NEGLECT_MS  (1 * 3600 * 1000UL)
 // ~20 FPS animation refresh (50ms per frame)
 #define AURORA_DESKMATE_FRAME_MS    50
 
