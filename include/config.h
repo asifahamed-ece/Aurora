@@ -63,7 +63,7 @@
 //  Build info
 // ----------------------------------------------------------------------------
 #define AURORA_PROJECT_NAME  "Aurora"
-#define AURORA_VERSION       "0.5.0"
+#define AURORA_VERSION       "0.5.1"
 #define AURORA_DEDICATEE     "Chandni"
 // AURORA_BUILD_BLOCK is supplied by the PlatformIO env's -D flag
 // (e.g. -DAURORA_BUILD_BLOCK=\"Block1-Breadboard\"). A sensible fallback

@@ -777,7 +777,7 @@
       font-style: normal;
     }
 
-    /* Integrated Lullaby Music Box Card */
+    /* Integrated Music Box Card */
     .dreamland-music-card {
       background: #ffffff;
       border-radius: 18px;
@@ -1517,18 +1517,18 @@
             <span class="dreamland-note-sparkles">✨💤☁️</span>
           </div>
           <p class="dreamland-note-body">
-            Caught you in the middle of your finest superpower — sleeping so peacefully, sweet and softly without a single worry in the universe. Whenever your days get hectic or noisy, come right here to your little haven, play this gentle lullaby, and let the quiet starlight carry you into sweetest dreams.
+            Caught you in the middle of your finest superpower — sleeping so peacefully, sweet and softly without a single worry in the universe. Whenever your days get hectic or noisy, come right here to your little haven, play "Perfect" — the song that says it all — and let the quiet starlight carry you into sweetest dreams.
           </p>
         </div>
 
-        <!-- Integrated Lullaby Music Box -->
+        <!-- Integrated Music Box -->
         <div class="dreamland-music-card">
           <div class="dreamland-disc-wrapper">
-            <div class="music-disc" id="music-disc" title="Tap to play lullaby">🎀</div>
+            <div class="music-disc" id="music-disc" title="Tap to play our song">🎀</div>
           </div>
           <div class="dreamland-music-info">
-            <h3>Gentle Music Box Lullaby</h3>
-            <p>Soft starlit chimes tuned for Chandni's sweetest sleep</p>
+            <h3>Perfect — Music Box</h3>
+            <p>Ed Sheeran's "Perfect", ringing softly in starlight</p>
           </div>
           <div class="music-pulse-waves" id="music-waves">
             <span class="wave-bar"></span>
@@ -1539,7 +1539,7 @@
           </div>
           <button class="music-play-btn" id="music-play-btn">
             <span>▶</span>
-            <span id="music-btn-text">Play Lullaby</span>
+            <span id="music-btn-text">Play Perfect</span>
           </button>
         </div>
       </div>
@@ -1979,25 +1979,122 @@
       let audioCtx = null;
       let isPlaying = false;
       let musicTimeout = null;
-      let noteIndex = 0;
+      let stepIndex = 0;
+      let arpRollIdx = 0;
+      let arpRollChord = null;
 
-      // Classic Brahms Lullaby with a soft music-box harmony bed.
+      // Ed Sheeran's "Perfect" — romantic music-box rendition in Ab major.
       // n = semitones above C4 (261.63 Hz). h = bass/chord-root frequency.
       // Every note carries a gentle bass root plus an added fifth so the
-      // lullaby sounds rounder & more melodious than a single-note line.
+      // melody sounds rounder & more melodious than a single-note line.
+      const BASS_AB = 207.65; // Ab3
+      const BASS_FM = 174.61; // F3
+      const BASS_DB = 138.59; // Db3
+      const BASS_EB = 155.56; // Eb3
+
+      // The fingerpicked guitar B-track of "Perfect" rolls a complete chord,
+      // not a single bass note. Each chord is voiced root·fifth·third·octave
+      // at a low register so it sits under the singing melody like the record.
+      const CHORD_BACKTRACK = {
+        [BASS_AB]: [207.65, 311.13, 261.63, 415.30], // Ab3-Eb4-C4-Ab4 (Ab major)
+        [BASS_FM]: [174.61, 261.63, 207.65, 349.23], // F3-C4-Ab3-F4  (F minor)
+        [BASS_DB]: [138.59, 207.65, 174.61, 277.18], // Db3-Ab3-F3-Db4 (Db major)
+        [BASS_EB]: [155.56, 233.08, 196.00, 311.13], // Eb3-Bb3-G3-Eb4 (Eb major)
+      };
+
+      // Every phrase on a steady 12/8 grid: 'st' = how many eighth-steps the
+      // note occupies (one step = 270 ms). Rests are { n: null } and let the
+      // arpeggio backtrack keep rolling underneath, exactly like the record.
       const MELODY = [
-        // Measure 1: "Lullaby and good night" (C)
-        { n: 12, d: 0.50, h: 130.81 }, { n: 12, d: 0.50, h: 130.81 }, { n: 16, d: 0.90, h: 130.81 },
-        { n: 12, d: 0.50, h: 130.81 }, { n: 12, d: 0.50, h: 130.81 }, { n: 16, d: 0.90, h: 130.81 },
-        // Measure 2: "In the sky stars are bright" (C, F, G)
-        { n: 12, d: 0.45, h: 130.81 }, { n: 16, d: 0.45, h: 130.81 }, { n: 19, d: 0.85, h: 130.81 },
-        { n: 17, d: 0.60, h: 174.61 }, { n: 14, d: 0.50, h: 196.00 }, { n: 16, d: 0.50, h: 196.00 },
-        { n: 14, d: 0.95, h: 196.00 },
-        // Measure 3: "Close your eyes, rest your head" (G, then C)
-        { n: 11, d: 0.45, h: 196.00 }, { n: 14, d: 0.45, h: 196.00 }, { n: 17, d: 0.65, h: 196.00 },
-        { n: 14, d: 0.45, h: 196.00 }, { n: 11, d: 0.45, h: 196.00 }, { n: 12, d: 0.90, h: 130.81 },
-        // Measure 4: gentle resolution (F, C)
-        { n: 14, d: 0.45, h: 196.00 }, { n: 16, d: 0.45, h: 174.61 }, { n: 12, d: 1.30, h: 130.81 }
+        // ============ VERSE ============
+        // "I found a love, for me..." (Ab)
+        { n: 3, st: 1, h: BASS_AB }, { n: 5, st: 1, h: BASS_AB }, { n: 8, st: 2, h: BASS_AB },
+        { n: 8, st: 3, h: BASS_AB }, { n: 12, st: 1, h: BASS_AB }, { n: 10, st: 5, h: BASS_AB },
+        { n: null, st: 2, h: null },
+        // "Darling, just dive right in, and follow my lead..." (Fm -> Eb)
+        { n: 10, st: 2, h: BASS_FM }, { n: 12, st: 1, h: BASS_FM }, { n: 12, st: 1, h: BASS_FM },
+        { n: 12, st: 1, h: BASS_FM }, { n: 10, st: 2, h: BASS_FM }, { n: 8, st: 3, h: BASS_FM },
+        { n: 8, st: 1, h: BASS_EB }, { n: 8, st: 1, h: BASS_EB },
+        { n: 10, st: 2, h: BASS_EB }, { n: 12, st: 1, h: BASS_EB }, { n: 10, st: 5, h: BASS_EB },
+        { n: null, st: 2, h: null },
+        // "I found a girl, beautiful and sweet..." (Ab -> Fm)
+        { n: 12, st: 1, h: BASS_AB }, { n: 10, st: 1, h: BASS_AB }, { n: 8, st: 1, h: BASS_AB },
+        { n: 12, st: 3, h: BASS_AB }, { n: 15, st: 2, h: BASS_FM }, { n: 12, st: 1, h: BASS_FM },
+        { n: 10, st: 1, h: BASS_FM }, { n: 8, st: 1, h: BASS_FM }, { n: 8, st: 5, h: BASS_FM },
+        { n: null, st: 2, h: null },
+        // "Oh, I never knew you were the someone waiting for me..." (Db -> Eb)
+        { n: 8, st: 2, h: BASS_DB }, { n: 10, st: 1, h: BASS_DB }, { n: 12, st: 1, h: BASS_DB },
+        { n: 13, st: 1, h: BASS_DB }, { n: 13, st: 3, h: BASS_DB }, { n: 12, st: 1, h: BASS_DB },
+        { n: 10, st: 1, h: BASS_DB }, { n: 10, st: 1, h: BASS_DB },
+        { n: 8, st: 2, h: BASS_DB }, { n: 8, st: 1, h: BASS_DB },
+        { n: 10, st: 2, h: BASS_EB }, { n: 12, st: 1, h: BASS_EB }, { n: 10, st: 5, h: BASS_EB },
+        { n: null, st: 2, h: null },
+
+        // ============ PRE-CHORUS ============
+        // "'Cause we were just kids when we fell in love..." (Ab -> Fm)
+        { n: 15, st: 1, h: BASS_AB }, { n: 15, st: 1, h: BASS_AB }, { n: 15, st: 1, h: BASS_AB },
+        { n: 15, st: 2, h: BASS_AB }, { n: 17, st: 3, h: BASS_FM },
+        { n: 12, st: 1, h: BASS_FM }, { n: 10, st: 1, h: BASS_FM }, { n: 12, st: 2, h: BASS_FM },
+        { n: 12, st: 1, h: BASS_FM }, { n: 12, st: 3, h: BASS_FM },
+        { n: null, st: 2, h: null },
+        // "Not knowing what it was..." (Fm -> Db)
+        { n: 12, st: 2, h: BASS_FM }, { n: 10, st: 1, h: BASS_DB }, { n: 8, st: 1, h: BASS_DB },
+        { n: 12, st: 2, h: BASS_DB }, { n: 12, st: 1, h: BASS_DB }, { n: 12, st: 4, h: BASS_DB },
+        { n: null, st: 2, h: null },
+        // "I will not give you up this time..." (Db -> Eb)
+        { n: 12, st: 1, h: BASS_DB }, { n: 10, st: 1, h: BASS_DB }, { n: 8, st: 2, h: BASS_DB },
+        { n: 13, st: 2, h: BASS_DB }, { n: 12, st: 1, h: BASS_DB }, { n: 8, st: 2, h: BASS_DB },
+        { n: 15, st: 2, h: BASS_EB }, { n: 12, st: 1, h: BASS_EB }, { n: 13, st: 1, h: BASS_EB },
+        { n: 12, st: 1, h: BASS_EB }, { n: 10, st: 4, h: BASS_EB },
+        { n: null, st: 2, h: null },
+        // "But darling, just kiss me slow..." (Fm)
+        { n: 12, st: 2, h: BASS_FM }, { n: 10, st: 1, h: BASS_FM }, { n: 8, st: 1, h: BASS_FM },
+        { n: 12, st: 2, h: BASS_FM }, { n: 12, st: 1, h: BASS_FM }, { n: 12, st: 4, h: BASS_FM },
+        { n: null, st: 2, h: null },
+        // "Your heart is all I own..." (Fm -> Db)
+        { n: 12, st: 2, h: BASS_FM }, { n: 10, st: 1, h: BASS_DB }, { n: 8, st: 1, h: BASS_DB },
+        { n: 12, st: 2, h: BASS_DB }, { n: 12, st: 1, h: BASS_DB }, { n: 12, st: 4, h: BASS_DB },
+        { n: null, st: 2, h: null },
+        // "And in your eyes, you're holding mine..." (Eb)
+        { n: 12, st: 2, h: BASS_EB }, { n: 10, st: 1, h: BASS_EB }, { n: 8, st: 2, h: BASS_EB },
+        { n: 13, st: 2, h: BASS_EB }, { n: 12, st: 1, h: BASS_EB }, { n: 8, st: 2, h: BASS_EB },
+        { n: 15, st: 2, h: BASS_EB }, { n: 10, st: 4, h: BASS_EB },
+        { n: null, st: 2, h: null },
+
+        // ============ CHORUS ============
+        // "Baby, I'm dancing in the dark..." (Fm)
+        { n: 12, st: 3, h: BASS_FM }, { n: 15, st: 2, h: BASS_FM }, { n: 12, st: 1, h: BASS_FM },
+        { n: 10, st: 2, h: BASS_FM }, { n: 8, st: 1, h: BASS_FM },
+        { n: 8, st: 1, h: BASS_FM }, { n: 8, st: 1, h: BASS_FM },
+        { n: 7, st: 1, h: BASS_FM }, { n: 5, st: 1, h: BASS_FM }, { n: 7, st: 2, h: BASS_FM },
+        { n: 12, st: 4, h: BASS_FM },
+        { n: null, st: 2, h: null },
+        // "With you between my arms..." (Db)
+        { n: 15, st: 1, h: BASS_DB }, { n: 15, st: 1, h: BASS_DB }, { n: 13, st: 1, h: BASS_DB },
+        { n: 12, st: 1, h: BASS_DB }, { n: 10, st: 1, h: BASS_DB }, { n: 8, st: 5, h: BASS_DB },
+        { n: null, st: 2, h: null },
+        // "Barefoot on the grass, listening to our favorite song..." (Ab -> Eb)
+        { n: 8, st: 2, h: BASS_AB }, { n: 7, st: 1, h: BASS_AB }, { n: 5, st: 1, h: BASS_AB },
+        { n: 7, st: 1, h: BASS_AB }, { n: 12, st: 3, h: BASS_AB },
+        { n: 15, st: 1, h: BASS_EB }, { n: 15, st: 1, h: BASS_EB }, { n: 15, st: 1, h: BASS_EB },
+        { n: 15, st: 1, h: BASS_EB }, { n: 17, st: 2, h: BASS_EB },
+        { n: 12, st: 1, h: BASS_EB }, { n: 10, st: 1, h: BASS_EB }, { n: 8, st: 5, h: BASS_EB },
+        { n: null, st: 2, h: null },
+        // "When you said you looked a mess..." (Fm)
+        { n: 12, st: 2, h: BASS_FM }, { n: 15, st: 1, h: BASS_FM }, { n: 8, st: 1, h: BASS_FM },
+        { n: 7, st: 1, h: BASS_FM }, { n: 5, st: 2, h: BASS_FM }, { n: 7, st: 1, h: BASS_FM },
+        { n: 12, st: 5, h: BASS_FM },
+        { n: null, st: 2, h: null },
+        // "I whispered underneath my breath..." (Db)
+        { n: 8, st: 1, h: BASS_DB }, { n: 10, st: 1, h: BASS_DB }, { n: 12, st: 2, h: BASS_DB },
+        { n: 15, st: 1, h: BASS_DB }, { n: 13, st: 1, h: BASS_DB }, { n: 12, st: 1, h: BASS_DB },
+        { n: 13, st: 2, h: BASS_DB }, { n: 12, st: 5, h: BASS_DB },
+        { n: null, st: 2, h: null },
+        // "But you heard it, Darling, you look perfect tonight..." (Ab -> Eb)
+        { n: 12, st: 1, h: BASS_AB }, { n: 12, st: 1, h: BASS_AB }, { n: 13, st: 2, h: BASS_AB },
+        { n: 12, st: 1, h: BASS_AB }, { n: 8, st: 1, h: BASS_EB }, { n: 8, st: 1, h: BASS_EB },
+        { n: 12, st: 1, h: BASS_EB }, { n: 10, st: 1, h: BASS_EB }, { n: 10, st: 2, h: BASS_EB },
+        { n: 8, st: 1, h: BASS_EB }, { n: 8, st: 1, h: BASS_EB }, { n: 8, st: 6, h: BASS_EB }
       ];
       const NOTE_BASE = 261.63; // C4
       const freqOf = (n) => NOTE_BASE * Math.pow(2, n / 12);
@@ -2018,7 +2115,7 @@
         if ($audioToggleBtn) $audioToggleBtn.classList.toggle('playing', active);
         if ($musicDisc) $musicDisc.classList.toggle('playing', active);
         if ($musicWaves) $musicWaves.classList.toggle('active', active);
-        if ($musicText) $musicText.textContent = active ? "Pause Lullaby" : "Play Lullaby";
+        if ($musicText) $musicText.textContent = active ? "Pause Perfect" : "Play Perfect";
       }
 
       function playChime(step, dur, bass) {
@@ -2086,15 +2183,73 @@
         } catch (_) { }
       }
 
-      function playNextNote() {
+      // One fingerpicked chord tone of the backtrack, struck at a steady pace.
+      function playArpTone(toneFreq, when) {
+        if (!audioCtx || audioCtx.state !== 'running') return;
+        try {
+          const arpOsc = audioCtx.createOscillator();
+          const arpGain = audioCtx.createGain();
+          const stopAt = when + 0.9;
+          arpOsc.type = 'triangle';
+          arpOsc.frequency.setValueAtTime(toneFreq, when);
+          arpGain.gain.setValueAtTime(0, when);
+          arpGain.gain.linearRampToValueAtTime(0.08, when + 0.015);
+          arpGain.gain.exponentialRampToValueAtTime(0.0001, stopAt);
+          arpOsc.connect(arpGain);
+          arpGain.connect(audioCtx.destination);
+          arpOsc.start(when);
+          arpOsc.stop(stopAt + 0.05);
+        } catch (_) { }
+      }
+
+      // The song is encoded on a steady 12/8 grid. Flatten MELODY entries into a
+      // literal step-clock: each entry occupies 'st' steps, a note chimes on its
+      // first step and sustains through the rest, and rests keep the arpeggio
+      // backtrack rolling without a melody note.
+      const STEP_MS = 270; // one 12/8 eighth note
+      const STEP_S = STEP_MS / 1000;
+      const STEPS = [];
+      (function buildTimeline() {
+        for (let i = 0; i < MELODY.length; i++) {
+          const e = MELODY[i];
+          const steps = Math.max(1, e.st || 1);
+          for (let s = 0; s < steps; s++) {
+            STEPS.push({
+              n: (s === 0) ? e.n : null,
+              h: e.h,
+              last: (s === steps - 1)
+            });
+          }
+        }
+      })();
+
+      function playNextStep() {
         if (!isPlaying || !audioCtx || audioCtx.state !== 'running') return;
 
-        const note = FULL_MELODY[noteIndex];
-        playChime(note.n, note.d, note.h);
+        const step = STEPS[stepIndex];
+        const now = audioCtx.currentTime;
 
-        noteIndex = (noteIndex + 1) % FULL_MELODY.length;
-        const delayMs = (noteIndex === 0) ? (note.d * 1000 + 1600) : (note.d * 960);
-        musicTimeout = setTimeout(playNextNote, delayMs);
+        // 1. Steady fingerpicked backtrack roll — one chord tone per step pick,
+        //    in root→fifth→third→octave order like the record's guitar figure.
+        if (step.h) arpRollChord = step.h;
+        if (arpRollChord) {
+          const tones = CHORD_BACKTRACK[arpRollChord];
+          if (tones) playArpTone(tones[arpRollIdx % tones.length], now);
+          arpRollIdx++;
+          // Reinforce the root every 4 picks so a low bass anchors the roll.
+          if (arpRollIdx % 4 === 1 && CHORD_BACKTRACK[arpRollChord]) {
+            playArpTone(CHORD_BACKTRACK[arpRollChord][0] * 0.5, now);
+          }
+        }
+
+        // 2. Melody chime floats on top, struck only at the start of its step run.
+        if (step.n !== null && step.n !== undefined) {
+          playChime(step.n, STEP_S, step.h);
+        }
+
+        stepIndex = (stepIndex + 1) % STEPS.length;
+        const delayMs = (stepIndex === 0) ? (STEP_MS + 1600) : STEP_MS;
+        musicTimeout = setTimeout(playNextStep, delayMs);
       }
 
       function startMusicBox() {
@@ -2105,8 +2260,10 @@
           if (isPlaying) return;
           isPlaying = true;
           updateMusicUI(true);
-          noteIndex = 0;
-          playNextNote();
+          stepIndex = 0;
+          arpRollIdx = 0;
+          arpRollChord = null;
+          playNextStep();
         };
 
         if (ctx.state === 'suspended') {
@@ -2124,7 +2281,7 @@
           clearTimeout(musicTimeout);
           musicTimeout = null;
         }
-        noteIndex = 0;
+        stepIndex = 0;
         updateMusicUI(false);
       }
 
