@@ -202,6 +202,7 @@ private:
     void spawnSparkle(int16_t x, int16_t y, uint8_t size, uint16_t lifetimeMs);
     void updateAndDrawSparkles(uint32_t now);
     void drawSparkle(int16_t x, int16_t y, uint8_t size);
+    void drawBatteryIcon(int x, int y, uint8_t pct);
 
     // Sub-renderers for deskmate states
     void renderDeskmate(uint32_t now);

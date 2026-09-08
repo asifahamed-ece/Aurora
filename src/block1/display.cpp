@@ -191,6 +191,13 @@ void AuroraDisplay::drawSparkle(int16_t x, int16_t y, uint8_t size) {
     }
 }
 
+void AuroraDisplay::drawBatteryIcon(int x, int y, uint8_t pct) {
+    _u8g2.drawFrame(x, y, 11, 7);
+    _u8g2.drawBox(x + 11, y + 1, 2, 5);
+    int fw = ((int)pct * 9) / 100;
+    if (fw > 0) _u8g2.drawBox(x + 1, y + 1, fw, 5);
+}
+
 void AuroraDisplay::updateAndDrawSparkles(uint32_t now) {
     for (uint8_t i = 0; i < MAX_SPARKLES; i++) {
         if (!_sparkles[i].active) continue;
@@ -429,7 +436,7 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
             spawnSparkle(random(8, 28), random(8, 20), random(2, 3), 1200);
         }
         if (random(0, 4) == 0) {
-            spawnSparkle(random(100, 120), random(8, 20), random(2, 3), 1200);
+            spawnSparkle(random(100, 120), random(24, 34), random(2, 3), 1200);
         }
         updateAndDrawSparkles(now);
 
@@ -439,6 +446,16 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
         int dw = _u8g2.getStrWidth(dateBuf);
         _u8g2.setFont(u8g2_font_6x10_tr);
         _u8g2.drawStr((AURORA_OLED_WIDTH - dw) / 2, 58, dateBuf);
+
+        // Battery indicator - RHS top, Clock mode only
+        uint8_t pct = AuroraState::instance().batteryPct();
+        char batBuf[8];
+        snprintf(batBuf, sizeof(batBuf), "%u%%", (unsigned)pct);
+        _u8g2.setFont(u8g2_font_5x7_tf);
+        int bw = _u8g2.getStrWidth(batBuf);
+        int bx = AURORA_OLED_WIDTH - bw - 3;
+        _u8g2.drawStr(bx, 9, batBuf);
+        drawBatteryIcon(bx - 15, 2, pct);
     }
 
     // Update floating hearts if active
