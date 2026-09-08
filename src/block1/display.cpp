@@ -31,7 +31,7 @@ static const char* const kTouchReactions[] = {
     "Warm Touch felt!",
     "Aurora loves you!",
     "You're my favorite",
-    "Stay cozy, Chandni",
+    "Stay cozy, Saira",
     "So warm and sweet",
     "Made with love",
     "Hehehe, thank you!",

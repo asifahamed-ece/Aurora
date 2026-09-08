@@ -4,15 +4,17 @@
  *
  *  Button input with software debouncing.
  *
- *  Block 1 scope (each pin is single-purpose):
+ *  Block 1 scope:
  *    - GPIO0  -> BTN_TOUCH       (Warm Touch on the deskmate)
- *    - GPIO2  -> BTN_MODE_CYCLE  (cycle OLED screen modes)
+ *    - GPIO2  -> BTN_MODE_CYCLE  (short press: cycle OLED screen modes)
+ *             -> BTN_WIFI_TOGGLE (3-second hold: toggle WiFi softAP)
  *
  *  Design notes:
  *    - Pressing a button pulls the pin to GND (active LOW).
  *    - Debounce uses AURORA_BTN_DEBOUNCE_MS (80 ms) for both pins.
- *    - No long-press / WiFi-toggle is wired to any button; the multi
- *      pin is just a mode cycle.
+ *    - GPIO2 is dual-purpose: a short press cycles the OLED mode, and a
+ *      3-second hold toggles the WiFi AP. The mode cycle only fires on a
+ *      clean short release; a held button triggers the WiFi toggle instead.
  *
  *  Press detection logic:
  *    We fire on the 0->1 transition (release), not the 1->0 (press).

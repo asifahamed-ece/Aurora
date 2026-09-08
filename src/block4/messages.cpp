@@ -39,7 +39,7 @@ const char* const kMessages[AURORA_NUM_MESSAGES] = {
   "If your notes look like hieroglyphics today, it's time for a break.",
   "The world gets a little brighter and sweeter whenever you walk into the room.",
   "Tomorrow is a blank page, but today is yours to take as gently as you need.",
-  "Happy Birthday, Chandni. Of everyone in the world, I'm so glad you exist."
+  "Happy Birthday, Saira. Of everyone in the world, I'm so glad you exist."
 };
 
 } // namespace aurora_messages

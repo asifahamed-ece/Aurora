@@ -33,5 +33,5 @@ window.AURORA_MESSAGES = [
   "If your notes or screen look like ancient hieroglyphics today, it's definitely time for a break.",
   "The world gets a little brighter and sweeter whenever you walk into the room.",
   "Tomorrow is a blank page, but today is yours to take as gently as you need.",
-  "Happy Birthday, Chandni. Out of all the people in the world, I am so endlessly glad you exist."
+  "Happy Birthday, Saira. Out of all the people in the world, I am so endlessly glad you exist."
 ];

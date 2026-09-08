@@ -304,21 +304,17 @@
         <tr><th>From</th><th>To</th><th>Via</th><th>Purpose</th></tr>
       </thead>
       <tbody>
-        <tr><td>GPIO6</td><td>OLED SDA</td><td>direct wire</td><td>I²C data</td></tr>
-        <tr><td>GPIO7</td><td>OLED SCL</td><td>direct wire</td><td>I²C clock</td></tr>
+        <tr><td>GPIO8</td><td>OLED SDA</td><td>direct wire</td><td>I²C data</td></tr>
+        <tr><td>GPIO9</td><td>OLED SCL</td><td>direct wire</td><td>I²C clock</td></tr>
         <tr><td>3V3</td><td>OLED VCC</td><td>direct wire</td><td>Power</td></tr>
         <tr><td>GND</td><td>OLED GND</td><td>direct wire</td><td>Common ground</td></tr>
         <tr><td>GPIO4</td><td>LED anode</td><td>220Ω resistor</td><td>PWM breath/chase</td></tr>
         <tr><td>LED cathode</td><td>GND</td><td>direct wire</td><td>LED return</td></tr>
-        <tr><td>GPIO0</td><td>BTN-UP pin A</td><td>direct wire</td><td>Button input</td></tr>
-        <tr><td>BTN-UP pin B</td><td>GND</td><td>direct wire</td><td>Button return</td></tr>
+        <tr><td>GPIO0</td><td>BTN-TOUCH pin A</td><td>direct wire</td><td>Warm Touch input</td></tr>
+        <tr><td>BTN-TOUCH pin B</td><td>GND</td><td>direct wire</td><td>Button return</td></tr>
         <tr><td>3V3</td><td>GPIO0 (via 10kΩ)</td><td>10kΩ pull-up</td><td>Keep GPIO0 stable HIGH at boot</td></tr>
-        <tr><td>GPIO1</td><td>BTN-SEL pin A</td><td>direct wire</td><td>Button input (internal pull-up)</td></tr>
-        <tr><td>BTN-SEL pin B</td><td>GND</td><td>direct wire</td><td>Button return</td></tr>
-        <tr><td>GPIO10</td><td>BTN-DOWN pin A</td><td>direct wire</td><td>Button input (internal pull-up)</td></tr>
-        <tr><td>BTN-DOWN pin B</td><td>GND</td><td>direct wire</td><td>Button return</td></tr>
-        <tr class="warn"><td>GPIO2</td><td>BTN-WiFi pin A</td><td>direct wire</td><td>Button input (strapping pin!)</td></tr>
-        <tr><td>BTN-WiFi pin B</td><td>GND</td><td>direct wire</td><td>Button return</td></tr>
+        <tr class="warn"><td>GPIO2</td><td>BTN-MULTI pin A</td><td>direct wire</td><td>Mode/WiFi button: short=mode cycle, 3s=WiFi (strapping pin!)</td></tr>
+        <tr><td>BTN-MULTI pin B</td><td>GND</td><td>direct wire</td><td>Button return</td></tr>
         <tr><td>LiPo +</td><td>100kΩ R1 top</td><td>direct wire</td><td>Battery divider input</td></tr>
         <tr><td>100kΩ R1 bottom</td><td>GPIO3 + 100kΩ R2 top</td><td>shared node</td><td>Divider mid-point = ADC input</td></tr>
         <tr><td>100kΩ R2 bottom</td><td>GND</td><td>direct wire</td><td>Divider return</td></tr>
@@ -331,9 +327,9 @@
   <div class="card full">
     <h2>Pre-flight checklist (before you flash)</h2>
     <ul class="checklist">
-      <li>OLED VCC/GND/SDA/SCL wired to 3V3/GND/GPIO6/GPIO7</li>
+      <li>OLED VCC/GND/SDA/SCL wired to 3V3/GND/GPIO8/GPIO9</li>
       <li>LED on GPIO4 via 220Ω resistor, cathode to GND</li>
-      <li>4 buttons wired: each button has one leg to its GPIO, the other to GND</li>
+      <li>2 buttons wired: each button has one leg to its GPIO, the other to GND</li>
       <li>10kΩ pull-up from GPIO0 to 3V3</li>
       <li>Battery divider: LiPo+ → 100kΩ → (100kΩ → GND); mid-point → GPIO3</li>
       <li>470µF electrolytic across 3V3 and GND, near the C3</li>

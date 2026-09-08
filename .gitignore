@@ -95,3 +95,9 @@ screenshots/*.jpeg
 # Allow a README inside screenshots/ to remain
 !screenshots/README.md
 !screenshots/.gitkeep
+
+# ----------------------------------------------------------------------------
+# Archive — miscellaneous local files not part of the firmware
+# ----------------------------------------------------------------------------
+archive/
+data/sleeping_chandni.jpg

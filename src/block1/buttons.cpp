@@ -12,8 +12,9 @@
  *
  *  Each BtnState carries its own `eventOnPress` (BTN_TOUCH for GPIO0,
  *  BTN_MODE_CYCLE for GPIO2), so the same release-edge logic produces
- *  a single, well-defined event for each pin. There is intentionally
- *  no long-press / WiFi-toggle path on GPIO2 anymore.
+ *  a single, well-defined event for each pin. GPIO2 additionally fires
+ *  BTN_WIFI_TOGGLE on a 3 second hold (guarded by `longFired` so it only
+ *  triggers once per press).
  */
 
 #include "buttons.h"
