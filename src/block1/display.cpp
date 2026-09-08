@@ -74,6 +74,7 @@ bool AuroraDisplay::begin() {
     _tearStartMs = millis();
 
     initHearts();
+    initSparkles();
 
     const char* driver = AURORA_OLED_DRIVER == 1 ? "SH1106" : "SSD1306";
     DBG_PRINTF("[OLED] begin() OK — %s %dx%d (Multi-mode Engine Ready)\n",
@@ -151,6 +152,66 @@ void AuroraDisplay::drawHeart(int cx, int cy, int size) {
         cx + (size * 6) / 10, cy - dy / 2,
         cx, cy + (size * 6) / 10
     );
+}
+
+void AuroraDisplay::initSparkles() {
+    for (uint8_t i = 0; i < MAX_SPARKLES; i++) {
+        _sparkles[i].active = false;
+    }
+}
+
+void AuroraDisplay::spawnSparkle(int16_t x, int16_t y, uint8_t size, uint16_t lifetimeMs) {
+    for (uint8_t i = 0; i < MAX_SPARKLES; i++) {
+        if (!_sparkles[i].active) {
+            _sparkles[i].x = x;
+            _sparkles[i].y = y;
+            _sparkles[i].size = size;
+            _sparkles[i].startMs = millis();
+            _sparkles[i].lifetimeMs = lifetimeMs;
+            _sparkles[i].active = true;
+            break;
+        }
+    }
+}
+
+void AuroraDisplay::drawSparkle(int16_t x, int16_t y, uint8_t size) {
+    // Draw a 4-pointed star sparkle
+    _u8g2.drawPixel(x, y);
+    if (size >= 2) {
+        _u8g2.drawPixel(x - 1, y);
+        _u8g2.drawPixel(x + 1, y);
+        _u8g2.drawPixel(x, y - 1);
+        _u8g2.drawPixel(x, y + 1);
+    }
+    if (size >= 3) {
+        _u8g2.drawPixel(x - 2, y);
+        _u8g2.drawPixel(x + 2, y);
+        _u8g2.drawPixel(x, y - 2);
+        _u8g2.drawPixel(x, y + 2);
+    }
+}
+
+void AuroraDisplay::updateAndDrawSparkles(uint32_t now) {
+    for (uint8_t i = 0; i < MAX_SPARKLES; i++) {
+        if (!_sparkles[i].active) continue;
+        uint32_t elapsed = now - _sparkles[i].startMs;
+        if (elapsed >= _sparkles[i].lifetimeMs) {
+            _sparkles[i].active = false;
+            continue;
+        }
+        float progress = (float)elapsed / (float)_sparkles[i].lifetimeMs;
+        // Fade in first 20%, fade out last 20%
+        uint8_t alpha = 255;
+        if (progress < 0.2f) {
+            alpha = (uint8_t)(progress / 0.2f * 255.0f);
+        } else if (progress > 0.8f) {
+            alpha = (uint8_t)((1.0f - progress) / 0.2f * 255.0f);
+        }
+        // Only draw if alpha is high enough
+        if (alpha > 100) {
+            drawSparkle(_sparkles[i].x, _sparkles[i].y, _sparkles[i].size);
+        }
+    }
 }
 
 void AuroraDisplay::triggerWarmTouch() {
@@ -362,6 +423,15 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
         // Decorative corner hearts sit just under the 24px glyphs
         drawHeart(12, 36, 3);
         drawHeart(116, 36, 3);
+
+        // Sparkle effects on both sides top
+        if (random(0, 4) == 0) {
+            spawnSparkle(random(8, 28), random(8, 20), random(2, 3), 1200);
+        }
+        if (random(0, 4) == 0) {
+            spawnSparkle(random(100, 120), random(8, 20), random(2, 3), 1200);
+        }
+        updateAndDrawSparkles(now);
 
         // Date at the original slot
         char dateBuf[24];
