@@ -94,9 +94,9 @@ void AuroraDisplay::cycleScreenMode() {
 
 const char* AuroraDisplay::screenModeName() const {
     switch (_screenMode) {
-        case ScreenMode::DESKMATE:           return "Aurora Deskmate";
-        case ScreenMode::CLOCK_DATE:         return "Clock & Greeting";
-        case ScreenMode::DAILY_QUOTE:        return "Daily Thought";
+        case ScreenMode::DESKMATE:           return "Aurora";
+        case ScreenMode::CLOCK_DATE:         return "Clock";
+        case ScreenMode::DAILY_QUOTE:        return "Thought";
         case ScreenMode::HEARTBEAT_KEEPSAKE: return "Keepsake Pulse";
     }
     return "Aurora";

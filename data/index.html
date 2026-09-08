@@ -280,7 +280,7 @@
       z-index: 5;
       max-width: var(--max-w);
       margin: 0 auto;
-      padding: 4px var(--gutter) calc(var(--nav-height) + 24px);
+      padding: 4px var(--gutter) calc(var(--nav-height) + 40px);
     }
 
     /* Tab Page View */
@@ -638,130 +638,256 @@
       white-space: nowrap;
     }
 
-    /* ============= TAB 3: POLAROIDS & MEMORIES ============= */
-    .polaroid-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
+    /* ============= TAB 3: CHANDNI'S DREAMLAND ============= */
+    .dreamland-container {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
     }
 
-    .polaroid-card {
+    /* Featured Sleeping Photo Frame */
+    .dreamland-photo-card {
       background: #ffffff;
-      padding: 12px 12px 18px;
-      border-radius: 8px;
-      box-shadow: 0 8px 24px rgba(70, 20, 40, 0.14);
-      cursor: pointer;
+      padding: 14px 14px 20px;
+      border-radius: 18px;
+      box-shadow: 0 12px 32px rgba(184, 20, 75, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
       position: relative;
-      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-      transform: rotate(var(--rot, 0deg));
+      overflow: visible;
+      border: 1px solid rgba(255, 182, 193, 0.4);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
 
-    body.theme-velvet .polaroid-card {
-      background: #fff8fb;
+    body.theme-velvet .dreamland-photo-card {
+      background: #200a16;
+      border-color: rgba(255, 92, 138, 0.25);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
     }
 
-    .polaroid-card:nth-child(1) {
-      --rot: -2deg;
-    }
-
-    .polaroid-card:nth-child(2) {
-      --rot: 2.5deg;
-    }
-
-    .polaroid-card:nth-child(3) {
-      --rot: 1.5deg;
-    }
-
-    .polaroid-card:nth-child(4) {
-      --rot: -2deg;
-    }
-
-    .polaroid-card:active {
-      transform: scale(1.03) rotate(0deg);
-      z-index: 10;
-    }
-
-    .polaroid-tape {
+    .dreamland-ribbon-pin {
       position: absolute;
-      top: -8px;
+      top: -14px;
       left: 50%;
       transform: translateX(-50%);
-      width: 44px;
-      height: 14px;
-      background: rgba(255, 182, 193, 0.6);
-      border-radius: 2px;
+      background: linear-gradient(135deg, #ff758f, #ff3366);
+      color: #ffffff;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 12px rgba(255, 51, 102, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 2;
     }
 
-    .polaroid-img-box {
+    .dreamland-img-wrapper {
       width: 100%;
-      aspect-ratio: 1;
-      border-radius: 4px;
-      background: linear-gradient(135deg, #ffe5ec 0%, #ffcad4 100%);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+      background: #101018;
+      aspect-ratio: 4 / 5;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 38px;
-      margin-bottom: 10px;
+      position: relative;
     }
 
-    .polaroid-caption {
+    .dreamland-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 25%;
+      display: block;
+      transition: transform 0.5s ease;
+    }
+
+    .dreamland-photo-card:hover .dreamland-img {
+      transform: scale(1.02);
+    }
+
+    .dreamland-caption-box {
+      margin-top: 14px;
+      text-align: center;
+      padding: 0 6px;
+    }
+
+    .dreamland-caption {
       font-family: var(--font-serif);
       font-style: italic;
-      font-size: 13px;
-      color: #4a192c;
-      text-align: center;
-      line-height: 1.35;
+      font-size: 15px;
+      color: #6a1a36;
+      line-height: 1.45;
       margin: 0;
     }
 
-    /* ============= TAB 4: OFFLINE MUSIC BOX ============= */
-    .music-box-card {
+    body.theme-velvet .dreamland-caption {
+      color: #ffccd9;
+    }
+
+    /* Cozy Bedtime Note Card */
+    .dreamland-note-card {
+      background: linear-gradient(145deg, #fff7fa 0%, #ffeef4 100%);
+      border-radius: 18px;
+      padding: 20px;
+      border: 1px dashed rgba(255, 92, 138, 0.35);
+      box-shadow: 0 6px 20px rgba(255, 182, 193, 0.25);
+      position: relative;
+    }
+
+    body.theme-velvet .dreamland-note-card {
+      background: linear-gradient(145deg, #240c19 0%, #1a0812 100%);
+      border-color: rgba(255, 92, 138, 0.3);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .dreamland-note-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .dreamland-note-title {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--c-pink-bright);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+    }
+
+    .dreamland-note-sparkles {
+      font-size: 16px;
+      letter-spacing: 2px;
+    }
+
+    .dreamland-note-body {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--c-text-main);
+      margin: 0;
+      font-style: normal;
+    }
+
+    /* Integrated Lullaby Music Box Card */
+    .dreamland-music-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 24px 20px;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
-      padding: 32px 24px;
+      gap: 14px;
+      border: 1px solid rgba(255, 182, 193, 0.4);
+      box-shadow: 0 10px 28px rgba(184, 20, 75, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.theme-velvet .dreamland-music-card {
+      background: #200a16;
+      border-color: rgba(255, 92, 138, 0.25);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+    }
+
+    .dreamland-disc-wrapper {
+      position: relative;
+      margin-top: 4px;
     }
 
     .music-disc {
-      width: 110px;
-      height: 110px;
+      width: 96px;
+      height: 96px;
       border-radius: 50%;
-      background: radial-gradient(circle, #ffcad4 0%, #ff5c8a 50%, #b8144b 100%);
-      box-shadow: 0 10px 30px rgba(255, 92, 138, 0.35);
+      background: radial-gradient(circle, #ffe3ec 0%, #ff758f 50%, #b8144b 100%);
+      box-shadow: 0 8px 24px rgba(255, 92, 138, 0.35);
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 42px;
+      font-size: 36px;
       color: #fff;
       position: relative;
       cursor: pointer;
       transition: transform 0.3s ease;
+      border: 3px solid #ffffff;
+    }
+
+    body.theme-velvet .music-disc {
+      border-color: #ff758f;
     }
 
     .music-disc.playing {
-      animation: spin 8s linear infinite;
+      animation: spin 9s linear infinite;
+    }
+
+    .dreamland-music-info h3 {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      margin: 0 0 4px;
+      color: var(--c-text-main);
+    }
+
+    .dreamland-music-info p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--c-text-sub);
     }
 
     .music-play-btn {
       background: linear-gradient(135deg, #ff5c8a, #ff3366);
       color: #fff;
       border: none;
-      padding: 12px 28px;
+      padding: 12px 30px;
       border-radius: 25px;
-      font-size: 15px;
+      font-size: 14.5px;
       font-weight: 700;
       cursor: pointer;
-      box-shadow: 0 6px 20px rgba(255, 51, 102, 0.35);
+      box-shadow: 0 6px 18px rgba(255, 51, 102, 0.35);
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      transition: transform 0.2s ease;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
 
     .music-play-btn:active {
       transform: scale(0.96);
+    }
+
+    .music-pulse-waves {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 16px;
+      margin-top: -4px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .music-pulse-waves.active {
+      opacity: 1;
+    }
+
+    .wave-bar {
+      width: 3px;
+      height: 6px;
+      background: var(--c-pink-bright);
+      border-radius: 2px;
+      animation: waveDance 1.2s ease-in-out infinite alternate;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.1s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.3s; }
+
+    @keyframes waveDance {
+      0% { height: 4px; }
+      100% { height: 16px; }
     }
 
     /* ============= BOTTOM NAVIGATION DOCK ============= */
@@ -1355,63 +1481,64 @@
       </div>
     </section>
 
-    <!-- ==================== TAB 3: POLAROIDS & MEMORIES ==================== -->
-    <section class="tab-view hidden" id="view-memories">
+    <!-- ==================== TAB 3: CHANDNI'S DREAMLAND ==================== -->
+    <section class="tab-view hidden" id="view-dreamland">
       <div class="hero">
         <div class="coquette-badge">
-          <span>📸</span>
-          <span>Moments & Memories</span>
-          <span>📸</span>
+          <span>🌙</span>
+          <span>Chandni's Dreamland</span>
+          <span>✨</span>
         </div>
       </div>
 
-      <div class="polaroid-grid">
-        <div class="polaroid-card" data-memo="1">
-          <div class="polaroid-tape"></div>
-          <div class="polaroid-img-box">🌸</div>
-          <p class="polaroid-caption">"Wrapped in a blanket burrito watching dramas in peace."</p>
+      <div class="dreamland-container">
+        <!-- Featured Sleeping Photo Card -->
+        <div class="dreamland-photo-card">
+          <div class="dreamland-ribbon-pin">
+            <span>🎀</span>
+            <span>Sleeping Peacefully</span>
+            <span>🌙</span>
+          </div>
+          <div class="dreamland-img-wrapper">
+            <img class="dreamland-img" src="/sleeping_chandni.jpg" alt="Chandni sleeping cutely" loading="lazy" />
+          </div>
+          <div class="dreamland-caption-box">
+            <p class="dreamland-caption">"The world can be as loud as it wants, but right here you are completely at peace."</p>
+          </div>
         </div>
 
-        <div class="polaroid-card" data-memo="2">
-          <div class="polaroid-tape"></div>
-          <div class="polaroid-img-box">☕</div>
-          <p class="polaroid-caption">"Your laugh across a noisy hall is the easiest thing to find."</p>
+        <!-- Bedtime Love Note Card -->
+        <div class="dreamland-note-card">
+          <div class="dreamland-note-header">
+            <h4 class="dreamland-note-title"><span>💌</span> A Quiet Little Note</h4>
+            <span class="dreamland-note-sparkles">✨🌙☁️</span>
+          </div>
+          <p class="dreamland-note-body">
+            Caught you in the middle of your finest superpower — sleeping so peacefully, sweet and softly without a single worry in the universe. Whenever your days get hectic or noisy, come right here to your little haven, play this gentle lullaby, and let the quiet starlight carry you into sweetest dreams.
+          </p>
         </div>
 
-        <div class="polaroid-card" data-memo="3">
-          <div class="polaroid-tape"></div>
-          <div class="polaroid-img-box">🌙</div>
-          <p class="polaroid-caption">"Looking up at the moonlight and thinking of your name."</p>
+        <!-- Integrated Lullaby Music Box -->
+        <div class="dreamland-music-card">
+          <div class="dreamland-disc-wrapper">
+            <div class="music-disc" id="music-disc" title="Tap to play lullaby">🎀</div>
+          </div>
+          <div class="dreamland-music-info">
+            <h3>Gentle Music Box Lullaby</h3>
+            <p>Soft starlit chimes tuned for Chandni's sweetest sleep</p>
+          </div>
+          <div class="music-pulse-waves" id="music-waves">
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+          </div>
+          <button class="music-play-btn" id="music-play-btn">
+            <span>▶</span>
+            <span id="music-btn-text">Play Lullaby</span>
+          </button>
         </div>
-
-        <div class="polaroid-card" data-memo="4">
-          <div class="polaroid-tape"></div>
-          <div class="polaroid-img-box">✨</div>
-          <p class="polaroid-caption">"Being elite at cozy laziness — honestly your superpower."</p>
-        </div>
-      </div>
-    </section>
-
-    <!-- ==================== TAB 4: OFFLINE MUSIC BOX ==================== -->
-    <section class="tab-view hidden" id="view-music">
-      <div class="hero">
-        <div class="coquette-badge">
-          <span>🎶</span>
-          <span>Asif's Music Box for Chandni</span>
-          <span>🎶</span>
-        </div>
-      </div>
-
-      <div class="card music-box-card">
-        <div class="music-disc" id="music-disc">🎀</div>
-        <h3>Gentle Music Box Lullaby</h3>
-        <p style="margin:0; font-size:14px; color:var(--c-text-sub); max-width:30ch;">
-          A small musical note just for You!
-        </p>
-        <button class="music-play-btn" id="music-play-btn">
-          <span>▶</span>
-          <span id="music-btn-text">Play Melody</span>
-        </button>
       </div>
     </section>
 
@@ -1427,13 +1554,9 @@
       <span class="nav-icon">💌</span>
       <span class="nav-text">Letters</span>
     </button>
-    <button class="nav-item" data-tab="memories">
-      <span class="nav-icon">📸</span>
-      <span class="nav-text">Memories</span>
-    </button>
-    <button class="nav-item" data-tab="music">
-      <span class="nav-icon">🎶</span>
-      <span class="nav-text">Music Box</span>
+    <button class="nav-item" data-tab="dreamland">
+      <span class="nav-icon">🎀</span>
+      <span class="nav-text">Dreamland</span>
     </button>
   </nav>
 
@@ -1633,6 +1756,7 @@
       const $musicBtn = document.getElementById('music-play-btn');
       const $musicText = document.getElementById('music-btn-text');
       const $musicDisc = document.getElementById('music-disc');
+      const $musicWaves = document.getElementById('music-waves');
 
       // Continuous Live Clock
       function tickClock() {
@@ -1680,8 +1804,7 @@
       const views = {
         today: document.getElementById('view-today'),
         letters: document.getElementById('view-letters'),
-        memories: document.getElementById('view-memories'),
-        music: document.getElementById('view-music')
+        dreamland: document.getElementById('view-dreamland')
       };
 
       tabs.forEach(btn => {
@@ -1690,11 +1813,18 @@
           btn.classList.add('active');
           const target = btn.dataset.tab;
           Object.keys(views).forEach(k => {
-            views[k].classList.toggle('hidden', k !== target);
+            if (views[k]) views[k].classList.toggle('hidden', k !== target);
           });
           window.scrollTo({ top: 0, behavior: 'smooth' });
         });
       });
+
+      // Optional initial tab from URL (e.g. ?tab=dreamland)
+      const initialTab = new URLSearchParams(window.location.search).get('tab');
+      if (initialTab && views[initialTab]) {
+        const initialBtn = document.querySelector(`.nav-item[data-tab="${initialTab}"]`);
+        if (initialBtn) initialBtn.click();
+      }
 
       // Mood Buttons
       const moodBtns = document.querySelectorAll('.mood-btn');
@@ -1848,36 +1978,40 @@
       let musicTimeout = null;
       let noteIndex = 0;
 
-      // Classic antique Swiss music box melody phrases (Canon in D / Lullaby motif)
-      const MELODY_PART_A = [
+      // Classic Brahms Lullaby & Antique Music Box Motif (gentle, warm & peaceful)
+      const BRAHMS_LULLABY = [
+        // Measure 1: "Lul-la-by and good night"
+        { f: 523.25, d: 0.50 }, // C5
+        { f: 523.25, d: 0.50 }, // C5
+        { f: 659.25, d: 0.90 }, // E5
+        { f: 523.25, d: 0.50 }, // C5
+        { f: 523.25, d: 0.50 }, // C5
+        { f: 659.25, d: 0.90 }, // E5
+
+        // Measure 2: "In the sky stars are bright"
+        { f: 523.25, d: 0.45 }, // C5
+        { f: 659.25, d: 0.45 }, // E5
+        { f: 783.99, d: 0.85 }, // G5
+        { f: 698.46, d: 0.60 }, // F5
+        { f: 587.33, d: 0.50 }, // D5
+        { f: 659.25, d: 0.50 }, // E5
+        { f: 587.33, d: 0.95 }, // D5
+
+        // Measure 3: "Close your eyes, rest your head"
+        { f: 493.88, d: 0.45 }, // B4
+        { f: 587.33, d: 0.45 }, // D5
+        { f: 698.46, d: 0.65 }, // F5
+        { f: 587.33, d: 0.45 }, // D5
+        { f: 493.88, d: 0.45 }, // B4
+        { f: 523.25, d: 0.90 }, // C5
+
+        // Measure 4: Canon in D gentle resolution
         { f: 587.33, d: 0.45 }, // D5
         { f: 659.25, d: 0.45 }, // E5
-        { f: 739.99, d: 0.70 }, // F#5
-        { f: 880.00, d: 0.45 }, // A5
-        { f: 739.99, d: 0.45 }, // F#5
-        { f: 659.25, d: 0.70 }, // E5
-        { f: 587.33, d: 0.45 }, // D5
-        { f: 554.37, d: 0.45 }, // C#5
-        { f: 493.88, d: 0.80 }, // B4
-        { f: 587.33, d: 0.45 }, // D5
-        { f: 659.25, d: 0.45 }, // E5
-        { f: 587.33, d: 1.10 }  // D5
+        { f: 523.25, d: 1.30 }  // C5 (long peaceful fade)
       ];
 
-      const MELODY_PART_B = [
-        { f: 739.99, d: 0.45 }, // F#5
-        { f: 880.00, d: 0.45 }, // A5
-        { f: 987.77, d: 0.75 }, // B5
-        { f: 880.00, d: 0.45 }, // A5
-        { f: 739.99, d: 0.55 }, // F#5
-        { f: 659.25, d: 0.45 }, // E5
-        { f: 587.33, d: 0.55 }, // D5
-        { f: 659.25, d: 0.45 }, // E5
-        { f: 739.99, d: 0.50 }, // F#5
-        { f: 587.33, d: 1.30 }  // D5
-      ];
-
-      const FULL_MELODY = [...MELODY_PART_A, ...MELODY_PART_B];
+      const FULL_MELODY = BRAHMS_LULLABY;
 
       function getAudioContext() {
         if (!audioCtx || audioCtx.state === 'closed') {
@@ -1893,41 +2027,42 @@
         if ($audioBtnIcon) $audioBtnIcon.textContent = active ? "🎵" : "🔇";
         if ($audioToggleBtn) $audioToggleBtn.classList.toggle('playing', active);
         if ($musicDisc) $musicDisc.classList.toggle('playing', active);
-        if ($musicText) $musicText.textContent = active ? "Pause Melody" : "Play Melody";
+        if ($musicWaves) $musicWaves.classList.toggle('active', active);
+        if ($musicText) $musicText.textContent = active ? "Pause Lullaby" : "Play Lullaby";
       }
 
       function playChime(freq, dur) {
         if (!audioCtx || audioCtx.state !== 'running') return;
         try {
           const now = audioCtx.currentTime;
-          const noteDur = dur || 0.45;
+          const noteDur = dur || 0.50;
 
-          // Main note envelope (sharp attack, slow bell decay)
+          // Main note envelope (gentle, warm celesta attack, long shimmering decay)
           const mainGain = audioCtx.createGain();
           mainGain.gain.setValueAtTime(0, now);
-          mainGain.gain.linearRampToValueAtTime(0.28, now + 0.015);
-          mainGain.gain.exponentialRampToValueAtTime(0.0001, now + noteDur * 1.6);
+          mainGain.gain.linearRampToValueAtTime(0.24, now + 0.025);
+          mainGain.gain.exponentialRampToValueAtTime(0.0001, now + noteDur * 1.8);
           mainGain.connect(audioCtx.destination);
 
-          // Primary bell tone
+          // Primary soft bell tone
           const osc1 = audioCtx.createOscillator();
           osc1.type = 'sine';
           osc1.frequency.setValueAtTime(freq, now);
           osc1.connect(mainGain);
           osc1.start(now);
-          osc1.stop(now + noteDur * 1.8);
+          osc1.stop(now + noteDur * 1.9);
 
-          // Sparkle overtone harmonic
+          // Sweet celesta music box harmonic (soft triangle overtone)
           const osc2 = audioCtx.createOscillator();
           const overtoneGain = audioCtx.createGain();
           osc2.type = 'triangle';
-          osc2.frequency.setValueAtTime(freq * 2.01, now);
-          overtoneGain.gain.setValueAtTime(0.08, now);
-          overtoneGain.gain.exponentialRampToValueAtTime(0.0001, now + noteDur * 1.1);
+          osc2.frequency.setValueAtTime(freq * 2.0, now);
+          overtoneGain.gain.setValueAtTime(0.06, now);
+          overtoneGain.gain.exponentialRampToValueAtTime(0.0001, now + noteDur * 1.2);
           osc2.connect(overtoneGain);
           overtoneGain.connect(mainGain);
           osc2.start(now);
-          osc2.stop(now + noteDur * 1.3);
+          osc2.stop(now + noteDur * 1.4);
         } catch (_) { }
       }
 
@@ -1938,7 +2073,7 @@
         playChime(note.f, note.d);
 
         noteIndex = (noteIndex + 1) % FULL_MELODY.length;
-        const delayMs = (noteIndex === 0) ? (note.d * 1000 + 1300) : (note.d * 880);
+        const delayMs = (noteIndex === 0) ? (note.d * 1000 + 1600) : (note.d * 960);
         musicTimeout = setTimeout(playNextNote, delayMs);
       }
 
