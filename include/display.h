@@ -186,6 +186,23 @@ private:
     void spawnHeart(int16_t x, int16_t y, uint8_t size, uint16_t lifetimeMs);
     void updateAndDrawHearts(uint32_t now);
 
+    // Sparkle particle system for clock mode
+    struct SparkleParticle {
+        int16_t  x;
+        int16_t  y;
+        uint8_t  size;
+        uint32_t startMs;
+        uint16_t lifetimeMs;
+        bool     active;
+    };
+    static constexpr uint8_t MAX_SPARKLES = 8;
+    SparkleParticle _sparkles[MAX_SPARKLES];
+
+    void initSparkles();
+    void spawnSparkle(int16_t x, int16_t y, uint8_t size, uint16_t lifetimeMs);
+    void updateAndDrawSparkles(uint32_t now);
+    void drawSparkle(int16_t x, int16_t y, uint8_t size);
+
     // Sub-renderers for deskmate states
     void renderDeskmate(uint32_t now);
     void drawNormalEyes(int cx1, int cx2, int cy, int w, int h, uint8_t blinkPct);
