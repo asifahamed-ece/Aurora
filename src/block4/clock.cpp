@@ -73,9 +73,14 @@ void formatTime(char* out, size_t outSize, uint32_t epoch) {
     uint32_t local = toLocal(epoch);
     uint32_t s  = local % 60;
     uint32_t m  = (local / 60) % 60;
-    uint32_t h  = (local / 3600) % 24;
-    snprintf(out, outSize, "%02lu:%02lu:%02lu",
-             (unsigned long)h, (unsigned long)m, (unsigned long)s);
+    uint32_t h24 = (local / 3600) % 24;
+    // 12-hour format with AM/PM indicator
+    bool isPm = (h24 >= 12);
+    uint32_t h12 = h24 % 12;
+    if (h12 == 0) h12 = 12;
+    snprintf(out, outSize, "%02lu:%02lu:%02lu %s",
+             (unsigned long)h12, (unsigned long)m, (unsigned long)s,
+             isPm ? "PM" : "AM");
 }
 
 void formatDate(char* out, size_t outSize, uint32_t epoch) {

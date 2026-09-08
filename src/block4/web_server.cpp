@@ -41,7 +41,7 @@ static size_t buildStateJson(char* out, size_t outSize) {
     StaticJsonDocument<512> doc;
     doc["type"] = "state";
 
-    char timeBuf[16], dateBuf[16];
+    char timeBuf[24], dateBuf[16];
     uint32_t epoch = st.epoch() ? st.epoch() : (millis() / 1000);
     aurora_clock::formatTime(timeBuf, sizeof(timeBuf), epoch);
     aurora_clock::formatDate(dateBuf, sizeof(dateBuf), epoch);

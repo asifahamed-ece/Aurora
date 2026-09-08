@@ -312,8 +312,12 @@ void AuroraDisplay::renderModeBadge(uint32_t now) {
 void AuroraDisplay::renderClockDate(uint32_t now) {
     uint32_t epoch = AuroraState::instance().epoch();
     uint32_t local = aurora_clock::toLocal(epoch);
-    uint32_t h = (local / 3600) % 24;
+    uint32_t h24 = (local / 3600) % 24;
     uint32_t m = (local / 60) % 60;
+    // 12-hour format with AM/PM indicator
+    bool isPm = (h24 >= 12);
+    uint32_t h = h24 % 12;
+    if (h == 0) h = 12;
 
     // Two layouts:
     //   - Unsynced (hint active):  16px clock at the top + a 4-line
@@ -325,9 +329,12 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
     //   - Synced:                   24px clock centred + date below.
     //     No greeting, no message — the time is the headline.
     bool    hintActive = AuroraState::instance().firstSyncHintActive();
-    char    timeBuf[8];
-    snprintf(timeBuf, sizeof(timeBuf), "%02lu%c%02lu",
-             (unsigned long)h, (now % 1000 < 500 ? ':' : ' '), (unsigned long)m);
+
+    // 12-hour format with AM/PM indicator
+    char timeBuf[12];
+    snprintf(timeBuf, sizeof(timeBuf), "%02lu:%02lu %s",
+             (unsigned long)h, (unsigned long)m,
+             isPm ? "PM" : "AM");
 
     if (hintActive) {
         // Compact 16px clock at the top (logisoso16, ~16px ascent).

@@ -23,7 +23,7 @@ uint32_t toLocal(uint32_t epoch);
 //  dashboard both show Chandni's Sep 10 birthday on the right day.
 uint16_t dayOfYear(uint32_t epoch);
 
-//  24-hour time as "HH:MM:SS" (8 chars + NUL). Local time (IST).
+//  12-hour time as "HH:MM:SS AM/PM" (11 chars + NUL). Local time (IST).
 void     formatTime(char* out, size_t outSize, uint32_t epoch);
 
 //  Short date as "Sat, 5 Sep" (12 chars + NUL). Local date (IST).
