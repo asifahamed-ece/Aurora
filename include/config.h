@@ -106,7 +106,7 @@
 
 // Button 2: Mode-cycle & WiFi push button (GPIO2)
 // Single short press: cycles through OLED screen modes
-// (DESKMATE -> CLOCK_DATE -> DAILY_QUOTE -> HEARTBEAT_KEEPSAKE -> wrap).
+// (DESKMATE -> CLOCK_DATE -> DAILY_QUOTE -> QR_CODE -> HEARTBEAT_KEEPSAKE -> wrap).
 // A 3-second hold of the same button toggles the WiFi softAP on/off.
 #define AURORA_BTN_MULTI_PIN        2
 
