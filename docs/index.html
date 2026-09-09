@@ -1,0 +1,2281 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffe5ec">
+  <title>Aurora — Interactive Demo 🎀</title>
+  <link rel="icon"
+    href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M16 28s-10-6.2-12.8-12.2C1 11 3.5 6 8.3 6c2.7 0 4.8 1.4 5.9 3.3l1.8 2.7 1.8-2.7C18.9 7.4 21 6 23.7 6c4.8 0 7.3 5 5.1 9.8C26 21.8 16 28 16 28Z' fill='%23ff5c8a'/></svg>">
+  <style>
+    /* ==========================================================================
+       AURORA 2.0 — STRAWBERRY MILK & COQUETTE MULTI-VIEW KEEPSAKE
+       Crafted with all my heart by Asif for Saira
+       ========================================================================== */
+    :root {
+      /* Theme: Strawberry Milkshake */
+      --bg-gradient: radial-gradient(ellipse at 50% -10%, #ffffff 0%, #fff0f5 35%, #ffe4eb 75%, #ffd2dc 100%);
+      --c-text-main: #461628;
+      --c-text-sub: #874660;
+      --c-text-dim: #b0768d;
+      --c-pink-soft: #ffcad4;
+      --c-pink-mid: #ff9aa2;
+      --c-pink-bright: #ff5c8a;
+      --c-pink-vibrant: #ff3366;
+      --c-pink-glow: rgba(255, 92, 138, 0.35);
+      --c-card-bg: rgba(255, 255, 255, 0.78);
+      --c-card-border: rgba(255, 255, 255, 0.95);
+      --c-card-shadow: 0 14px 36px rgba(255, 105, 145, 0.14), 0 2px 10px rgba(255, 182, 193, 0.15);
+      --c-pill-bg: rgba(255, 255, 255, 0.88);
+
+      --font-serif: 'Playfair Display', 'Cormorant Garamond', Didot, 'Bodoni MT', Georgia, serif;
+      --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, system-ui, sans-serif;
+
+      --gutter: 20px;
+      --max-w: 500px;
+      --nav-height: 72px;
+    }
+
+    body.theme-velvet {
+      --bg-gradient: radial-gradient(ellipse at 50% 0%, #2e0f25 0%, #1e0918 55%, #12040f 100%);
+      --c-text-main: #fff0f5;
+      --c-text-sub: #f7c4cf;
+      --c-text-dim: #c793a6;
+      --c-pink-soft: #ffb3c6;
+      --c-pink-mid: #ff758f;
+      --c-pink-bright: #ff4d6d;
+      --c-pink-glow: rgba(255, 77, 109, 0.5);
+      --c-card-bg: rgba(48, 16, 36, 0.74);
+      --c-card-border: rgba(255, 179, 198, 0.25);
+      --c-card-shadow: 0 16px 40px rgba(10, 2, 8, 0.55), 0 0 20px rgba(255, 77, 109, 0.15);
+      --c-pill-bg: rgba(58, 20, 44, 0.82);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg-gradient);
+      color: var(--c-text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      transition: background 0.6s ease, color 0.6s ease;
+    }
+
+    body.modal-open {
+      overflow: hidden;
+    }
+
+    /* Floating petals & sparkles */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .floating-glow {
+      position: absolute;
+      top: -10vw;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(600px, 120vw);
+      height: min(600px, 120vw);
+      background: radial-gradient(circle, rgba(255, 182, 193, 0.3) 0%, transparent 65%);
+      filter: blur(30px);
+      animation: breathe 7s ease-in-out infinite;
+    }
+
+    .petal {
+      position: absolute;
+      width: 14px;
+      height: 19px;
+      background: linear-gradient(135deg, rgba(255, 182, 193, 0.75), rgba(255, 92, 138, 0.45));
+      border-radius: 60% 10% 60% 60%;
+      pointer-events: none;
+      animation: petal-drift 14s linear infinite;
+    }
+
+    .petal.p1 {
+      left: 10%;
+      top: -20px;
+      animation-duration: 16s;
+      animation-delay: 0s;
+      transform: rotate(15deg);
+    }
+
+    .petal.p2 {
+      left: 80%;
+      top: -20px;
+      animation-duration: 18s;
+      animation-delay: 4s;
+      transform: rotate(-30deg);
+      width: 16px;
+      height: 22px;
+    }
+
+    .petal.p3 {
+      left: 45%;
+      top: -20px;
+      animation-duration: 13s;
+      animation-delay: 8s;
+      transform: rotate(45deg);
+      width: 12px;
+      height: 16px;
+    }
+
+    /* Top Status Bar */
+    .status-bar {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px var(--gutter) 8px;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      font-size: 13px;
+    }
+
+    .status-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .wifi-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      background: var(--c-pill-bg);
+      border: 1px solid var(--c-card-border);
+      box-shadow: 0 4px 12px rgba(255, 105, 145, 0.08);
+      color: var(--c-text-sub);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .wifi-badge.on {
+      color: var(--c-pink-vibrant);
+      border-color: rgba(255, 92, 138, 0.35);
+    }
+
+    .led-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--c-pink-bright);
+      box-shadow: 0 0 12px var(--c-pink-glow);
+      animation: heartbeat 2s ease-in-out infinite;
+    }
+
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      background: var(--c-pill-bg);
+      border: 1px solid var(--c-card-border);
+      border-radius: 14px;
+      padding: 3px 7px;
+      font-size: 12px;
+      line-height: 1;
+      color: var(--c-text-main);
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 105, 145, 0.08);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.92);
+    }
+
+    .icon-btn.playing {
+      border-color: var(--c-pink-bright);
+      box-shadow: 0 0 10px var(--c-pink-glow);
+    }
+
+    .theme-btn {
+      background: var(--c-pill-bg);
+      border: 1px solid var(--c-card-border);
+      border-radius: 14px;
+      padding: 3px 8px;
+      font-size: 11px;
+      color: var(--c-text-main);
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 105, 145, 0.08);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .battery {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: var(--c-pill-bg);
+      padding: 3px 6px;
+      border-radius: 14px;
+      border: 1px solid var(--c-card-border);
+    }
+
+    .battery-shell {
+      position: relative;
+      width: 18px;
+      height: 9px;
+      border: 1.2px solid var(--c-pink-mid);
+      border-radius: 2px;
+      padding: 1px;
+    }
+
+    .battery-shell::after {
+      content: "";
+      position: absolute;
+      right: -2.5px;
+      top: 1.5px;
+      width: 1.5px;
+      height: 4px;
+      background: var(--c-pink-mid);
+      border-radius: 0 1px 1px 0;
+    }
+
+    .battery-fill {
+      height: 100%;
+      width: 85%;
+      border-radius: 0.5px;
+      background: linear-gradient(90deg, #ff758f, #ff3366);
+      transition: width 0.5s ease;
+    }
+
+    .battery-pct {
+      font-size: 10px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    /* Main Container with bottom nav spacing */
+    .app-viewport {
+      position: relative;
+      z-index: 5;
+      max-width: var(--max-w);
+      margin: 0 auto;
+      padding: 4px var(--gutter) calc(var(--nav-height) + 40px);
+    }
+
+    /* Tab Page View */
+    .tab-view {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      animation: fadeIn 0.35s ease-out;
+    }
+
+    .tab-view.hidden {
+      display: none;
+    }
+
+    /* Coquette Dedication */
+    .hero {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    .coquette-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 16px;
+      border-radius: 30px;
+      background: var(--c-pill-bg);
+      border: 1.5px solid rgba(255, 154, 162, 0.45);
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 15px;
+      letter-spacing: 0.04em;
+      color: var(--c-pink-vibrant);
+      box-shadow: 0 4px 16px rgba(255, 92, 138, 0.12);
+      margin-bottom: 10px;
+      cursor: pointer;
+    }
+
+    .time-display {
+      font-family: var(--font-serif);
+      font-weight: 400;
+      font-size: clamp(56px, 15vw, 92px);
+      letter-spacing: -0.01em;
+      line-height: 1;
+      margin: 0;
+      color: var(--c-text-main);
+      font-variant-numeric: tabular-nums;
+      text-shadow: 0 8px 28px rgba(255, 92, 138, 0.2);
+    }
+
+    .date-display {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--c-text-sub);
+      margin: 8px 0 0;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--c-card-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1.5px solid var(--c-card-border);
+      border-radius: 24px;
+      padding: 22px 20px;
+      box-shadow: var(--c-card-shadow);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #ffcad4, #ff758f, #f6b26b, #ffcad4);
+    }
+
+    /* Message Card */
+    .message-card {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--c-pink-bright);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .message-text {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: clamp(19px, 4.8vw, 24px);
+      line-height: 1.6;
+      color: var(--c-text-main);
+      margin: 0;
+      max-width: 32ch;
+      text-wrap: balance;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    .message-text.fading {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+
+    /* Mood Selector Feature */
+    .mood-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .mood-header {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--c-pink-bright);
+      text-transform: uppercase;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .mood-dotted-box {
+      background: rgba(255, 255, 255, 0.62);
+      border: 1.5px dashed var(--c-pink-mid);
+      border-radius: 20px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 4px 16px rgba(255, 105, 145, 0.06);
+    }
+
+    body.theme-velvet .mood-dotted-box {
+      background: rgba(58, 20, 44, 0.6);
+      border-color: rgba(255, 179, 198, 0.35);
+    }
+
+    .mood-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+
+    .mood-btn {
+      background: var(--c-pill-bg);
+      border: 1.5px solid var(--c-card-border);
+      border-radius: 16px;
+      padding: 9px 4px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 105, 145, 0.06);
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+
+    .mood-btn:active {
+      transform: scale(0.94);
+    }
+
+    .mood-btn.active {
+      border-color: var(--c-pink-bright);
+      background: rgba(255, 92, 138, 0.16);
+      transform: translateY(-2px);
+    }
+
+    .mood-emoji {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .mood-name {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--c-text-main);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .mood-note-box {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid var(--c-card-border);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 15px;
+      color: var(--c-text-main);
+      text-align: center;
+      line-height: 1.5;
+      animation: fadeIn 0.35s ease-out;
+    }
+
+    body.theme-velvet .mood-note-box {
+      background: rgba(48, 16, 36, 0.88);
+    }
+
+    /* Single Heart Touch Interaction Box */
+    .heart-touch-card {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 235, 242, 0.92) 100%);
+      border: 1.5px solid rgba(255, 154, 162, 0.6);
+      border-radius: 20px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      cursor: pointer;
+      box-shadow: 0 8px 24px rgba(255, 92, 138, 0.12);
+      transition: transform 0.2s ease;
+    }
+
+    body.theme-velvet .heart-touch-card {
+      background: linear-gradient(135deg, rgba(60, 20, 48, 0.85) 0%, rgba(45, 12, 35, 0.9) 100%);
+    }
+
+    .heart-touch-card:active {
+      transform: scale(0.98);
+    }
+
+    .heart-icon-big {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ff5c8a 0%, #d81b60 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 20px;
+      box-shadow: 0 4px 14px var(--c-pink-glow);
+      animation: heartbeat 2.2s infinite;
+      flex-shrink: 0;
+    }
+
+    .heart-touch-text h4 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--c-text-main);
+    }
+
+    .heart-touch-text p {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--c-text-sub);
+    }
+
+    .heart-count-pill {
+      background: var(--c-pink-bright);
+      color: #fff;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 15px;
+      font-weight: 800;
+      box-shadow: 0 4px 12px rgba(255, 92, 138, 0.3);
+      font-variant-numeric: tabular-nums;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .heart-count-pill.bump {
+      transform: scale(1.35);
+    }
+
+    /* ============= TAB 2: "OPEN WHEN..." ENVELOPES ============= */
+    .letters-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .envelope-item {
+      background: var(--c-card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid var(--c-card-border);
+      border-radius: 18px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      cursor: pointer;
+      box-shadow: 0 8px 20px rgba(255, 105, 145, 0.08);
+      transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+
+    .envelope-item:active {
+      transform: scale(0.98);
+    }
+
+    .env-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .env-stamp {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ff758f, #ff3366);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 18px;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px var(--c-pink-glow);
+    }
+
+    .env-text h4 {
+      margin: 0;
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--c-text-main);
+    }
+
+    .env-text p {
+      margin: 3px 0 0;
+      font-size: 12px;
+      color: var(--c-text-sub);
+    }
+
+    .env-open-badge {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--c-pink-bright);
+      background: rgba(255, 92, 138, 0.12);
+      padding: 5px 10px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+
+    /* ============= TAB 3: CHANDNI'S DREAMLAND ============= */
+    .dreamland-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 18px;
+    }
+
+    /* Featured Sleeping Photo Frame */
+    .dreamland-photo-card {
+      background: #ffffff;
+      padding: 14px 14px 20px;
+      border-radius: 18px;
+      width: 100%;
+      max-width: 320px;
+      box-shadow: 0 12px 32px rgba(184, 20, 75, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04);
+      position: relative;
+      overflow: visible;
+      border: 1px solid rgba(255, 182, 193, 0.4);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    body.theme-velvet .dreamland-photo-card {
+      background: #200a16;
+      border-color: rgba(255, 92, 138, 0.25);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    }
+
+    .dreamland-ribbon-pin {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #ff758f, #ff3366);
+      color: #ffffff;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      box-shadow: 0 4px 12px rgba(255, 51, 102, 0.35);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 2;
+    }
+
+    .dreamland-img-wrapper {
+      width: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+      background: #101018;
+      aspect-ratio: 4 / 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .dreamland-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 25%;
+      display: block;
+      transition: transform 0.5s ease;
+    }
+
+    .dreamland-photo-card:hover .dreamland-img {
+      transform: scale(1.02);
+    }
+
+    .dreamland-caption-box {
+      margin-top: 14px;
+      text-align: center;
+      padding: 0 6px;
+    }
+
+    .dreamland-caption {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 15px;
+      color: #6a1a36;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    body.theme-velvet .dreamland-caption {
+      color: #ffccd9;
+    }
+
+    /* Cozy Bedtime Note Card */
+    .dreamland-note-card {
+      background: linear-gradient(145deg, #fff7fa 0%, #ffeef4 100%);
+      border-radius: 18px;
+      padding: 20px;
+      border: 1px dashed rgba(255, 92, 138, 0.35);
+      box-shadow: 0 6px 20px rgba(255, 182, 193, 0.25);
+      position: relative;
+    }
+
+    body.theme-velvet .dreamland-note-card {
+      background: linear-gradient(145deg, #240c19 0%, #1a0812 100%);
+      border-color: rgba(255, 92, 138, 0.3);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .dreamland-note-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .dreamland-note-title {
+      font-family: var(--font-serif);
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--c-pink-bright);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+    }
+
+    .dreamland-note-sparkles {
+      font-size: 16px;
+      letter-spacing: 2px;
+    }
+
+    .dreamland-note-body {
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--c-text-main);
+      margin: 0;
+      font-style: normal;
+    }
+
+    /* Integrated Music Box Card */
+    .dreamland-music-card {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 24px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      border: 1px solid rgba(255, 182, 193, 0.4);
+      box-shadow: 0 10px 28px rgba(184, 20, 75, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    body.theme-velvet .dreamland-music-card {
+      background: #200a16;
+      border-color: rgba(255, 92, 138, 0.25);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+    }
+
+    .dreamland-disc-wrapper {
+      position: relative;
+      margin-top: 4px;
+    }
+
+    .music-disc {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #ffe3ec 0%, #ff758f 50%, #b8144b 100%);
+      box-shadow: 0 8px 24px rgba(255, 92, 138, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 36px;
+      color: #fff;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+      border: 3px solid #ffffff;
+    }
+
+    body.theme-velvet .music-disc {
+      border-color: #ff758f;
+    }
+
+    .music-disc.playing {
+      animation: spin 9s linear infinite;
+    }
+
+    .dreamland-music-info h3 {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      margin: 0 0 4px;
+      color: var(--c-text-main);
+    }
+
+    .dreamland-music-info p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--c-text-sub);
+    }
+
+    .music-play-btn {
+      background: linear-gradient(135deg, #ff5c8a, #ff3366);
+      color: #fff;
+      border: none;
+      padding: 12px 30px;
+      border-radius: 25px;
+      font-size: 14.5px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(255, 51, 102, 0.35);
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .music-play-btn:active {
+      transform: scale(0.96);
+    }
+
+    .music-pulse-waves {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 16px;
+      margin-top: -4px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .music-pulse-waves.active {
+      opacity: 1;
+    }
+
+    .wave-bar {
+      width: 3px;
+      height: 6px;
+      background: var(--c-pink-bright);
+      border-radius: 2px;
+      animation: waveDance 1.2s ease-in-out infinite alternate;
+    }
+    .wave-bar:nth-child(2) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.4s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.1s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.3s; }
+
+    @keyframes waveDance {
+      0% { height: 4px; }
+      100% { height: 16px; }
+    }
+
+    /* ============= BOTTOM NAVIGATION DOCK ============= */
+    .nav-dock {
+      position: fixed;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - (var(--gutter) * 2));
+      max-width: calc(var(--max-w) - 16px);
+      height: var(--nav-height);
+      background: var(--c-card-bg);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1.5px solid var(--c-card-border);
+      border-radius: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      box-shadow: 0 16px 40px rgba(70, 20, 40, 0.2);
+      z-index: 50;
+      padding: 0 8px;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--c-text-dim);
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 18px;
+      transition: color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .nav-item.active {
+      color: var(--c-pink-bright);
+      transform: translateY(-2px);
+    }
+
+    .nav-item .nav-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .nav-item .nav-text {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    /* Modal for Letters */
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(35, 8, 22, 0.7);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 18px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .envelope-box {
+      position: relative;
+      width: 100%;
+      max-width: 480px;
+    }
+
+    .letter-paper {
+      background: #fff8fa;
+      color: #3d1424;
+      border-radius: 20px;
+      padding: 36px 28px 28px;
+      font-family: var(--font-serif);
+      font-size: 17px;
+      line-height: 1.75;
+      max-height: 75vh;
+      overflow-y: auto;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      border: 2px solid rgba(255, 182, 193, 0.8);
+      position: relative;
+    }
+
+    .letter-paper::before {
+      content: "";
+      position: absolute;
+      inset: 8px;
+      border: 1px dashed rgba(255, 117, 143, 0.4);
+      pointer-events: none;
+      border-radius: 12px;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: -14px;
+      right: -10px;
+      background: #ff5c8a;
+      border: 2.5px solid #fff;
+      color: #fff;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(255, 92, 138, 0.4);
+      z-index: 10;
+    }
+
+    .letter-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .letter-title {
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-style: italic;
+      font-size: 24px;
+      color: #d81b60;
+      margin: 0;
+    }
+
+    .letter-body p {
+      margin: 0 0 14px;
+    }
+
+    .letter-body p:last-child {
+      font-style: italic;
+      text-align: right;
+      font-size: 20px;
+      color: #c2185b;
+      margin-bottom: 0;
+    }
+
+    /* Floating particles */
+    .burst-item {
+      position: fixed;
+      pointer-events: none;
+      z-index: 200;
+      animation: floatBurst 1.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* Keyframes */
+    @keyframes heartbeat {
+
+      0%,
+      100% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.15);
+      }
+    }
+
+    @keyframes breathe {
+
+      0%,
+      100% {
+        transform: translateX(-50%) scale(1);
+        opacity: 0.6;
+      }
+
+      50% {
+        transform: translateX(-50%) scale(1.1);
+        opacity: 0.9;
+      }
+    }
+
+    @keyframes petal-drift {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 0.85;
+      }
+
+      90% {
+        opacity: 0.85;
+      }
+
+      100% {
+        transform: translateY(105vh) rotate(360deg);
+        opacity: 0;
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes floatBurst {
+      0% {
+        transform: translateY(0) scale(0.6);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(-110px) scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    /* Birthday Mode Celebration Styles */
+    .bday-active {
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 230, 242, 0.98)) !important;
+      border: 2px solid #ff5c8a !important;
+      box-shadow: 0 0 25px rgba(255, 92, 138, 0.45), 0 0 50px rgba(255, 182, 193, 0.3) !important;
+      animation: bdayGlow 3s ease-in-out infinite !important;
+    }
+
+    .bday-badge-glow {
+      border-color: #ff3366 !important;
+      color: #d81b60 !important;
+      box-shadow: 0 0 20px rgba(255, 51, 102, 0.45) !important;
+      animation: heartbeat 1.8s infinite !important;
+    }
+
+    .bday-age-banner {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 16px;
+      letter-spacing: 0.05em;
+      color: var(--c-pink-bright);
+      margin-top: 6px;
+      text-align: center;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .bday-confetti {
+      position: fixed;
+      pointer-events: none;
+      z-index: 150;
+      animation: bdayFall linear forwards;
+    }
+
+    @keyframes bdayGlow {
+
+      0%,
+      100% {
+        box-shadow: 0 0 20px rgba(255, 92, 138, 0.35);
+      }
+
+      50% {
+        box-shadow: 0 0 40px rgba(255, 51, 102, 0.6), 0 0 60px rgba(255, 182, 193, 0.4);
+      }
+    }
+
+    @keyframes bdayFall {
+      0% {
+        transform: translateY(-30px) rotate(0deg) scale(0.8);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 0.9;
+      }
+
+      100% {
+        transform: translateY(105vh) rotate(360deg) scale(1.1);
+        opacity: 0;
+      }
+    }
+
+    /* 3-Second Cozy Opening Splash Overlay */
+    .splash-curtain {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at 50% 30%, #fff4f8 0%, #fde2ed 55%, #fbcfe0 100%);
+      transition: opacity 0.65s cubic-bezier(0.16, 1, 0.3, 1), transform 0.65s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .splash-curtain.hidden {
+      opacity: 0;
+      transform: scale(1.05);
+      pointer-events: none;
+    }
+
+    .splash-card {
+      width: 86%;
+      max-width: 320px;
+      padding: 34px 24px 28px;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1.5px solid rgba(255, 182, 193, 0.65);
+      border-radius: 28px;
+      box-shadow: 0 16px 40px rgba(255, 105, 145, 0.18), 0 0 30px rgba(255, 182, 193, 0.25);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .splash-emoji {
+      font-size: 50px;
+      line-height: 1;
+      margin-bottom: 14px;
+      animation: splashFloat 1.8s ease-in-out infinite;
+      filter: drop-shadow(0 6px 12px rgba(255, 105, 145, 0.25));
+    }
+
+    .splash-title {
+      font-family: var(--font-serif);
+      font-size: 20px;
+      color: var(--c-pink-vibrant);
+      margin: 0 0 8px;
+      letter-spacing: 0.02em;
+    }
+
+    .splash-status {
+      font-size: 13px;
+      color: var(--c-text-sub);
+      margin: 0 0 20px;
+      min-height: 20px;
+      font-weight: 500;
+      transition: opacity 0.2s ease;
+    }
+
+    .splash-status.fading {
+      opacity: 0;
+    }
+
+    .splash-bar-track {
+      width: 100%;
+      height: 6px;
+      border-radius: 10px;
+      background: rgba(255, 182, 193, 0.35);
+      overflow: hidden;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .splash-bar-fill {
+      height: 100%;
+      width: 15%;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #ff758f, #ff3366, #ff85a2);
+      transition: width 0.35s ease;
+    }
+
+    .splash-sub {
+      font-family: var(--font-serif);
+      font-style: italic;
+      font-size: 12px;
+      color: var(--c-pink-bright);
+      opacity: 0.85;
+    }
+
+    @keyframes splashFloat {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg) scale(1);
+      }
+      50% {
+        transform: translateY(-8px) rotate(4deg) scale(1.08);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- ============= 3-SECOND COZY OPENING SPLASH ============= -->
+  <div class="splash-curtain" id="splash-curtain" aria-label="Loading Aurora">
+    <div class="splash-card">
+      <div class="splash-emoji" id="splash-emoji">🍳</div>
+      <h3 class="splash-title" id="splash-title">Saira's Haven</h3>
+      <p class="splash-status" id="splash-status">Cooking up cozy vibes...</p>
+      <div class="splash-bar-track">
+        <div class="splash-bar-fill" id="splash-bar-fill"></div>
+      </div>
+      <div class="splash-sub" id="splash-sub">crafted by Asif with love ✨</div>
+    </div>
+  </div>
+  <!-- ============= BACKGROUND DECORATIONS ============= -->
+  <div class="backdrop" aria-hidden="true">
+    <div class="floating-glow"></div>
+    <span class="petal p1"></span>
+    <span class="petal p2"></span>
+    <span class="petal p3"></span>
+  </div>
+
+  <!-- ============= TOP STATUS BAR ============= -->
+  <header class="status-bar" role="banner">
+    <div class="status-left">
+      <div class="wifi-badge" id="wifi-badge">
+        <span id="wifi-text">Saira's Haven 🎀</span>
+      </div>
+      <span class="led-dot" id="led-dot" title="Breathing LED"></span>
+    </div>
+    <div class="status-right">
+      <button class="theme-btn" id="theme-btn">
+        <span id="theme-icon">🍓</span>
+        <span id="theme-text">Milk</span>
+      </button>
+      <div class="battery">
+        <div class="battery-shell">
+          <div class="battery-fill" id="battery-fill"></div>
+        </div>
+        <span class="battery-pct" id="battery-pct">—%</span>
+      </div>
+      <button class="icon-btn" id="audio-toggle-btn" aria-label="Toggle sound" title="Sound">
+        <span id="audio-btn-icon">🎵</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============= MAIN VIEWPORT ============= -->
+  <main class="app-viewport">
+
+    <!-- ==================== TAB 1: TODAY / HOME ==================== -->
+    <section class="tab-view" id="view-today">
+      <div class="hero">
+        <div class="coquette-badge" id="dedication-tag">
+          <span>🎀</span>
+          <span>Aurora — for Saira</span>
+          <span>🎀</span>
+        </div>
+        <h1 class="time-display" id="time">00:00:00</h1>
+        <p class="date-display" id="date">—</p>
+        <div class="bday-age-banner" id="bday-age-tag" style="display: none;"></div>
+      </div>
+
+      <!-- Today's Observant Message Card -->
+      <div class="card message-card" id="message-card-box">
+        <div class="card-label">
+          <span>✨</span>
+          <span>A thought for your day</span>
+          <span>✨</span>
+        </div>
+        <p class="message-text" id="message">Loading today's message…</p>
+      </div>
+
+      <!-- Interactive Mood Check-In -->
+      <div class="card mood-section">
+        <div class="mood-header">Tap to check in ✨</div>
+        <div class="mood-dotted-box">
+          <div class="mood-grid">
+            <button class="mood-btn" data-mood="happy">
+              <span class="mood-emoji">✨</span>
+              <span class="mood-name">Happy</span>
+            </button>
+            <button class="mood-btn" data-mood="stressed">
+              <span class="mood-emoji">🌧️</span>
+              <span class="mood-name">Stressed</span>
+            </button>
+            <button class="mood-btn" data-mood="angry">
+              <span class="mood-emoji">😾</span>
+              <span class="mood-name">Angry</span>
+            </button>
+            <button class="mood-btn" data-mood="tired">
+              <span class="mood-emoji">🌸</span>
+              <span class="mood-name">Tired</span>
+            </button>
+            <button class="mood-btn" data-mood="focused">
+              <span class="mood-emoji">☕</span>
+              <span class="mood-name">Focused</span>
+            </button>
+            <button class="mood-btn" data-mood="quiet">
+              <span class="mood-emoji">🧘</span>
+              <span class="mood-name">Quiet</span>
+            </button>
+          </div>
+          <div class="mood-note-box" id="mood-note" style="display: none;">
+            <!-- Revealed dynamically on tap -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Single Heart Touch Keepsake Box -->
+      <div class="heart-touch-card" id="touch-heart-card" role="button">
+        <div class="heart-icon-big">💖</div>
+        <div class="heart-touch-text">
+          <h4>Warm Touches Received</h4>
+          <p>Tap here or touch the physical Aurora box</p>
+        </div>
+        <span class="heart-count-pill" id="heart-count">0</span>
+      </div>
+    </section>
+
+    <!-- ==================== TAB 2: "OPEN WHEN..." LETTERS ==================== -->
+    <section class="tab-view hidden" id="view-letters">
+      <div class="hero">
+        <div class="coquette-badge">
+          <span>💌</span>
+          <span>The Keepsake Envelope Jar</span>
+          <span>💌</span>
+        </div>
+      </div>
+
+      <div class="letters-list">
+        <div class="envelope-item" data-letter="birthday" id="bday-env-item">
+          <div class="env-left">
+            <div class="env-stamp">🎂</div>
+            <div class="env-text">
+              <h4 id="bday-env-title">Open on your Birthday (September 10)</h4>
+              <p id="bday-env-desc">Asif's personal letter for your special milestone</p>
+            </div>
+          </div>
+          <span class="env-open-badge" id="bday-env-badge">Unseal 🎀</span>
+        </div>
+
+        <div class="envelope-item" data-letter="celebrate">
+          <div class="env-left">
+            <div class="env-stamp">✨</div>
+            <div class="env-text">
+              <h4>Open when you accomplished something proud</h4>
+              <p>Even small victories deserve to be celebrated properly</p>
+            </div>
+          </div>
+          <span class="env-open-badge">Unseal 🎀</span>
+        </div>
+
+        <div class="envelope-item" data-letter="sleep">
+          <div class="env-left">
+            <div class="env-stamp">💤</div>
+            <div class="env-text">
+              <h4>Open when you can't sleep at 2 AM</h4>
+              <p>Gentle starlit thoughts to quiet an overthinking mind</p>
+            </div>
+          </div>
+          <span class="env-open-badge">Unseal 🎀</span>
+        </div>
+
+        <div class="envelope-item" data-letter="rough">
+          <div class="env-left">
+            <div class="env-stamp">🌧️</div>
+            <div class="env-text">
+              <h4>Open when you had a really rough day</h4>
+              <p>For when everything felt too heavy and you need quiet warmth</p>
+            </div>
+          </div>
+          <span class="env-open-badge">Unseal 🎀</span>
+        </div>
+
+        <div class="envelope-item" data-letter="angry">
+          <div class="env-left">
+            <div class="env-stamp">😾</div>
+            <div class="env-text">
+              <h4>Open when you're mad at the world (or at me)</h4>
+              <p>An official peace treaty, zero judgment, and a little comfort</p>
+            </div>
+          </div>
+          <span class="env-open-badge">Unseal 🎀</span>
+        </div>
+
+        <div class="envelope-item" data-letter="moon">
+          <div class="env-left">
+            <div class="env-stamp">🌙</div>
+            <div class="env-text">
+              <h4>Open when you look up at the night sky</h4>
+              <p>Why your name resembles the moon as you truly are</p>
+            </div>
+          </div>
+          <span class="env-open-badge">Unseal 🎀</span>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== TAB 3: CHANDNI'S DREAMLAND ==================== -->
+    <section class="tab-view hidden" id="view-dreamland">
+      <div class="hero">
+        <div class="coquette-badge">
+          <span>🌙</span>
+          <span>Chandni's Dreamland</span>
+          <span>✨</span>
+        </div>
+      </div>
+
+      <div class="dreamland-container">
+        <!-- Featured Sleeping Photo Card -->
+        <div class="dreamland-photo-card">
+          <div class="dreamland-ribbon-pin">
+            <span>🎀</span>
+            <span>Viva La Vida</span>
+            <span>🍉</span>
+          </div>
+          <div class="dreamland-img-wrapper">
+            <img class="dreamland-img" src="/sleeping_chandni.jpg" alt="Chandni sleeping cutely" loading="lazy" />
+          </div>
+          <div class="dreamland-caption-box">
+            <p class="dreamland-caption">"The world can be as loud as it wants, but right here you are completely at peace."</p>
+          </div>
+        </div>
+
+        <!-- Bedtime Love Note Card -->
+        <div class="dreamland-note-card">
+          <div class="dreamland-note-header">
+            <h4 class="dreamland-note-title"><span>💌</span> A Quiet Little Note</h4>
+            <span class="dreamland-note-sparkles">✨💤☁️</span>
+          </div>
+          <p class="dreamland-note-body">
+            Caught you in the middle of your finest superpower — sleeping so peacefully, sweet and softly without a single worry in the universe. Whenever your days get hectic or noisy, come right here to your little haven, play this gentle lullaby, and let the quiet starlight carry you into sweetest dreams.
+          </p>
+        </div>
+
+        <!-- Integrated Music Box -->
+        <div class="dreamland-music-card">
+          <div class="dreamland-disc-wrapper">
+            <div class="music-disc" id="music-disc" title="Tap to play our song">🎀</div>
+          </div>
+          <div class="dreamland-music-info">
+            <h3>Gentle Music Box Lullaby</h3>
+            <p>Soft starlit chimes tuned for Chandni's sweetest sleep</p>
+          </div>
+          <div class="music-pulse-waves" id="music-waves">
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+            <span class="wave-bar"></span>
+          </div>
+          <button class="music-play-btn" id="music-play-btn">
+            <span>▶</span>
+            <span id="music-btn-text">Play Lullaby</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============= FLOATING BOTTOM NAVIGATION DOCK ============= -->
+  <nav class="nav-dock" role="navigation" aria-label="Bottom Navigation">
+    <button class="nav-item active" data-tab="today">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-text">Today</span>
+    </button>
+    <button class="nav-item" data-tab="letters">
+      <span class="nav-icon">💌</span>
+      <span class="nav-text">Letters</span>
+    </button>
+    <button class="nav-item" data-tab="dreamland">
+      <span class="nav-icon">🎀</span>
+      <span class="nav-text">Dreamland</span>
+    </button>
+  </nav>
+
+  <!-- ============= LETTER MODAL ============= -->
+  <div class="modal" id="letter-modal" hidden role="dialog" aria-modal="true">
+    <div class="envelope-box">
+      <button class="modal-close" id="modal-close" aria-label="Close letter">×</button>
+      <article class="letter-paper">
+        <div class="letter-header">
+          <div id="letter-modal-emoji"
+            style="font-size:38px; margin-bottom:8px; display:inline-block; animation: heartbeat 2s infinite;">💌</div>
+          <h2 class="letter-title" id="letter-modal-title">A Letter for Chandni</h2>
+        </div>
+        <div class="letter-body" id="letter-modal-body">
+          <!-- Injected dynamically -->
+        </div>
+      </article>
+    </div>
+  </div>
+
+  <!-- ============= LOGIC & SOUND SYNTHESIS ============= -->
+  <script>
+    (function () {
+      'use strict';
+
+      // 30 Grounded, Simple & Romantic Messages for Chandni
+      const MESSAGES = [
+        "In a crowded room or a noisy hall, your laugh is always the easiest thing to recognize.",
+        "If your drama ended on a cliffhanger, staying in bed for 'just one more episode' is 100% justified.",
+        "You make ordinary days feel distinctly less ordinary just by showing up.",
+        "Reminder: iced coffee and a little treat solve approximately 85% of daily problems.",
+        "If the AI writes silly code today, just blame the robot. You're the genius here.",
+        "You don't have to be productive every single second. Elite cozy lounging is an art form.",
+        "Out of all the coincidences in this world, having you in my days is easily my favorite one.",
+        "Wrap yourself up in a warm blanket burrito tonight. You've done plenty for today.",
+        "May your playlist hit all the right songs and your Wi-Fi stay at maximum speed today.",
+        "The way you notice the smallest sweet details in things is rare. Don't ever lose that.",
+        "I hope something unexpectedly lovely catches you off guard today.",
+        "Don't let a stubborn problem convince you that you aren't brilliant. You've got this.",
+        "Whatever chaos is happening around you, you handle it with effortless grace.",
+        "Official decree: today you are allowed to wake up slowly and take things gently.",
+        "When you're happy, it shows in your whole face. I hope today gives you a reason to smile.",
+        "Some days are meant for big accomplishments, and some days are just for tea and quiet.",
+        "If nobody told you today: you are genuinely appreciated, more than you realize.",
+        "May your favorite series have zero annoying plot twists and all the satisfying moments.",
+        "You don't need to have everything figured out right now. Just the very next cozy step.",
+        "Even on your quietest, most tired days, you make the world softer just by being in it.",
+        "I'm grateful for every conversation we share — especially the silly, random ones.",
+        "You carry a lot with a quiet smile. Today, let the world do some of the heavy lifting.",
+        "A gentle reminder that taking a nap is not giving up — it's tactical recharging.",
+        "I hope this evening brings you cozy socks, your favorite snack, and complete peace.",
+        "There's an effortless charm about you that you never seem to give yourself credit for.",
+        "Whatever felt heavy today, leave it at the door. Tonight is for peaceful sleep.",
+        "If your notes or screen look like ancient hieroglyphics today, it's definitely time for a break.",
+        "The world gets a little brighter and sweeter whenever you walk into the room.",
+        "Tomorrow is a blank page, but today is yours to take as gently as you need.",
+        "If anyone annoyed you today, give me their name so I can put them on my official blacklist. Tonight is strictly for snacks and peace.",
+        "If you're ever mad at the world, I'm on your team. If you're mad at me, I wave the white flag immediately and offer peace snacks 🏳️🧸",
+        "Happy Birthday, Saira. Out of all the people in the world, I am so endlessly glad you exist."
+      ];
+
+      // Mood Responses
+      const MOOD_NOTES = {
+        happy: "Seeing you happy is my absolute favorite thing. Whatever is making you smile like that, hold onto it tightly today!",
+        stressed: "Drop your shoulders right now. Take a deep breath. You don't have to solve the whole week today — just the next 15 minutes.",
+        angry: "Hey... deep breath in, drop your shoulders. Whoever or whatever annoyed you today is officially on my blacklist. Want me to go fight them for you, or do you just want some snacks and peace? You’re far too precious to let silly things steal your sparkle. Let it go for tonight 🧸",
+        overwhelmed: "Drop your shoulders right now. Take a deep breath. You don't have to solve the whole week today — just the next 15 minutes.",
+        tired: "You've been carrying a lot today. Put the screen away early, get into your coziest blanket, and rest without an ounce of guilt.",
+        focused: "Look at you locked in! Go create your magic, but remember to blink and take a sip of water.",
+        quiet: "Quiet days are sacred. Wrap yourself in cozy peace, brew your favorite drink, and let the busy world wait outside."
+      };
+
+      // "Open When..." Letters Content with Dedicated Emojis & Cozy Romantic Tone
+      const LETTERS = {
+        moon: {
+          emoji: "🌕",
+          title: "Chandni — Resembling the Moon",
+          body: `<p>Dearest Chandni 💖,</p>
+               <p>I was thinking about your name the other day. Out of all the names in the world, whoever gave you yours got it unimaginably right.</p>
+               <p><em>Chandni</em> — moonlight. It’s not loud or blinding like the midday sun. It doesn’t demand that everyone look at it. It just glows softly, turning ordinary dark nights into something calm, peaceful, and quietly beautiful.</p>
+               <p>That is exactly who you are to me, and to everyone lucky enough to know you. You carry this effortless, luminous grace without even trying. Even on days when you feel tired or quiet, you bring so much warmth and light into the room.</p>
+               <p>Whenever you look up at the moon tonight, remember that you resemble it in all the best ways. You are truly rare and wonderful, Chandni.</p>
+               <p>Always admiring you,<br>— Asif 🌑🎀</p>`
+        },
+        rough: {
+          emoji: "🧸",
+          title: "When You Had a Really Rough Day 🌧️",
+          body: `<p>Dear Chandni 🌸,</p>
+               <p>I'm so sorry today was heavy. Some days just take everything out of you, and it's exhausting having to pretend to be cheerful in front of everyone.</p>
+               <p>You don't have to be strong right now. You don't have to reply to anyone or be productive. Wrap yourself up like a cozy blanket burrito, put on your comfort show, and let the world wait outside.</p>
+               <p>Rough days pass, but you remain the gentlest, sweetest person I know. Tomorrow gets to start from a clean slate.</p>
+               <p>Sending you the warmest hug,<br>— Asif 🧸</p>`
+        },
+        angry: {
+          emoji: "😾",
+          title: "When You're Mad at the World (or at Me) 😾",
+          body: `<p>Hey grumpy 😾,</p>
+               <p>First off: deep breath in, drop those tense shoulders, and unclench your jaw right now. (Yes, I know you were doing that).</p>
+               <p>If you're mad at someone or something ridiculous that happened today: they are officially on my blacklist. Just say the word and I will personally go fight them, argue on your behalf, or challenge them to an aggressively polite duel. Or even better — we ignore them completely, because nobody gets to steal your sparkle and get away with it.</p>
+               <p>And if you're annoyed or mad at <em>me</em>... I surrender! 🏳️ I am officially waving the white flag. Whatever silly, oblivious, or dense thing I did, I'm truly sorry. Your smile is way too important to me to ever let silly things stay between us.</p>
+               <p>Go grab your favorite cold drink or snack, wrap up in a blanket burrito, and remember that I am on your team no matter what. You are allowed to be grumpy for 5 more minutes, and then you have to let me make you laugh, deal?</p>
+               <p>Always on your team,<br>— Asif 🧸🤍</p>`
+        },
+        sleep: {
+          emoji: "🌙",
+          title: "When You Can't Sleep at 2 AM ✨",
+          body: `<p>Hey Chandni 🌙,</p>
+               <p>It's past 2 AM, the whole town is asleep, and your brain has decided this is the exact moment to overthink every life choice since 2019.</p>
+               <p>Nothing that worries you at 2 AM can actually be solved in the dark anyway. Whatever problem feels huge right now will look tiny in the morning sun.</p>
+               <p>Tuck your phone away, close your eyes, and think about something soft — like sleeping in on a rainy Sunday with zero alarms. You are safe, and everything is going to be alright.</p>
+               <p>Sweet dreams,<br>— Asif ✨</p>`
+        },
+        celebrate: {
+          emoji: "🥂",
+          title: "When You Did Something Awesome! 🎉",
+          body: `<p>CHANDNI! 🥳🥂</p>
+               <p>I knew you could do it! Whatever just happened — you finished that assignment, got through a scary day, or finally made something work — YOU WON!</p>
+               <p>I know your immediate instinct is to say <em>'Oh, it was just luck'</em> or <em>'It wasn't a big deal.'</em> Stop that right now! It wasn't luck. It was your brain, your effort, and your quiet brilliance.</p>
+               <p>Take full credit, treat yourself to a celebratory snack or boba, and enjoy this feeling. I am so ridiculously proud of you!</p>
+               <p>Cheering for you always,<br>— Asif 🥂</p>`
+        },
+        birthday: {
+          emoji: "🎂",
+          title: "Happy Birthday, Saira 💖",
+          body: ""
+        }
+      };
+
+      // Exact birthdate: September 10, 2004
+      const BIRTH_MONTH = 8; // 0-indexed (8 = September)
+      const BIRTH_DAY = 10;
+      const BIRTH_YEAR = 2004;
+
+      function getOrdinalSuffix(n) {
+        const s = ["th", "st", "nd", "rd"];
+        const v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+      }
+
+      function getBirthdayData() {
+        const now = new Date();
+        const urlParams = new URLSearchParams(window.location.search);
+        const forcedBday = urlParams.get('bday') === '1';
+
+        const isBdayDate = (now.getMonth() === BIRTH_MONTH && now.getDate() === BIRTH_DAY);
+        const isToday = forcedBday || isBdayDate;
+
+        const currentYear = now.getFullYear();
+        const age = Math.max(1, currentYear - BIRTH_YEAR);
+        const ageWithSuffix = getOrdinalSuffix(age);
+
+        return { isToday, age, ageWithSuffix, currentYear };
+      }
+
+      const bdayInfo = getBirthdayData();
+
+      // Dynamic Birthday Letter customized to her exact entering age
+      LETTERS.birthday = {
+        emoji: "🎂",
+        title: `Happy ${bdayInfo.ageWithSuffix} Birthday, Saira 💖`,
+        body: `<p>Dearest Saira 🎂✨,</p>
+             <p>Happy ${bdayInfo.ageWithSuffix} Birthday! Welcome to Chapter ${bdayInfo.age} 🌸✨</p>
+             <p>If you're opening this on September 10th, I hope your day is filled with everything you love most: endless comfort, your favorite treats, your top drama series, and zero stress.</p>
+             <p>I built this little Aurora box for you by hand — soldering every wire, writing the code, and tuning every single pixel, chime, and melody — because someone as special, gentle, and lovely as you deserves a keepsake made exclusively for her.</p>
+             <p>Thank you for bringing your laughter, your effortless charm, and your cozy moonlight warmth into my world. Entering your ${bdayInfo.ageWithSuffix} year is such a milestone, and I hope this chapter brings you all the peace, happiness, and sweet moments you secretly wish for.</p>
+             <p>With all my heart,<br>— Asif 💖</p>`
+      };
+
+      // DOM Elements
+      const $time = document.getElementById('time');
+      const $date = document.getElementById('date');
+      const $message = document.getElementById('message');
+      const $messageBox = document.getElementById('message-card-box');
+      const $dedicationTag = document.getElementById('dedication-tag');
+      const $bdayAgeTag = document.getElementById('bday-age-tag');
+      const $bdayEnvTitle = document.getElementById('bday-env-title');
+      const $bdayEnvDesc = document.getElementById('bday-env-desc');
+      const $bdayEnvBadge = document.getElementById('bday-env-badge');
+      const $batFill = document.getElementById('battery-fill');
+      const $batPct = document.getElementById('battery-pct');
+      const $wifiBadge = document.getElementById('wifi-badge');
+      const $wifiText = document.getElementById('wifi-text');
+      const $ledDot = document.getElementById('led-dot');
+      const $themeBtn = document.getElementById('theme-btn');
+      const $themeIcon = document.getElementById('theme-icon');
+      const $themeText = document.getElementById('theme-text');
+      const $audioToggleBtn = document.getElementById('audio-toggle-btn');
+      const $audioBtnIcon = document.getElementById('audio-btn-icon');
+      const $moodNote = document.getElementById('mood-note');
+      const $heartCount = document.getElementById('heart-count');
+      const $touchCard = document.getElementById('touch-heart-card');
+      const $modal = document.getElementById('letter-modal');
+      const $modalClose = document.getElementById('modal-close');
+      const $modalTitle = document.getElementById('letter-modal-title');
+      const $modalEmoji = document.getElementById('letter-modal-emoji');
+      const $modalBody = document.getElementById('letter-modal-body');
+      const $musicBtn = document.getElementById('music-play-btn');
+      const $musicText = document.getElementById('music-btn-text');
+      const $musicDisc = document.getElementById('music-disc');
+      const $musicWaves = document.getElementById('music-waves');
+
+      // Continuous Live Clock
+      function tickClock() {
+        const now = new Date();
+        const hrs = String(now.getHours()).padStart(2, '0');
+        const mins = String(now.getMinutes()).padStart(2, '0');
+        const secs = String(now.getSeconds()).padStart(2, '0');
+        $time.textContent = `${hrs}:${mins}:${secs}`;
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
+        $date.textContent = now.toLocaleDateString('en-US', options);
+      }
+      tickClock();
+      setInterval(tickClock, 1000);
+
+      // Message selection
+      function pickMessage(doy, sIdx) {
+        if (typeof sIdx === 'number' && sIdx >= 0 && sIdx < MESSAGES.length) {
+          return MESSAGES[sIdx];
+        }
+        const day = doy || Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+        return MESSAGES[Math.abs(day) % MESSAGES.length];
+      }
+
+      function setMessage(text) {
+        if ($message.textContent === text) return;
+        $message.classList.add('fading');
+        setTimeout(() => {
+          $message.textContent = text;
+          $message.classList.remove('fading');
+        }, 350);
+      }
+
+      // Theme Toggle
+      let isVelvet = false;
+      $themeBtn.addEventListener('click', () => {
+        isVelvet = !isVelvet;
+        document.body.classList.toggle('theme-velvet', isVelvet);
+        $themeIcon.textContent = isVelvet ? '🌹' : '🍓';
+        $themeText.textContent = isVelvet ? 'Rose' : 'Milk';
+        spawnSparkles(window.innerWidth / 2, 40);
+      });
+
+      // Navigation Tabs
+      const tabs = document.querySelectorAll('.nav-item');
+      const views = {
+        today: document.getElementById('view-today'),
+        letters: document.getElementById('view-letters'),
+        dreamland: document.getElementById('view-dreamland')
+      };
+
+      tabs.forEach(btn => {
+        btn.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          btn.classList.add('active');
+          const target = btn.dataset.tab;
+          Object.keys(views).forEach(k => {
+            if (views[k]) views[k].classList.toggle('hidden', k !== target);
+          });
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      });
+
+      // Optional initial tab from URL (e.g. ?tab=dreamland)
+      const initialTab = new URLSearchParams(window.location.search).get('tab');
+      if (initialTab && views[initialTab]) {
+        const initialBtn = document.querySelector(`.nav-item[data-tab="${initialTab}"]`);
+        if (initialBtn) initialBtn.click();
+      }
+
+      // Mood Buttons
+      const moodBtns = document.querySelectorAll('.mood-btn');
+      moodBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+          moodBtns.forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          const m = btn.dataset.mood;
+          if (MOOD_NOTES[m]) {
+            $moodNote.style.display = 'block';
+            $moodNote.textContent = MOOD_NOTES[m];
+            spawnSparkles(btn.getBoundingClientRect().left + 20, btn.getBoundingClientRect().top);
+          }
+        });
+      });
+
+      // Letter Envelopes
+      document.querySelectorAll('.envelope-item').forEach(env => {
+        env.addEventListener('click', () => {
+          const key = env.dataset.letter;
+          if (LETTERS[key]) {
+            if ($modalEmoji) $modalEmoji.textContent = LETTERS[key].emoji || '💌';
+            $modalTitle.textContent = LETTERS[key].title;
+            $modalBody.innerHTML = LETTERS[key].body;
+            $modal.hidden = false;
+            document.body.classList.add('modal-open');
+            spawnSparkles(window.innerWidth / 2, window.innerHeight / 2);
+          }
+        });
+      });
+
+      $modalClose.addEventListener('click', () => {
+        $modal.hidden = true;
+        document.body.classList.remove('modal-open');
+      });
+      $modal.addEventListener('click', (e) => {
+        if (e.target === $modal) {
+          $modal.hidden = true;
+          document.body.classList.remove('modal-open');
+        }
+      });
+
+      // Heart Touch Card
+      let touchCount = 0;
+      function bumpHeart(val) {
+        touchCount = val || (touchCount + 1);
+        $heartCount.textContent = touchCount;
+        $heartCount.classList.add('bump');
+        const rect = $touchCard.getBoundingClientRect();
+        spawnSparkles(rect.left + rect.width / 2, rect.top);
+        setTimeout(() => $heartCount.classList.remove('bump'), 250);
+      }
+      $touchCard.addEventListener('click', () => {
+        bumpHeart(touchCount + 1);
+      });
+
+      document.getElementById('dedication-tag').addEventListener('click', (e) => {
+        spawnSparkles(e.clientX, e.clientY);
+      });
+
+      // Sparkle Particle Generator
+      function spawnSparkles(x, y) {
+        const items = ['💖', '🎀', '✨', '🌸', '🍓'];
+        for (let i = 0; i < 5; i++) {
+          const el = document.createElement('div');
+          el.className = 'burst-item';
+          el.textContent = items[Math.floor(Math.random() * items.length)];
+          el.style.left = (x || window.innerWidth / 2) + (Math.random() * 50 - 25) + 'px';
+          el.style.top = (y || window.innerHeight / 2) + (Math.random() * 20 - 10) + 'px';
+          el.style.fontSize = (18 + Math.random() * 10) + 'px';
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), 1750);
+        }
+      }
+
+      // ==========================================
+      //  BIRTHDAY CELEBRATION MODE & ANIMATIONS
+      // ==========================================
+      function initBirthdayMode() {
+        if (!bdayInfo.isToday) return;
+
+        // 1. Hero Dedication Banner
+        if ($dedicationTag) {
+          $dedicationTag.innerHTML = `<span>🎂</span><span>Happy ${bdayInfo.ageWithSuffix} Birthday, Saira!</span><span>💖</span>`;
+          $dedicationTag.classList.add('bday-badge-glow');
+        }
+
+        // 2. Birthday Age Sub-banner
+        if ($bdayAgeTag) {
+          $bdayAgeTag.style.display = 'block';
+          $bdayAgeTag.textContent = `✨ Entering Chapter ${bdayInfo.age} (${bdayInfo.ageWithSuffix} Year) • September 10 ✨`;
+        }
+
+        // 3. Message Card Glow & Celebration Tribute
+        if ($messageBox) {
+          $messageBox.classList.add('bday-active');
+        }
+        setMessage(`Happy ${bdayInfo.ageWithSuffix} Birthday Saira! 🎂✨ Today is entirely yours — sleep in, eat the sweetest cake, watch your favorite show, and let Aurora celebrate you.`);
+
+        // 4. Letters Tab Envelope Highlight
+        if ($bdayEnvTitle) {
+          $bdayEnvTitle.textContent = `Happy ${bdayInfo.ageWithSuffix} Birthday! 🎂`;
+        }
+        if ($bdayEnvDesc) {
+          $bdayEnvDesc.textContent = `✨ TODAY IS YOUR SPECIAL DAY! Tap to unseal Asif's Chapter ${bdayInfo.age} letter 🎀`;
+        }
+        if ($bdayEnvBadge) {
+          $bdayEnvBadge.classList.add('bday-badge-glow');
+          $bdayEnvBadge.textContent = 'Open Today! 🎂';
+        }
+
+        // 5. Celebration Animations
+        startBirthdayCelebration();
+      }
+
+      function startBirthdayCelebration() {
+        const confettiEmojis = ['🎂', '✨', '🎉', '💖', '🌸', '🎀', '🧁', '⭐', '☁️'];
+        function dropConfetti() {
+          if (!document.hidden) {
+            const el = document.createElement('div');
+            el.className = 'bday-confetti';
+            el.textContent = confettiEmojis[Math.floor(Math.random() * confettiEmojis.length)];
+            el.style.left = (Math.random() * 95) + 'vw';
+            el.style.top = '-20px';
+            el.style.fontSize = (16 + Math.random() * 16) + 'px';
+            el.style.animationDuration = (3.5 + Math.random() * 3) + 's';
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 7000);
+          }
+        }
+        // Spawn initial festive burst
+        for (let i = 0; i < 15; i++) {
+          setTimeout(dropConfetti, i * 140);
+        }
+        // Continuous gentle floating drift
+        setInterval(dropConfetti, 1200);
+      }
+
+      // ==========================================
+      //  WEB AUDIO OFFLINE MUSIC BOX SYNTHESIS
+      // ==========================================
+      let audioCtx = null;
+      let isPlaying = false;
+      let musicTimeout = null;
+      let noteIndex = 0;
+
+      // Classic Brahms Lullaby with a soft music-box harmony bed.
+      // n = semitones above C4 (261.63 Hz). h = bass/chord-root frequency.
+      // Every note carries a gentle bass root plus an added fifth so the
+      // lullaby sounds rounder & more melodious than a single-note line.
+      const MELODY = [
+        // Measure 1: "Lullaby and good night" (C)
+        { n: 12, d: 0.50, h: 130.81 }, { n: 12, d: 0.50, h: 130.81 }, { n: 16, d: 0.90, h: 130.81 },
+        { n: 12, d: 0.50, h: 130.81 }, { n: 12, d: 0.50, h: 130.81 }, { n: 16, d: 0.90, h: 130.81 },
+        // Measure 2: "In the sky stars are bright" (C, F, G)
+        { n: 12, d: 0.45, h: 130.81 }, { n: 16, d: 0.45, h: 130.81 }, { n: 19, d: 0.85, h: 130.81 },
+        { n: 17, d: 0.60, h: 174.61 }, { n: 14, d: 0.50, h: 196.00 }, { n: 16, d: 0.50, h: 196.00 },
+        { n: 14, d: 0.95, h: 196.00 },
+        // Measure 3: "Close your eyes, rest your head" (G, then C)
+        { n: 11, d: 0.45, h: 196.00 }, { n: 14, d: 0.45, h: 196.00 }, { n: 17, d: 0.65, h: 196.00 },
+        { n: 14, d: 0.45, h: 196.00 }, { n: 11, d: 0.45, h: 196.00 }, { n: 12, d: 0.90, h: 130.81 },
+        // Measure 4: gentle resolution (F, C)
+        { n: 14, d: 0.45, h: 196.00 }, { n: 16, d: 0.45, h: 174.61 }, { n: 12, d: 1.30, h: 130.81 }
+      ];
+      const NOTE_BASE = 261.63; // C4
+      const freqOf = (n) => NOTE_BASE * Math.pow(2, n / 12);
+      const FULL_MELODY = MELODY;
+
+      function getAudioContext() {
+        if (!audioCtx || audioCtx.state === 'closed') {
+          const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+          if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+          }
+        }
+        return audioCtx;
+      }
+
+      function updateMusicUI(active) {
+        if ($audioBtnIcon) $audioBtnIcon.textContent = active ? "🎵" : "🔇";
+        if ($audioToggleBtn) $audioToggleBtn.classList.toggle('playing', active);
+        if ($musicDisc) $musicDisc.classList.toggle('playing', active);
+        if ($musicWaves) $musicWaves.classList.toggle('active', active);
+        if ($musicText) $musicText.textContent = active ? "Pause Lullaby" : "Play Lullaby";
+      }
+
+      function playChime(step, dur, bass) {
+        if (!audioCtx || audioCtx.state !== 'running') return;
+        try {
+          const now = audioCtx.currentTime;
+          const noteDur = dur || 0.50;
+          const freq = freqOf(step);
+
+          // Main note envelope (gentle, warm celesta attack, long shimmering decay)
+          const mainGain = audioCtx.createGain();
+          mainGain.gain.setValueAtTime(0, now);
+          mainGain.gain.linearRampToValueAtTime(0.28, now + 0.03);
+          mainGain.gain.exponentialRampToValueAtTime(0.0001, now + noteDur * 2.2);
+          mainGain.connect(audioCtx.destination);
+
+          // 1. Primary sparkling melody bell tone
+          const osc1 = audioCtx.createOscillator();
+          osc1.type = 'sine';
+          osc1.frequency.setValueAtTime(freq, now);
+          osc1.connect(mainGain);
+          osc1.start(now);
+          osc1.stop(now + noteDur * 2.3);
+
+          // 2. Celesta music-box overtone (soft triangle, one octave up)
+          const osc2 = audioCtx.createOscillator();
+          const overtoneGain = audioCtx.createGain();
+          osc2.type = 'triangle';
+          osc2.frequency.setValueAtTime(freq * 2.0, now);
+          overtoneGain.gain.setValueAtTime(0.06, now);
+          overtoneGain.gain.exponentialRampToValueAtTime(0.0001, now + noteDur * 1.6);
+          osc2.connect(overtoneGain);
+          overtoneGain.connect(mainGain);
+          osc2.start(now);
+          osc2.stop(now + noteDur * 1.8);
+
+          // 3. Warm bass harmony on the chord root — adds roundness & body
+          if (bass) {
+            const bassOsc = audioCtx.createOscillator();
+            const bassGain = audioCtx.createGain();
+            bassOsc.type = 'sine';
+            bassOsc.frequency.setValueAtTime(bass, now);
+            bassGain.gain.setValueAtTime(0.0, now);
+            bassGain.gain.linearRampToValueAtTime(0.14, now + 0.05);
+            bassGain.gain.exponentialRampToValueAtTime(0.0001, now + noteDur * 2.6);
+            bassOsc.connect(bassGain);
+            bassGain.connect(audioCtx.destination);
+            bassOsc.start(now);
+            bassOsc.stop(now + noteDur * 2.7);
+          }
+
+          // 4. Gentle perfect-fifth shimmer above the bass for a music-box sparkle
+          if (bass) {
+            const osc3 = audioCtx.createOscillator();
+            const fifthGain = audioCtx.createGain();
+            osc3.type = 'triangle';
+            osc3.frequency.setValueAtTime(bass * 1.5, now);
+            fifthGain.gain.setValueAtTime(0.045, now);
+            fifthGain.gain.exponentialRampToValueAtTime(0.0001, now + noteDur * 1.8);
+            osc3.connect(fifthGain);
+            fifthGain.connect(mainGain);
+            osc3.start(now);
+            osc3.stop(now + noteDur * 2.0);
+          }
+        } catch (_) { }
+      }
+
+      function playNextNote() {
+        if (!isPlaying || !audioCtx || audioCtx.state !== 'running') return;
+
+        const note = FULL_MELODY[noteIndex];
+        playChime(note.n, note.d, note.h);
+
+        noteIndex = (noteIndex + 1) % FULL_MELODY.length;
+        const delayMs = (noteIndex === 0) ? (note.d * 1000 + 1600) : (note.d * 960);
+        musicTimeout = setTimeout(playNextNote, delayMs);
+      }
+
+      function startMusicBox() {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+
+        const beginPlayback = () => {
+          if (isPlaying) return;
+          isPlaying = true;
+          updateMusicUI(true);
+          noteIndex = 0;
+          playNextNote();
+        };
+
+        if (ctx.state === 'suspended') {
+          ctx.resume().then(() => {
+            if (ctx.state === 'running') beginPlayback();
+          }).catch(() => { });
+        } else if (ctx.state === 'running') {
+          beginPlayback();
+        }
+      }
+
+      function stopMusicBox() {
+        isPlaying = false;
+        if (musicTimeout) {
+          clearTimeout(musicTimeout);
+          musicTimeout = null;
+        }
+        noteIndex = 0;
+        updateMusicUI(false);
+      }
+
+      function toggleMusicBox(e) {
+        if (e && e.stopPropagation) e.stopPropagation();
+        if (isPlaying) {
+          stopMusicBox();
+        } else {
+          startMusicBox();
+        }
+      }
+
+      if ($audioToggleBtn) $audioToggleBtn.addEventListener('click', toggleMusicBox);
+      if ($musicBtn) $musicBtn.addEventListener('click', toggleMusicBox);
+      if ($musicDisc) $musicDisc.addEventListener('click', toggleMusicBox);
+
+      // ==========================================
+      //  DEMO MODE — Mock Hardware State
+      // ==========================================
+      let prevTouches = 0;
+
+      function applyState(s) {
+        if (!s) return;
+        if (s.bat) {
+          const pct = Math.max(0, Math.min(100, s.bat.pct || 0));
+          $batFill.style.width = pct + '%';
+          $batPct.textContent = pct + '%';
+        }
+        if (s.wifi !== undefined) {
+          $wifiBadge.classList.toggle('on', !!s.wifi);
+          $wifiText.textContent = s.wifi ? "Saira's Haven 🎀" : "Haven Paused 💤";
+        }
+        if (s.led !== undefined) {
+          $ledDot.classList.toggle('off', s.led !== 'on');
+        }
+        if (s.touches !== undefined) {
+          if (s.touches > prevTouches) {
+            bumpHeart(s.touches);
+            prevTouches = s.touches;
+          } else {
+            $heartCount.textContent = s.touches;
+            prevTouches = s.touches;
+            touchCount = s.touches;
+          }
+        }
+        if (!bdayInfo.isToday && (s.msg_idx !== undefined || s.doy !== undefined)) {
+          setMessage(pickMessage(s.doy, s.msg_idx));
+        }
+      }
+
+      // 3-Second Opening Loading Screen (Funny & Cozy, Special Birthday Edition)
+      function runLoadingScreen() {
+        const $curtain = document.getElementById('splash-curtain');
+        if (!$curtain) return;
+
+        const $emoji = document.getElementById('splash-emoji');
+        const $title = document.getElementById('splash-title');
+        const $status = document.getElementById('splash-status');
+        const $fill = document.getElementById('splash-bar-fill');
+        const $sub = document.getElementById('splash-sub');
+
+        const isBday = bdayInfo.isToday;
+
+        const steps = isBday ? [
+          { pct: 25, emoji: "🕵️", title: "Wait a second...", text: "Running routine morning diagnostics..." },
+          { pct: 55, emoji: "🚨", title: "WAIT. STOP EVERYTHING.", text: "Checking calendar... IT'S SEPTEMBER 10TH?!" },
+          { pct: 85, emoji: "🎂", title: `Happy ${bdayInfo.ageWithSuffix} Birthday!`, text: `Baking Chapter ${bdayInfo.age} cake & lighting candles...` },
+          { pct: 100, emoji: "👑", title: "LITTLE PRINCESS'S DAY ✨", text: "Unleashing maximum celebration mode! 💖" }
+        ] : [
+          { pct: 25, emoji: "🍳", title: "Saira's Haven", text: "Cooking up cozy vibes & lazy warmth..." },
+          { pct: 55, emoji: "🛋️", title: "Saira's Haven", text: "Fluffing the virtual pillows & blankets..." },
+          { pct: 85, emoji: "✨", title: "Saira's Haven", text: "Bribing the Wi-Fi fairies for maximum speed..." },
+          { pct: 100, emoji: "🎀", title: "Saira's Haven", text: "All cozy and ready for you! Welcome home 💖" }
+        ];
+
+        if (isBday && $sub) {
+          $sub.textContent = `Chapter ${bdayInfo.age} Birthday Edition 🌸`;
+        }
+
+        let stepIdx = 0;
+        function updateStep() {
+          if (stepIdx >= steps.length) return;
+          const s = steps[stepIdx];
+          if ($emoji) $emoji.textContent = s.emoji;
+          if ($title) $title.textContent = s.title;
+          if ($status) {
+            $status.classList.add('fading');
+            setTimeout(() => {
+              $status.textContent = s.text;
+              $status.classList.remove('fading');
+            }, 100);
+          }
+          if ($fill) $fill.style.width = s.pct + '%';
+          stepIdx++;
+        }
+
+        // Tap to prime audio on splash
+        $curtain.addEventListener('click', () => {
+          startMusicBox();
+        }, { once: true });
+
+        // Timeline:
+        updateStep();                  // 0s: Step 1
+        setTimeout(updateStep, 800);   // 0.8s: Step 2
+        setTimeout(updateStep, 1700);  // 1.7s: Step 3
+        setTimeout(updateStep, 2600);  // 2.6s: Step 4
+
+        // 3.2s: Smooth dissolve and start celebration
+        setTimeout(() => {
+          $curtain.classList.add('hidden');
+          setTimeout(() => {
+            try { $curtain.remove(); } catch (_) { }
+          }, 700);
+
+          startMusicBox();
+          if (isBday) {
+            spawnSparkles(window.innerWidth / 2, window.innerHeight / 3);
+          }
+        }, 3200);
+      }
+
+      // Autoplay smooth music on open / first user interaction
+      function initAutoplay() {
+        // 1. Attempt immediate playback (works if browser allows autoplay)
+        startMusicBox();
+
+        // 2. Guaranteed unlock on first user gesture anywhere on screen
+        const unlockOnUserGesture = () => {
+          if (!isPlaying) {
+            startMusicBox();
+          } else if (audioCtx && audioCtx.state === 'suspended') {
+            audioCtx.resume();
+          }
+        };
+
+        ['pointerdown', 'touchstart', 'touchend', 'click'].forEach(evt => {
+          window.addEventListener(evt, unlockOnUserGesture, { once: true, passive: true });
+        });
+      }
+
+      // Boot (Demo Mode)
+      initBirthdayMode();
+      runLoadingScreen();
+      if (!bdayInfo.isToday) {
+        setMessage(pickMessage());
+      }
+      // Mock hardware state for demo
+      applyState({
+        bat: { pct: 85 },
+        wifi: true,
+        led: 'on',
+        touches: 7,
+        doy: Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0)) / 86400000),
+        msg_idx: 3
+      });
+      initAutoplay();
+    })();
+  </script>
+</body>
+
+</html>
