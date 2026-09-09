@@ -191,17 +191,7 @@ static void handleNotFound(AsyncWebServerRequest* req) {
         req->send(404);
         return;
     }
-    // Suppress captive portal detection probes by returning 204 directly
-    if (strstr(url, "204") != nullptr || strstr(url, "connectivity") != nullptr ||
-        strstr(url, "probe") != nullptr || strstr(url, "check") != nullptr ||
-        strstr(url, "status") != nullptr || strstr(url, "detect") != nullptr) {
-        req->send(204);
-        return;
-    }
-    if (strstr(url, "wpad") != nullptr || strstr(url, "pac") != nullptr) {
-        req->send(404);
-        return;
-    }
+    // Redirect all unknown paths to dashboard (captive portal fallback)
     DBG_PRINTF("[HTTP] fallback -> / for %s\n", url);
     req->redirect("/");
 }
@@ -231,39 +221,35 @@ bool begin() {
         req->send(200, "application/json", buf);
     });
 
-    //  3. Suppress Captive Portal ("Sign-In Required") prompts on Android, iOS, Windows, Firefox
-    //     Returning 204 No Content or expected success body allows phones to connect directly!
-    auto send204 = [](AsyncWebServerRequest* req) { req->send(204); };
-    server.on("/generate_204", HTTP_GET, send204);
-    server.on("/generate204", HTTP_GET, send204);
-    server.on("/gen_204", HTTP_GET, send204);
-    server.on("/mobile/status", HTTP_GET, send204);
-    server.on("/check_network_status", HTTP_GET, send204);
+    //  3. Captive Portal: redirect connectivity probes to dashboard
+    //     This triggers the "Sign In Required" / auto-open browser on phones.
+    auto redirectToDashboard = [](AsyncWebServerRequest* req) {
+        req->redirect("http://192.168.4.1/");
+    };
 
-    // Apple / iOS connectivity probes
+    // Android captive portal probes
+    server.on("/generate_204", HTTP_GET, redirectToDashboard);
+    server.on("/generate204", HTTP_GET, redirectToDashboard);
+    server.on("/gen_204", HTTP_GET, redirectToDashboard);
+    server.on("/mobile/status", HTTP_GET, redirectToDashboard);
+    server.on("/check_network_status", HTTP_GET, redirectToDashboard);
+
+    // Apple / iOS captive portal probes
     server.on("/hotspot-detect.html", HTTP_GET, [](AsyncWebServerRequest* req) {
-        req->send(200, "text/html", "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>");
+        // iOS expects "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>"
+        // for "no captive portal". Anything else triggers the sign-in sheet.
+        req->redirect("http://192.168.4.1/");
     });
-    server.on("/library/test/success.html", HTTP_GET, [](AsyncWebServerRequest* req) {
-        req->send(200, "text/html", "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>");
-    });
+    server.on("/library/test/success.html", HTTP_GET, redirectToDashboard);
 
-    // Windows NCSI connectivity probes
-    server.on("/connecttest.txt", HTTP_GET, [](AsyncWebServerRequest* req) {
-        req->send(200, "text/plain", "Microsoft Connect Test");
-    });
-    server.on("/ncsi.txt", HTTP_GET, [](AsyncWebServerRequest* req) {
-        req->send(200, "text/plain", "Microsoft NCSI");
-    });
-    server.on("/redirect", HTTP_GET, send204);
+    // Windows NCSI captive portal probes
+    server.on("/connecttest.txt", HTTP_GET, redirectToDashboard);
+    server.on("/ncsi.txt", HTTP_GET, redirectToDashboard);
+    server.on("/redirect", HTTP_GET, redirectToDashboard);
 
-    // Firefox / Linux connectivity probes
-    server.on("/success.txt", HTTP_GET, [](AsyncWebServerRequest* req) {
-        req->send(200, "text/plain", "success\n");
-    });
-    server.on("/canonical.html", HTTP_GET, [](AsyncWebServerRequest* req) {
-        req->send(200, "text/html", "<HTML><BODY>OK</BODY></HTML>");
-    });
+    // Firefox / Linux captive portal probes
+    server.on("/success.txt", HTTP_GET, redirectToDashboard);
+    server.on("/canonical.html", HTTP_GET, redirectToDashboard);
 
     //  4. Static file serving from LittleFS (checked only for asset files)
     server.serveStatic("/", LittleFS, "/")
