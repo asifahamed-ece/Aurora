@@ -16,9 +16,6 @@
     --pink-400: #f472b6;
     --pink-500: #ec4899;
     --lavender: #f3e8ff;
-    --peach: #fff5eb;
-    --blush: #ffe4e6;
-    --cream: #fefce8;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -31,17 +28,14 @@
     overflow-x: hidden;
   }
 
-  /* ============================================
-     SCREEN VIEW — Floating hearts & sparkles
-     ============================================ */
-
+  /* ===== SCREEN VIEW ===== */
   .screen-view {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     min-height: 100vh;
-    padding: 2rem;
+    padding: 2rem 1rem;
     position: relative;
     overflow: hidden;
   }
@@ -49,17 +43,15 @@
   .card {
     position: relative;
     z-index: 2;
-    background: rgba(255,255,255,0.85);
+    background: rgba(255,255,255,0.88);
     backdrop-filter: blur(12px);
     border: 2px dashed var(--pink-300);
     border-radius: 24px;
-    padding: 3rem 2.5rem;
-    max-width: 520px;
+    padding: 2.5rem 2rem;
+    max-width: 480px;
     width: 100%;
     text-align: center;
-    box-shadow:
-      0 4px 24px rgba(236,72,153,0.10),
-      0 0 80px rgba(236,72,153,0.05);
+    box-shadow: 0 4px 24px rgba(236,72,153,0.10), 0 0 80px rgba(236,72,153,0.05);
     animation: cardBreathe 4s ease-in-out infinite;
   }
 
@@ -70,125 +62,94 @@
 
   .card h1 {
     font-family: 'Dancing Script', cursive;
-    font-size: 2.8rem;
+    font-size: 2.6rem;
     font-weight: 700;
     color: var(--pink-500);
-    margin-bottom: 0.3rem;
-    animation: fadeSlideIn 1s ease-out 0.2s both;
+    margin-bottom: 0.2rem;
+    animation: fadeSlideIn 0.8s ease-out 0.2s both;
   }
 
   .card .subtitle {
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 300;
     color: var(--pink-400);
-    margin-bottom: 1.8rem;
-    animation: fadeSlideIn 1s ease-out 0.4s both;
+    margin-bottom: 1.4rem;
+    animation: fadeSlideIn 0.8s ease-out 0.3s both;
   }
 
   .divider {
-    width: 60px;
+    width: 50px;
     height: 2px;
     background: linear-gradient(90deg, transparent, var(--pink-300), transparent);
-    margin: 1.2rem auto;
-    animation: fadeSlideIn 1s ease-out 0.5s both;
+    margin: 1rem auto;
+    animation: fadeSlideIn 0.8s ease-out 0.4s both;
   }
 
-  .section {
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.2rem;
     text-align: left;
-    margin-bottom: 1.4rem;
-    animation: fadeSlideIn 1s ease-out both;
+    animation: fadeSlideIn 0.8s ease-out 0.5s both;
   }
 
-  .section:nth-child(3) { animation-delay: 0.6s; }
-  .section:nth-child(4) { animation-delay: 0.7s; }
-  .section:nth-child(5) { animation-delay: 0.8s; }
-  .section:nth-child(6) { animation-delay: 0.9s; }
-  .section:nth-child(7) { animation-delay: 1.0s; }
-  .section:nth-child(8) { animation-delay: 1.1s; }
-
-  .section h2 {
+  .col h2 {
     font-family: 'Dancing Script', cursive;
-    font-size: 1.3rem;
+    font-size: 1.15rem;
     color: var(--pink-500);
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.35rem;
   }
 
-  .section p, .section li {
-    font-size: 0.88rem;
+  .col p, .col li {
+    font-size: 0.82rem;
     font-weight: 400;
-    line-height: 1.6;
+    line-height: 1.55;
     color: #5a4550;
   }
 
-  .section ul {
-    list-style: none;
-    padding-left: 0;
-  }
-
-  .section ul li::before {
-    content: '♡ ';
-    color: var(--pink-400);
-    font-size: 0.9rem;
-  }
+  .col ul { list-style: none; padding: 0; margin: 0.3rem 0; }
+  .col ul li::before { content: '♡ '; color: var(--pink-400); }
 
   .wifi-box {
     background: linear-gradient(135deg, var(--pink-100), var(--lavender));
-    border-radius: 14px;
-    padding: 1rem 1.2rem;
-    margin: 0.8rem 0;
+    border-radius: 12px;
+    padding: 0.8rem 1rem;
+    margin: 0.5rem 0;
     text-align: center;
   }
 
-  .wifi-box .ssid {
-    font-weight: 600;
-    color: var(--pink-500);
-    font-size: 1rem;
-  }
-
+  .wifi-box .ssid { font-weight: 600; color: var(--pink-500); font-size: 0.95rem; }
   .wifi-box .pass {
     font-family: monospace;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     background: white;
     padding: 2px 8px;
     border-radius: 6px;
     color: var(--pink-400);
-    margin-top: 4px;
+    margin-top: 3px;
     display: inline-block;
   }
-
-  .wifi-box .url {
-    font-weight: 600;
-    font-size: 1rem;
-    color: var(--pink-500);
-    margin-top: 0.4rem;
-  }
+  .wifi-box .url { font-weight: 600; font-size: 0.95rem; color: var(--pink-500); margin-top: 0.3rem; }
 
   .closing {
     font-family: 'Dancing Script', cursive;
-    font-size: 1.1rem;
+    font-size: 1rem;
     color: var(--pink-400);
-    margin-top: 1.5rem;
+    margin-top: 1.2rem;
     line-height: 1.6;
-    animation: fadeSlideIn 1s ease-out 1.2s both;
+    animation: fadeSlideIn 0.8s ease-out 0.7s both;
   }
 
   .signature {
     font-family: 'Dancing Script', cursive;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     color: var(--pink-500);
-    margin-top: 1rem;
-    animation: fadeSlideIn 1s ease-out 1.4s both;
+    margin-top: 0.8rem;
+    animation: fadeSlideIn 0.8s ease-out 0.8s both;
   }
 
   /* Floating hearts */
-  .hearts-container {
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 1;
-    overflow: hidden;
-  }
-
+  .hearts-container { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
   .heart {
     position: absolute;
     bottom: -30px;
@@ -196,7 +157,6 @@
     opacity: 0;
     animation: floatHeart linear infinite;
   }
-
   .heart:nth-child(1) { left: 8%; font-size: 1rem; animation-duration: 7s; animation-delay: 0s; }
   .heart:nth-child(2) { left: 18%; font-size: 0.8rem; animation-duration: 9s; animation-delay: 1s; }
   .heart:nth-child(3) { left: 28%; font-size: 1.3rem; animation-duration: 6s; animation-delay: 3s; }
@@ -225,7 +185,6 @@
     opacity: 0;
     animation: sparkle 3s ease-in-out infinite;
   }
-
   .sparkle:nth-child(1) { top: 12%; left: 15%; animation-delay: 0s; }
   .sparkle:nth-child(2) { top: 25%; right: 12%; animation-delay: 1s; }
   .sparkle:nth-child(3) { top: 60%; left: 8%; animation-delay: 2s; }
@@ -238,11 +197,10 @@
   }
 
   @keyframes fadeSlideIn {
-    from { opacity: 0; transform: translateY(16px); }
+    from { opacity: 0; transform: translateY(14px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Print hint */
   .print-hint {
     position: fixed;
     bottom: 1.5rem;
@@ -250,55 +208,32 @@
     background: rgba(255,255,255,0.9);
     border: 1px dashed var(--pink-300);
     border-radius: 12px;
-    padding: 0.6rem 1rem;
-    font-size: 0.75rem;
+    padding: 0.5rem 0.9rem;
+    font-size: 0.72rem;
     color: var(--pink-400);
     cursor: pointer;
     z-index: 10;
     transition: all 0.2s;
   }
+  .print-hint:hover { background: var(--pink-100); transform: scale(1.05); }
 
-  .print-hint:hover {
-    background: var(--pink-100);
-    transform: scale(1.05);
-  }
-
-  /* ============================================
-     PRINT VIEW — Clean A5 card layout
-     ============================================ */
+  /* ===== PRINT VIEW ===== */
   @media print {
-    body {
-      background: white;
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
-
-    .screen-view {
-      display: none !important;
-    }
-
-    .print-card {
-      display: block !important;
-    }
-
-    .print-card * {
-      animation: none !important;
-    }
+    body { background: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .screen-view { display: none !important; }
+    .print-card { display: block !important; }
+    .print-card * { animation: none !important; }
 
     .page {
       width: 148mm;
       height: 210mm;
-      padding: 15mm;
+      padding: 12mm;
       page-break-after: always;
       position: relative;
       overflow: hidden;
     }
+    .page:last-child { page-break-after: avoid; }
 
-    .page:last-child {
-      page-break-after: avoid;
-    }
-
-    /* Front cover */
     .page-cover {
       display: flex;
       flex-direction: column;
@@ -306,111 +241,71 @@
       justify-content: center;
       background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #f3e8ff 100%);
       border: 2px dashed #f9a8d4;
-      border-radius: 0;
       text-align: center;
     }
+    .page-cover h1 { font-family: 'Dancing Script', cursive; font-size: 2.8rem; color: #ec4899; margin-bottom: 0.2rem; }
+    .page-cover .subtitle { font-size: 0.9rem; font-weight: 300; color: #f472b6; margin-bottom: 1.5rem; }
+    .page-cover .cover-emoji { font-size: 3.5rem; margin-bottom: 0.8rem; }
+    .page-cover .cover-line { font-family: 'Dancing Script', cursive; font-size: 0.95rem; color: #f9a8d4; margin-top: 1.5rem; }
 
-    .page-cover h1 {
-      font-family: 'Dancing Script', cursive;
-      font-size: 3rem;
-      color: #ec4899;
-      margin-bottom: 0.2rem;
-    }
-
-    .page-cover .subtitle {
-      font-size: 0.95rem;
-      font-weight: 300;
-      color: #f472b6;
-      margin-bottom: 2rem;
-    }
-
-    .page-cover .cover-emoji {
-      font-size: 4rem;
-      margin-bottom: 1rem;
-    }
-
-    .page-cover .cover-line {
-      font-family: 'Dancing Script', cursive;
-      font-size: 1rem;
-      color: #f9a8d4;
-      margin-top: 2rem;
-    }
-
-    /* Inside left */
-    .page-inside-left {
+    .page-inside {
       background: #fff;
       border: 1px dashed #fce7f3;
-      padding: 12mm 15mm;
+      padding: 10mm 12mm;
     }
 
-    .page-inside-left h2 {
+    .inside-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10mm;
+      margin-bottom: 6mm;
+    }
+
+    .page-inside h2 {
       font-family: 'Dancing Script', cursive;
-      font-size: 1.5rem;
+      font-size: 1.3rem;
       color: #ec4899;
-      margin-bottom: 0.8rem;
+      margin-bottom: 0.5rem;
     }
 
-    .page-inside-left p,
-    .page-inside-left li {
-      font-size: 0.82rem;
-      line-height: 1.7;
+    .page-inside p, .page-inside li {
+      font-size: 0.78rem;
+      line-height: 1.6;
       color: #5a4550;
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.3rem;
     }
 
-    .page-inside-left ul {
-      list-style: none;
-      padding: 0;
-      margin: 0.5rem 0;
-    }
-
-    .page-inside-left ul li::before {
-      content: '♡ ';
-      color: #f472b6;
-    }
+    .page-inside ul { list-style: none; padding: 0; margin: 0.3rem 0; }
+    .page-inside ul li::before { content: '♡ '; color: #f472b6; }
 
     .wifi-box-print {
       background: #fdf2f8;
       border-radius: 10px;
-      padding: 0.8rem 1rem;
-      margin: 0.8rem 0;
+      padding: 0.7rem 1rem;
+      margin: 0.6rem 0;
       text-align: center;
       border: 1px solid #fce7f3;
     }
+    .wifi-box-print .ssid { font-weight: 600; color: #ec4899; font-size: 0.9rem; }
+    .wifi-box-print .pass { font-family: monospace; font-size: 0.75rem; background: white; padding: 2px 6px; border-radius: 4px; color: #f472b6; }
+    .wifi-box-print .url { font-weight: 600; color: #ec4899; font-size: 0.9rem; margin-top: 0.2rem; }
 
-    .wifi-box-print .ssid { font-weight: 600; color: #ec4899; }
-    .wifi-box-print .pass {
-      font-family: monospace;
-      font-size: 0.8rem;
-      background: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      color: #f472b6;
+    .inside-bottom {
+      text-align: center;
+      margin-top: 4mm;
+      padding-top: 4mm;
+      border-top: 1px dashed #fce7f3;
     }
-    .wifi-box-print .url { font-weight: 600; color: #ec4899; margin-top: 0.3rem; }
-
-    /* Inside right */
-    .page-inside-right {
-      background: #fff;
-      border: 1px dashed #fce7f3;
-      padding: 12mm 15mm;
+    .inside-bottom .fun-facts {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 3mm;
+      text-align: center;
     }
+    .inside-bottom .fun-facts div { font-size: 0.7rem; color: #7a6570; line-height: 1.5; }
+    .inside-bottom .fun-facts .emoji { font-size: 1.3rem; margin-bottom: 2px; }
+    .inside-bottom .fun-facts .label { font-weight: 500; color: #ec4899; font-size: 0.72rem; }
 
-    .page-inside-right h2 {
-      font-family: 'Dancing Script', cursive;
-      font-size: 1.5rem;
-      color: #ec4899;
-      margin-bottom: 0.8rem;
-    }
-
-    .page-inside-right p {
-      font-size: 0.82rem;
-      line-height: 1.7;
-      color: #5a4550;
-      margin-bottom: 0.5rem;
-    }
-
-    /* Back cover */
     .page-back {
       display: flex;
       flex-direction: column;
@@ -420,115 +315,80 @@
       border: 2px dashed #f9a8d4;
       text-align: center;
     }
-
     .page-back .closing {
       font-family: 'Dancing Script', cursive;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       color: #ec4899;
-      max-width: 300px;
+      max-width: 280px;
       line-height: 1.7;
+      margin-bottom: 1.2rem;
+    }
+    .page-back .signature {
+      font-family: 'Dancing Script', cursive;
+      font-size: 1.3rem;
+      color: #ec4899;
       margin-bottom: 1.5rem;
     }
 
-    .page-back .signature {
-      font-family: 'Dancing Script', cursive;
-      font-size: 1.4rem;
-      color: #ec4899;
-    }
+    .qr-container { text-align: center; }
+    .qr-container canvas { border-radius: 8px; box-shadow: 0 2px 12px rgba(236,72,153,0.15); }
+    .qr-label { font-size: 0.65rem; color: #f472b6; margin-top: 4px; font-weight: 500; }
 
-    .corner-deco {
-      position: absolute;
-      font-size: 1.2rem;
-      opacity: 0.4;
-    }
-    .corner-deco.tl { top: 8mm; left: 8mm; }
-    .corner-deco.tr { top: 8mm; right: 8mm; }
-    .corner-deco.bl { bottom: 8mm; left: 8mm; }
-    .corner-deco.br { bottom: 8mm; right: 8mm; }
+    .corner-deco { position: absolute; font-size: 1.1rem; opacity: 0.35; }
+    .corner-deco.tl { top: 6mm; left: 6mm; }
+    .corner-deco.tr { top: 6mm; right: 6mm; }
+    .corner-deco.bl { bottom: 6mm; left: 6mm; }
+    .corner-deco.br { bottom: 6mm; right: 6mm; }
 
-    @page {
-      size: A5 portrait;
-      margin: 0;
-    }
+    @page { size: A5 portrait; margin: 0; }
   }
 </style>
 </head>
 <body>
 
-<!-- ========== SCREEN VIEW (animated) ========== -->
+<!-- ===== SCREEN VIEW ===== -->
 <div class="screen-view">
   <div class="hearts-container">
-    <div class="heart">♡</div>
-    <div class="heart">♡</div>
-    <div class="heart">♡</div>
-    <div class="heart">♡</div>
-    <div class="heart">♡</div>
-    <div class="heart">♡</div>
-    <div class="heart">♡</div>
-    <div class="heart">♡</div>
-    <div class="heart">♡</div>
+    <div class="heart">♡</div><div class="heart">♡</div><div class="heart">♡</div>
+    <div class="heart">♡</div><div class="heart">♡</div><div class="heart">♡</div>
+    <div class="heart">♡</div><div class="heart">♡</div><div class="heart">♡</div>
     <div class="heart">♡</div>
   </div>
-
-  <div class="sparkle"></div>
-  <div class="sparkle"></div>
-  <div class="sparkle"></div>
-  <div class="sparkle"></div>
-  <div class="sparkle"></div>
+  <div class="sparkle"></div><div class="sparkle"></div><div class="sparkle"></div>
+  <div class="sparkle"></div><div class="sparkle"></div>
 
   <div class="card">
     <h1>Hey Saira!</h1>
-    <p class="subtitle">This is Aurora — your tiny desk buddy</p>
-
+    <p class="subtitle">This is Aurora — your tiny desk buddy ♡</p>
     <div class="divider"></div>
 
-    <div class="section">
-      <h2>What's Inside</h2>
-      <ul>
-        <li>Aurora (the little box with the screen)</li>
-        <li>A tiny charging cable</li>
-        <li>This card (hi!)</li>
-      </ul>
-    </div>
-
-    <div class="section">
-      <h2>How She Works</h2>
-      <p><b>She's always on.</b> Just glance at her whenever you want.</p>
-      <p style="margin-top:0.4rem"><b>Touch her chin</b> — she lights up and shows love. Do it a bunch and she gets really happy.</p>
-      <p style="margin-top:0.4rem"><b>Leave her alone for a while</b> — she gets a little lonely. Just touch her and she's back to smiling.</p>
-      <p style="margin-top:0.4rem"><b>At midnight</b> — she has a tiny reminder for you. Check your phone's WiFi for a little surprise.</p>
-    </div>
-
-    <div class="section">
-      <h2>The Little Button</h2>
-      <p>The tiny button on the side cycles through her screens:</p>
-      <ul>
-        <li>Her face (the main thing!)</li>
-        <li>Clock &amp; date</li>
-        <li>A sweet quote</li>
-        <li>WiFi QR code — scan to connect</li>
-        <li>A heartbeat keepsake from me</li>
-      </ul>
-    </div>
-
-    <div class="section">
-      <h2>Connect Your Phone</h2>
-      <div class="wifi-box">
-        <div class="ssid">WiFi: Aurora</div>
-        <div class="pass">for-chandni</div>
-        <div class="url">Open → 192.168.4.1</div>
+    <div class="two-col">
+      <div class="col">
+        <h2>How She Works</h2>
+        <ul>
+          <li>She's always on — just glance whenever</li>
+          <li>Touch her chin — she lights up with love</li>
+          <li>Leave her alone — she gets lonely, touch her back</li>
+          <li>At midnight — she has a surprise for you</li>
+        </ul>
       </div>
-      <p style="margin-top:0.5rem; font-size:0.85rem; color:#7a6570;">That's your control center. Change her daily messages, listen to the music box, see how she's doing.</p>
+      <div class="col">
+        <h2>Little Button</h2>
+        <p>Tap it to cycle through her screens:</p>
+        <ul>
+          <li>Her cute face</li>
+          <li>Clock &amp; date</li>
+          <li>A sweet quote</li>
+          <li>WiFi QR code</li>
+          <li>Heartbeat from me</li>
+        </ul>
+      </div>
     </div>
 
-    <div class="section">
-      <h2>A Few Little Things</h2>
-      <ul>
-        <li>She remembers every time you touch her</li>
-        <li>Her little breathing light changes with her mood</li>
-        <li>She hums a gentle lullaby softly</li>
-        <li>WiFi is always on — your phone connects automatically</li>
-      </ul>
+    <div class="wifi-box">
+      <div class="ssid">WiFi: Aurora</div>
+      <div class="pass">for-chandni</div>
+      <div class="url">Open → 192.168.4.1</div>
     </div>
 
     <div class="divider"></div>
@@ -536,21 +396,18 @@
     <div class="closing">
       I made every bit of this for you.<br>
       She's not just a gadget.<br>
-      She's a piece of me sitting on your desk.
+      She's a piece of me on your desk.
     </div>
-
     <div class="signature">Made with all my love — Asif ♡</div>
   </div>
 
-  <div class="print-hint" onclick="window.print()">
-    🖨 Print this as a card
-  </div>
+  <div class="print-hint" onclick="window.print()">🖨 Print as a card</div>
 </div>
 
-<!-- ========== PRINT VIEW (hidden on screen) ========== -->
+<!-- ===== PRINT VIEW (3 pages) ===== -->
 <div class="print-card" style="display:none;">
 
-  <!-- Page 1: Front Cover -->
+  <!-- Page 1: Cover -->
   <div class="page page-cover">
     <span class="corner-deco tl">♡</span>
     <span class="corner-deco tr">♡</span>
@@ -559,68 +416,60 @@
     <div class="cover-emoji">🌸</div>
     <h1>Aurora</h1>
     <p class="subtitle">A little guide for Saira</p>
-    <div style="width:50px;height:2px;background:linear-gradient(90deg,transparent,#f9a8d4,transparent);margin:1.5rem auto;"></div>
+    <div style="width:40px;height:2px;background:linear-gradient(90deg,transparent,#f9a8d4,transparent);margin:1rem auto;"></div>
     <p class="cover-line">Fold this card &amp; keep it close ♡</p>
   </div>
 
-  <!-- Page 2: Inside Left — Getting Started -->
-  <div class="page page-inside-left">
+  <!-- Page 2: Inside -->
+  <div class="page page-inside">
     <span class="corner-deco tl">♡</span>
     <span class="corner-deco br">♡</span>
-    <h2>Hey Saira!</h2>
-    <p>Aurora is a tiny desk buddy who lives on your desk and keeps you company. She blinks, smiles, and hums a lullaby for you.</p>
 
-    <h2 style="margin-top:1rem;">How She Works</h2>
-    <ul>
-      <li><b>Always on</b> — just glance whenever you want</li>
-      <li><b>Touch her chin</b> — she lights up and shows love</li>
-      <li><b>Leave her alone</b> — she gets a little lonely, just touch her back</li>
-      <li><b>At midnight</b> — a tiny reminder. Check your phone's WiFi!</li>
-    </ul>
+    <div class="inside-top">
+      <div>
+        <h2>How She Works</h2>
+        <ul>
+          <li>She's always on — just glance whenever</li>
+          <li>Touch her chin — she lights up with love</li>
+          <li>Leave her alone — she gets lonely, touch her back</li>
+          <li>At midnight — she has a surprise for you</li>
+        </ul>
 
-    <h2 style="margin-top:1rem;">The Little Button</h2>
-    <p>Tap the tiny button on the side to cycle through her screens:</p>
-    <ul>
-      <li>Her face (the main thing!)</li>
-      <li>Clock &amp; date</li>
-      <li>A sweet quote</li>
-      <li>WiFi QR code — scan to connect</li>
-      <li>A heartbeat keepsake from me</li>
-    </ul>
+        <h2 style="margin-top:5mm;">The Little Button</h2>
+        <p>Tap it to cycle her screens:</p>
+        <ul>
+          <li>Her cute face</li>
+          <li>Clock &amp; date</li>
+          <li>A sweet quote</li>
+          <li>WiFi QR — scan to connect</li>
+          <li>Heartbeat from me</li>
+        </ul>
+      </div>
 
-    <h2 style="margin-top:1rem;">Music</h2>
-    <p>Aurora hums a gentle lullaby softly. Toggle it from the dashboard on your phone.</p>
-  </div>
+      <div>
+        <h2>Connect Your Phone</h2>
+        <div class="wifi-box-print">
+          <div class="ssid">WiFi: Aurora</div>
+          <div class="pass">for-chandni</div>
+          <div class="url">Open → 192.168.4.1</div>
+        </div>
+        <p>That's your control center — change her messages, play the music box, check in on her.</p>
 
-  <!-- Page 3: Inside Right — Connect -->
-  <div class="page page-inside-right">
-    <span class="corner-deco tl">♡</span>
-    <span class="corner-deco br">♡</span>
-    <h2>Connect Your Phone</h2>
-    <div class="wifi-box-print">
-      <div class="ssid">WiFi: Aurora</div>
-      <div class="pass">for-chandni</div>
-      <div class="url">Open → 192.168.4.1</div>
+        <h2 style="margin-top:5mm;">Music</h2>
+        <p>She hums a gentle lullaby softly. Toggle it from the dashboard.</p>
+      </div>
     </div>
-    <p>That's your control center. You can change her daily messages, listen to the music box, and see how she's doing.</p>
 
-    <h2 style="margin-top:1rem;">A Few Little Things</h2>
-    <ul>
-      <li>She remembers every time you touch her</li>
-      <li>Her breathing light changes with her mood</li>
-      <li>WiFi is always on — your phone connects automatically</li>
-      <li>If she feels lonely, just touch her and she's back to smiling</li>
-    </ul>
-
-    <h2 style="margin-top:1rem;">QR Code</h2>
-    <p>Aurora's screen shows a QR code. Scan it with your phone's camera to connect to her WiFi — no typing needed.</p>
-
-    <div style="margin-top:1.5rem; text-align:center;">
-      <div style="font-size:2rem;">♡ ♡ ♡</div>
+    <div class="inside-bottom">
+      <div class="fun-facts">
+        <div><div class="emoji">♡</div><div class="label">Remembers touches</div></div>
+        <div><div class="emoji">💡</div><div class="label">Breathing mood light</div></div>
+        <div><div class="emoji">📶</div><div class="label">WiFi always on</div></div>
+      </div>
     </div>
   </div>
 
-  <!-- Page 4: Back Cover -->
+  <!-- Page 3: Back Cover + QR -->
   <div class="page page-back">
     <span class="corner-deco tl">♡</span>
     <span class="corner-deco tr">♡</span>
@@ -630,15 +479,67 @@
       I made every bit of this for you.<br>
       The screen, the code, the music,<br>
       the little heartbeat — all of it.<br><br>
-      She's not just a gadget.<br>
-      She's a piece of me sitting on your desk.<br><br>
       Whenever you miss me, just touch her.<br>
       She'll light up. And so will I.
     </div>
-    <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,#f9a8d4,transparent);margin:1rem auto;"></div>
+    <div style="width:35px;height:1px;background:linear-gradient(90deg,transparent,#f9a8d4,transparent);margin:0.8rem auto;"></div>
     <div class="signature">Made with all my love — Asif ♡</div>
+    <div class="qr-container" style="margin-top:1.2rem;">
+      <div id="qr-print-mount"></div>
+      <div class="qr-label">Scan to connect to Aurora</div>
+    </div>
   </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  var wifi = 'WIFI:S:Aurora;T:WPA;P:for-chandni;;';
+
+  function makeQR(text, cellSize) {
+    var qr = qrcode(0, 'L');
+    qr.addData(text);
+    qr.make();
+    var size = qr.getModuleCount();
+    var margin = cellSize * 4;
+    var total = size * cellSize + margin * 2;
+
+    var canvas = document.createElement('canvas');
+    canvas.width = total;
+    canvas.height = total;
+    canvas.style.borderRadius = '8px';
+    canvas.style.boxShadow = '0 2px 12px rgba(236,72,153,0.15)';
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, total, total);
+    ctx.fillStyle = '#3d2b3a';
+    for (var r = 0; r < size; r++) {
+      for (var c = 0; c < size; c++) {
+        if (qr.isDark(r, c)) {
+          ctx.fillRect(margin + c * cellSize, margin + r * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+    return canvas;
+  }
+
+  // Screen QR
+  var screenQR = makeQR(wifi, 5);
+  var qrWrap = document.createElement('div');
+  qrWrap.style.cssText = 'text-align:center;margin-top:0.8rem;animation:fadeSlideIn 0.8s ease-out 0.6s both;';
+  qrWrap.appendChild(screenQR);
+  var lbl = document.createElement('div');
+  lbl.style.cssText = 'font-size:0.7rem;color:#f472b6;margin-top:4px;font-weight:500;';
+  lbl.textContent = 'Scan to connect';
+  qrWrap.appendChild(lbl);
+  document.querySelector('.card').insertBefore(qrWrap, document.querySelector('.wifi-box'));
+
+  // Print QR
+  var printQR = makeQR(wifi, 4);
+  printQR.style.boxShadow = '0 2px 12px rgba(236,72,153,0.15)';
+  document.getElementById('qr-print-mount').appendChild(printQR);
+});
+</script>
 
 </body>
 </html>
