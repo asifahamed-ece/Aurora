@@ -29,6 +29,7 @@ enum class ScreenMode : uint8_t {
     DESKMATE = 0,         // Animated Aurora deskmate (default)
     CLOCK_DATE,           // Large digital clock + contextual greeting + date
     DAILY_QUOTE,          // Today's rotating daily thought
+    QR_CODE,              // "Connect Aurora WiFi and Scan" + dashboard URL QR
     HEARTBEAT_KEEPSAKE    // Pulsing heart + ECG pulse + lifetime Warm Touches
 };
 
@@ -223,6 +224,7 @@ private:
     void renderModeBadge(uint32_t now);
     void renderClockDate(uint32_t now);
     void renderDailyQuote(uint32_t now);
+    void renderQRCode(uint32_t now);
     void renderHeartbeat(uint32_t now);
     void drawPulseWave(int startX, int endX, int centerY, uint32_t now, uint16_t bpm);
     void drawWrappedText(const char* text, int startY, int maxLines, int lineHeight);
