@@ -6,7 +6,8 @@
  *  - Mode 1: Animated Deskmate Companion ("Aurora")
  *  - Mode 2: Clock, Date & Contextual Greeting
  *  - Mode 3: Daily Thought / Affirmation Card
- *  - Mode 4: Heartbeat Keepsake & Animated ECG Pulse
+ *  - Mode 4: Dashboard QR Code ("Connect Aurora WiFi and Scan")
+ *  - Mode 5: Heartbeat Keepsake & Animated ECG Pulse
  *  Supports both SSD1306 (0.96") and SH1106 (1.3") displays with U8g2.
  */
 
@@ -14,6 +15,7 @@
 #include "state.h"
 #include "clock.h"
 #include "messages.h"
+#include <qrcode.h>
 #include <U8g2lib.h>
 #include <math.h>
 
@@ -89,7 +91,7 @@ void AuroraDisplay::setScreenMode(ScreenMode mode) {
 }
 
 void AuroraDisplay::cycleScreenMode() {
-    uint8_t next = ((uint8_t)_screenMode + 1) % 4;
+    uint8_t next = ((uint8_t)_screenMode + 1) % 5;
     setScreenMode((ScreenMode)next);
 }
 
@@ -98,6 +100,7 @@ const char* AuroraDisplay::screenModeName() const {
         case ScreenMode::DESKMATE:           return "Aurora";
         case ScreenMode::CLOCK_DATE:         return "Clock";
         case ScreenMode::DAILY_QUOTE:        return "Thought";
+        case ScreenMode::QR_CODE:            return "Scan Me";
         case ScreenMode::HEARTBEAT_KEEPSAKE: return "Keepsake Pulse";
     }
     return "Aurora";
@@ -347,6 +350,9 @@ void AuroraDisplay::update() {
         case ScreenMode::DAILY_QUOTE:
             renderDailyQuote(now);
             break;
+        case ScreenMode::QR_CODE:
+            renderQRCode(now);
+            break;
         case ScreenMode::HEARTBEAT_KEEPSAKE:
             renderHeartbeat(now);
             break;
@@ -387,76 +393,46 @@ void AuroraDisplay::renderClockDate(uint32_t now) {
     uint32_t h = h24 % 12;
     if (h == 0) h = 12;
 
-    // Two layouts:
-    //   - Unsynced (hint active):  16px clock at the top + a 4-line
-    //     wrapped notification in 6x10 filling the bottom 2/3 of the
-    //     screen. The clock is intentionally small so the message
-    //     reads as the headline. The greeting was removed to give
-    //     the message more vertical room and keep the focus on the
-    //     action Chandni needs to take.
-    //   - Synced:                   24px clock centred + date below.
-    //     No greeting, no message — the time is the headline.
-    bool    hintActive = AuroraState::instance().firstSyncHintActive();
-
     // 12-hour format with AM/PM indicator
     char timeBuf[12];
     snprintf(timeBuf, sizeof(timeBuf), "%02lu:%02lu %s",
              (unsigned long)h, (unsigned long)m,
              isPm ? "PM" : "AM");
 
-    if (hintActive) {
-        // Compact 16px clock at the top (logisoso16, ~16px ascent).
-        // Baseline at y=16 puts glyphs y=0..16 so the message area
-        // below is wide and clean.
-        _u8g2.setFont(u8g2_font_logisoso16_tn);
-        int tw = _u8g2.getStrWidth(timeBuf);
-        _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 16, timeBuf);
+    // Big 24px clock centred
+    _u8g2.setFont(u8g2_font_logisoso24_tn);
+    int tw = _u8g2.getStrWidth(timeBuf);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 42, timeBuf);
 
-        // 4-line notification in 6x10, lineHeight=10. Baselines at
-        // y=26, 36, 46, 56. With 6x10 ascent=10 and descent=2, each
-        // line's top sits 10px above its baseline, so lines step
-        // y=16, 26, 36, 46 — non-overlapping, with a clean 1px gap
-        // between each. Last line descender ends ~y=58, 6px from the
-        // bottom edge. drawWrappedText() also bounds the width to
-        // 114px so no RHS clipping.
-        const char* msg = "Open WiFi, Connect Aurora and Open 192.168.4.1 to Sync Data.";
-        drawWrappedText(msg, 26, 4, 10);
-    } else {
-        // Big 24px clock centred (unchanged presence)
-        _u8g2.setFont(u8g2_font_logisoso24_tn);
-        int tw = _u8g2.getStrWidth(timeBuf);
-        _u8g2.drawStr((AURORA_OLED_WIDTH - tw) / 2, 42, timeBuf);
+    // Decorative corner hearts sit just under the 24px glyphs
+    drawHeart(12, 36, 3);
+    drawHeart(116, 36, 3);
 
-        // Decorative corner hearts sit just under the 24px glyphs
-        drawHeart(12, 36, 3);
-        drawHeart(116, 36, 3);
-
-        // Sparkle effects on both sides top
-        if (random(0, 4) == 0) {
-            spawnSparkle(random(8, 28), random(8, 20), random(2, 3), 1200);
-        }
-        if (random(0, 4) == 0) {
-            spawnSparkle(random(100, 120), random(24, 34), random(2, 3), 1200);
-        }
-        updateAndDrawSparkles(now);
-
-        // Date at the original slot
-        char dateBuf[24];
-        aurora_clock::formatDate(dateBuf, sizeof(dateBuf), epoch);
-        int dw = _u8g2.getStrWidth(dateBuf);
-        _u8g2.setFont(u8g2_font_6x10_tr);
-        _u8g2.drawStr((AURORA_OLED_WIDTH - dw) / 2, 58, dateBuf);
-
-        // Battery indicator - RHS top, Clock mode only
-        uint8_t pct = AuroraState::instance().batteryPct();
-        char batBuf[8];
-        snprintf(batBuf, sizeof(batBuf), "%u%%", (unsigned)pct);
-        _u8g2.setFont(u8g2_font_5x7_tf);
-        int bw = _u8g2.getStrWidth(batBuf);
-        int bx = AURORA_OLED_WIDTH - bw - 3;
-        _u8g2.drawStr(bx, 9, batBuf);
-        drawBatteryIcon(bx - 15, 2, pct);
+    // Sparkle effects on both sides top
+    if (random(0, 4) == 0) {
+        spawnSparkle(random(8, 28), random(8, 20), random(2, 3), 1200);
     }
+    if (random(0, 4) == 0) {
+        spawnSparkle(random(100, 120), random(24, 34), random(2, 3), 1200);
+    }
+    updateAndDrawSparkles(now);
+
+    // Date at the original slot
+    char dateBuf[24];
+    aurora_clock::formatDate(dateBuf, sizeof(dateBuf), epoch);
+    int dw = _u8g2.getStrWidth(dateBuf);
+    _u8g2.setFont(u8g2_font_6x10_tr);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - dw) / 2, 58, dateBuf);
+
+    // Battery indicator - RHS top, Clock mode only
+    uint8_t pct = AuroraState::instance().batteryPct();
+    char batBuf[8];
+    snprintf(batBuf, sizeof(batBuf), "%u%%", (unsigned)pct);
+    _u8g2.setFont(u8g2_font_5x7_tf);
+    int bw = _u8g2.getStrWidth(batBuf);
+    int bx = AURORA_OLED_WIDTH - bw - 3;
+    _u8g2.drawStr(bx, 9, batBuf);
+    drawBatteryIcon(bx - 15, 2, pct);
 
     // Update floating hearts if active
     updateAndDrawHearts(now);
@@ -488,6 +464,33 @@ void AuroraDisplay::renderDailyQuote(uint32_t now) {
 
     // Floating hearts
     updateAndDrawHearts(now);
+}
+
+void AuroraDisplay::renderQRCode(uint32_t now) {
+    (void)now;
+
+    QRCode qrcode;
+    uint8_t qrcodeData[qrcode_getBufferSize(3)];
+    qrcode_initText(&qrcode, qrcodeData, 3, ECC_LOW,
+                     "WIFI:S:Aurora;T:WPA;P:for-chandni;;");
+
+    // Version 3 = 29×29 modules. Scale 2 → 58×58 px.
+    int scale = 2;
+    int qrPx = qrcode.size * scale; // 58
+
+    int shiftX = (AURORA_OLED_WIDTH - qrPx) / 2;
+    int shiftY = 4;
+
+    for (uint8_t y = 0; y < qrcode.size; y++)
+        for (uint8_t x = 0; x < qrcode.size; x++)
+            if (qrcode_getModule(&qrcode, x, y))
+                _u8g2.drawBox(shiftX + x * scale, shiftY + y * scale,
+                              scale, scale);
+
+    // Heading above QR
+    _u8g2.setFont(u8g2_font_tom_thumb_4x6_tr);
+    const char* h1 = "Scan to Connect";
+    _u8g2.drawStr((AURORA_OLED_WIDTH - _u8g2.getStrWidth(h1)) / 2, 7, h1);
 }
 
 void AuroraDisplay::drawPulseWave(int startX, int endX, int centerY, uint32_t now, uint16_t bpm) {
