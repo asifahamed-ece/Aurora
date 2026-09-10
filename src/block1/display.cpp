@@ -481,6 +481,11 @@ void AuroraDisplay::renderDashboardQRCode(uint32_t now) {
 }
 
 void AuroraDisplay::drawQrScreen(const char* text, const char* heading) {
+    // Heading drawn FIRST at the very top, so it never overwrites the QR.
+    _u8g2.setFont(u8g2_font_tom_thumb_4x6_tr);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - _u8g2.getStrWidth(heading)) / 2, 5,
+                  heading);
+
     QRCode qrcode;
     uint8_t qrcodeData[qrcode_getBufferSize(3)];
     qrcode_initText(&qrcode, qrcodeData, 3, ECC_LOW, text);
@@ -490,17 +495,13 @@ void AuroraDisplay::drawQrScreen(const char* text, const char* heading) {
     int qrPx = qrcode.size * scale; // 58
 
     int shiftX = (AURORA_OLED_WIDTH - qrPx) / 2;
-    int shiftY = 4;
+    int shiftY = 6; // below the heading row (rows 6..63), no overlap
 
     for (uint8_t y = 0; y < qrcode.size; y++)
         for (uint8_t x = 0; x < qrcode.size; x++)
             if (qrcode_getModule(&qrcode, x, y))
                 _u8g2.drawBox(shiftX + x * scale, shiftY + y * scale,
                               scale, scale);
-
-    // Heading above QR
-    _u8g2.setFont(u8g2_font_tom_thumb_4x6_tr);
-    _u8g2.drawStr((AURORA_OLED_WIDTH - _u8g2.getStrWidth(heading)) / 2, 7, heading);
 }
 
 void AuroraDisplay::drawPulseWave(int startX, int endX, int centerY, uint32_t now, uint16_t bpm) {
