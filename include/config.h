@@ -195,6 +195,18 @@ enum class BatStatus : uint8_t {
 #define AURORA_WS_PATH         "/ws"
 #define AURORA_WS_PUSH_MS      2000   // 0.5 Hz state broadcast to all clients
 
+// ----------------------------------------------------------------------------
+//  OTA (Block 4) -- web-based firmware + filesystem updates over WiFi.
+//  Registered ONLY while the softAP is active, so updates happen over the
+//  Aurora AP itself (192.168.4.1) and keep the enclosure sealed forever.
+// ----------------------------------------------------------------------------
+#define AURORA_OTA_ENABLED    1
+//  Optional token. A request must present it as the "X-Aurora-Key" header
+//  (or a multipart form field named "key") to reflash / upload. Leave empty
+//  string "" to disable auth entirely (not recommended -- anyone on the AP
+//  could then reprogram the device).
+#define AURORA_OTA_KEY        "deskmate-update"
+
 #if AURORA_DEBUG_LOG
   #define DBG_PRINT(x)    Serial.print(x)
   #define DBG_PRINTLN(x)  Serial.println(x)
