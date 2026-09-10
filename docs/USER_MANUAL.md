@@ -53,7 +53,9 @@ You can toggle it from the dashboard on your phone.
 
 ## The Dashboard
 
-Connect your phone to **Aurora** WiFi (password: `for-chandni`), then open a browser and go to:
+Connect your phone to **Aurora** WiFi (password: `for-chandni`). Your phone will connect quietly — no "sign in" page needed.
+
+Then press the little button on Aurora's screen until she shows the **"Scan to Open"** QR code, and scan it with your phone's camera. It opens:
 
 **192.168.4.1**
 
@@ -63,7 +65,12 @@ That's your control center. You can change her daily messages, listen to the mus
 
 ## QR Code
 
-Aurora's screen shows a QR code. Scan it with your phone's camera to connect to her WiFi.
+Aurora's screen cycles between two QR codes:
+
+- **"Scan to Connect"** — scan to join her WiFi (`Aurora` / `for-chandni`)
+- **"Scan to Open"** — scan to open her dashboard
+
+Press the little button to cycle to the next QR code.
 
 ---
 
@@ -78,14 +85,14 @@ Aurora's screen shows a QR code. Scan it with your phone's camera to connect to 
 
 ## From Me to You
 
-I made every bit of this for you.
+I put a lot of heart into this one.
 The screen, the code, the music, the little heartbeat — all of it.
 
-She's not just a gadget. She's a piece of me sitting on your desk.
+She's not just a gadget. She's got a little heart of her own.
 
-Whenever you miss me, just touch her.
-She'll light up. And so will I.
+She's here to make you smile.
+Every time you touch her, she'll light up.
 
 ---
 
-*Made with all my love — Asif*
+*Made with Love — Asif*
