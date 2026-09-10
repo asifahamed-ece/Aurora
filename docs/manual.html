@@ -367,8 +367,8 @@
         <h2>How She Works</h2>
         <ul>
           <li>She's always on — just glance whenever</li>
-          <li>Touch her chin — she lights up with love</li>
-          <li>Leave her alone — she gets lonely, touch her back</li>
+          <li>Touch her chin — she lights up and gets happy</li>
+          <li>Leave her alone — she gets a little sad, touch her back</li>
           <li>At midnight — she has a surprise for you</li>
         </ul>
       </div>
@@ -380,7 +380,8 @@
           <li>Clock &amp; date</li>
           <li>A sweet quote</li>
           <li>WiFi QR code</li>
-          <li>Heartbeat from me</li>
+          <li>Dashboard QR code</li>
+          <li>A keepsake heartbeat</li>
         </ul>
       </div>
     </div>
@@ -394,11 +395,11 @@
     <div class="divider"></div>
 
     <div class="closing">
-      I made every bit of this for you.<br>
-      She's not just a gadget.<br>
-      She's a piece of me on your desk.
-    </div>
-    <div class="signature">Made with all my love — Asif ♡</div>
+      Put a lot of heart into this one.<br>
+      She's not just a gadget —<br>
+      she's got a little heart of her own.
+</div>
+    <div class="signature">Made with Love — Asif ♡</div>
   </div>
 
   <div class="print-hint" onclick="window.print()">🖨 Print as a card</div>
@@ -430,8 +431,8 @@
         <h2>How She Works</h2>
         <ul>
           <li>She's always on — just glance whenever</li>
-          <li>Touch her chin — she lights up with love</li>
-          <li>Leave her alone — she gets lonely, touch her back</li>
+          <li>Touch her chin — she lights up and gets happy</li>
+          <li>Leave her alone — she gets a little sad, touch her back</li>
           <li>At midnight — she has a surprise for you</li>
         </ul>
 
@@ -442,7 +443,7 @@
           <li>Clock &amp; date</li>
           <li>A sweet quote</li>
           <li>WiFi QR — scan to connect</li>
-          <li>Heartbeat from me</li>
+          <li>A keepsake heartbeat</li>
         </ul>
       </div>
 
@@ -476,18 +477,24 @@
     <span class="corner-deco bl">♡</span>
     <span class="corner-deco br">♡</span>
     <div class="closing">
-      I made every bit of this for you.<br>
+      Put a lot of heart into this one.<br>
       The screen, the code, the music,<br>
       the little heartbeat — all of it.<br><br>
-      Whenever you miss me, just touch her.<br>
-      She'll light up. And so will I.
+      She's here to make you smile.<br>
+      Every time you touch her, she'll light up.
     </div>
     <div style="width:35px;height:1px;background:linear-gradient(90deg,transparent,#f9a8d4,transparent);margin:0.8rem auto;"></div>
-    <div class="signature">Made with all my love — Asif ♡</div>
+    <div class="signature">Made with Love — Asif ♡</div>
     <div class="qr-container" style="margin-top:1.2rem;">
       <div id="qr-print-mount"></div>
-      <div class="qr-label">Scan to connect to Aurora</div>
+      <div class="qr-label">QR 1 · Scan to connect to Aurora</div>
     </div>
+    <div style="width:35px;height:1px;background:linear-gradient(90deg,transparent,#f9a8d4,transparent);margin:0.6rem auto;"></div>
+    <div class="qr-container">
+      <div id="qr-dash-print-mount"></div>
+      <div class="qr-label">QR 2 · Scan to open Aurora's dashboard</div>
+    </div>
+    <div style="font-size:0.62rem;color:#f9a8d4;margin-top:0.5rem;">Or press the button on her screen until the "Scan to Open" QR shows.</div>
   </div>
 </div>
 
@@ -534,10 +541,15 @@ document.addEventListener('DOMContentLoaded', function() {
   qrWrap.appendChild(lbl);
   document.querySelector('.card').insertBefore(qrWrap, document.querySelector('.wifi-box'));
 
-  // Print QR
+  // Print QR (WiFi join)
   var printQR = makeQR(wifi, 4);
   printQR.style.boxShadow = '0 2px 12px rgba(236,72,153,0.15)';
   document.getElementById('qr-print-mount').appendChild(printQR);
+
+  // Print QR (dashboard URL)
+  var dashQR = makeQR('http://192.168.4.1/', 4);
+  dashQR.style.boxShadow = '0 2px 12px rgba(236,72,153,0.15)';
+  document.getElementById('qr-dash-print-mount').appendChild(dashQR);
 });
 </script>
 
