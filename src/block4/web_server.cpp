@@ -9,6 +9,7 @@
  *    - bblanchon/ArduinoJson @ ^6.21.0
  */
 #include "web_server.h"
+#include "config.h"
 
 #include <Arduino.h>
 #include <LittleFS.h>
@@ -16,7 +17,10 @@
 #include <AsyncTCP.h>
 #include <ArduinoJson.h>
 
-#include "config.h"
+#if AURORA_OTA_ENABLED
+#include <Update.h>
+#endif
+
 #include "state.h"
 #include "clock.h"
 #include "messages.h"
@@ -197,6 +201,152 @@ static void handleNotFound(AsyncWebServerRequest* req) {
 }
 
 // ----------------------------------------------------------------------------
+//  OTA -- web-based firmware + filesystem updates (softAP only)
+// ----------------------------------------------------------------------------
+#if AURORA_OTA_ENABLED
+
+static File g_uploadFile;
+static bool g_otaDenied = false;
+
+//  Token check: accept a "key" multipart form field or "X-Aurora-Key" header.
+static bool otaKeyOk(AsyncWebServerRequest* req) {
+    const char* key = AURORA_OTA_KEY;
+    if (strlen(key) == 0) return true;   // auth disabled for this build
+    if (req->hasParam("key", true) &&
+        req->getParam("key", true)->value() == key) return true;
+    if (req->hasHeader("X-Aurora-Key") &&
+        req->header("X-Aurora-Key") == key) return true;
+    return false;
+}
+
+static const char OTA_INDEX_HTML[] PROGMEM =
+    "<!doctype html><html><head><meta charset=utf-8>"
+    "<meta name=viewport content=\"width=device-width,initial-scale=1\">"
+    "<title>Aurora Update</title></head>"
+    "<body style=\"font-family:sans-serif;max-width:520px;margin:40px auto;"
+    "text-align:center;background:#fff0f5;color:#461628\">"
+    "<h2>Aurora — Update</h2>"
+    "<form method=post action=/update enctype=multipart/form-data>"
+    "<p>Firmware (.bin)</p><input type=file name=firmware required><br><br>"
+    "<button>Update Firmware</button></form><hr>"
+    "<form method=post action=/upload enctype=multipart/form-data>"
+    "<p>Dashboard / content file (index.html, messages.js, images...)</p>"
+    "<input type=file name=file required><br><br>"
+    "<button>Upload File</button></form></body></html>";
+
+static void handleOtaForm(AsyncWebServerRequest* req) {
+    req->send_P(200, "text/html", OTA_INDEX_HTML);
+}
+
+//  POST /update -- firmware image. Requires header "X-Aurora-Key".
+//  First callback runs when the whole multipart request has been consumed;
+//  second callback streams each received chunk into the Update engine.
+static void handleOtaUpdate(AsyncWebServerRequest* req) {
+    AsyncWebServerResponse* r;
+    if (g_otaDenied) {
+        r = req->beginResponse(403, "text/plain", "DENIED: bad key");
+    } else if (Update.hasError()) {
+        char err[96];
+        snprintf(err, sizeof(err), "UPDATE FAILED: %s\n", Update.errorString());
+        r = req->beginResponse(400, "text/plain", err);
+    } else {
+        r = req->beginResponse(200, "text/plain", "UPDATE OK - rebooting\n");
+    }
+    r->addHeader("Connection", "close");
+    req->send(r);
+    if (!g_otaDenied && !Update.hasError()) {
+        delay(1500);          // let the response flush
+        ESP.restart();
+    }
+    g_otaDenied = false;
+}
+
+static void handleOtaUpdateUpload(AsyncWebServerRequest* req,
+                                  const String& filename, size_t index,
+                                  uint8_t* data, size_t len, bool final) {
+    if (index == 0) {
+        g_otaDenied = false;
+        if (!otaKeyOk(req)) {
+            g_otaDenied = true;
+            DBG_PRINTLN(F("[OTA] update denied (bad key)"));
+            return;
+        }
+        DBG_PRINTF("[OTA] firmware start: %s (%u bytes)\n",
+                   filename.c_str(), (unsigned)len);
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
+            Update.printError(Serial);
+            return;
+        }
+    }
+    if (g_otaDenied) return;
+    if (!Update.hasError() && !Update.write(data, len)) {
+        Update.printError(Serial);
+    }
+    if (final) {
+        if (!Update.hasError()) {
+            DBG_PRINTLN(F("[OTA] firmware end, verifying..."));
+            if (!Update.end(true)) {
+                Update.printError(Serial);
+            }
+        }
+    }
+}
+
+//  POST /upload -- write a single file into LittleFS. Path-traversal guarded,
+//  no subdirectories (dashboard assets all live at the FS root).
+static void handleFsUpload(AsyncWebServerRequest* req) {
+    AsyncWebServerResponse* r;
+    if (g_otaDenied) {
+        r = req->beginResponse(403, "text/plain", "DENIED: bad key");
+    } else {
+        r = req->beginResponse(200, "text/plain", "UPLOAD OK");
+    }
+    r->addHeader("Connection", "close");
+    req->send(r);
+    g_otaDenied = false;
+}
+
+static void handleFsUploadBody(AsyncWebServerRequest* req,
+                               const String& filename, size_t index,
+                               uint8_t* data, size_t len, bool final) {
+    if (index == 0) {
+        g_otaDenied = false;
+        if (!otaKeyOk(req)) {
+            g_otaDenied = true;
+            DBG_PRINTLN(F("[OTA] upload denied (bad key)"));
+            return;
+        }
+        //  Reject traversal attempts and anything that is not a filename.
+        if (filename.indexOf("..") >= 0 || filename.startsWith("/") ||
+            filename.isEmpty()) {
+            g_otaDenied = true;
+            DBG_PRINTLN(F("[OTA] upload rejected: bad filename"));
+            return;
+        }
+        g_uploadFile = LittleFS.open("/" + filename, "w");
+        if (!g_uploadFile) {
+            g_otaDenied = true;
+            DBG_PRINTF("[OTA] upload open failed: %s\n", filename.c_str());
+            return;
+        }
+        if (len > 0) g_uploadFile.write(data, len);
+        DBG_PRINTF("[OTA] upload start: /%s\n", filename.c_str());
+        return;
+    }
+    if (g_otaDenied) return;
+    if (g_uploadFile && len > 0) g_uploadFile.write(data, len);
+    if (final) {
+        if (g_uploadFile) {
+            g_uploadFile.close();
+            g_uploadFile = File();
+            DBG_PRINTLN(F("[OTA] upload complete"));
+        }
+    }
+}
+
+#endif // AURORA_OTA_ENABLED
+
+// ----------------------------------------------------------------------------
 //  Public API
 // ----------------------------------------------------------------------------
 bool begin() {
@@ -221,35 +371,49 @@ bool begin() {
         req->send(200, "application/json", buf);
     });
 
-    //  3. Captive Portal: redirect connectivity probes to dashboard
-    //     This triggers the "Sign In Required" / auto-open browser on phones.
-    auto redirectToDashboard = [](AsyncWebServerRequest* req) {
-        req->redirect("http://192.168.4.1/");
+    //  3. Captive Portal probe handling.
+    //     Android/Windows/Linux probes get 204 ("internet OK") so phones
+    //     connect SILENTLY — no "Sign in to network" page, which is the
+    //     WebView that scrolls poorly. The dashboard is opened by scanning
+    //     the OLED's dashboard QR (http://192.168.4.1/).
+    //     iOS probes still redirect so iPhone auto-opens Safari (which
+    //     scrolls fine), keeping that convenience intact.
+    auto respondNoContent = [](AsyncWebServerRequest* req) {
+        req->send(204);
     };
 
-    // Android captive portal probes
-    server.on("/generate_204", HTTP_GET, redirectToDashboard);
-    server.on("/generate204", HTTP_GET, redirectToDashboard);
-    server.on("/gen_204", HTTP_GET, redirectToDashboard);
-    server.on("/mobile/status", HTTP_GET, redirectToDashboard);
-    server.on("/check_network_status", HTTP_GET, redirectToDashboard);
+    // Android captive portal probes -> 204 (silent connect, no sign-in page)
+    server.on("/generate_204", HTTP_GET, respondNoContent);
+    server.on("/generate204", HTTP_GET, respondNoContent);
+    server.on("/gen_204", HTTP_GET, respondNoContent);
+    server.on("/mobile/status", HTTP_GET, respondNoContent);
+    server.on("/check_network_status", HTTP_GET, respondNoContent);
 
-    // Apple / iOS captive portal probes
+    // Apple / iOS captive portal probes: keep redirect for auto-open in Safari
     server.on("/hotspot-detect.html", HTTP_GET, [](AsyncWebServerRequest* req) {
         // iOS expects "<HTML><HEAD><TITLE>Success</TITLE></HEAD><BODY>Success</BODY></HTML>"
         // for "no captive portal". Anything else triggers the sign-in sheet.
         req->redirect("http://192.168.4.1/");
     });
-    server.on("/library/test/success.html", HTTP_GET, redirectToDashboard);
+    server.on("/library/test/success.html", HTTP_GET, [](AsyncWebServerRequest* req) {
+        req->redirect("http://192.168.4.1/");
+    });
 
-    // Windows NCSI captive portal probes
-    server.on("/connecttest.txt", HTTP_GET, redirectToDashboard);
-    server.on("/ncsi.txt", HTTP_GET, redirectToDashboard);
-    server.on("/redirect", HTTP_GET, redirectToDashboard);
+    // Windows NCSI + Firefox / Linux captive portal probes -> 204 (silent)
+    server.on("/connecttest.txt", HTTP_GET, respondNoContent);
+    server.on("/ncsi.txt", HTTP_GET, respondNoContent);
+    server.on("/redirect", HTTP_GET, respondNoContent);
+    server.on("/success.txt", HTTP_GET, respondNoContent);
+    server.on("/canonical.html", HTTP_GET, respondNoContent);
 
-    // Firefox / Linux captive portal probes
-    server.on("/success.txt", HTTP_GET, redirectToDashboard);
-    server.on("/canonical.html", HTTP_GET, redirectToDashboard);
+    //  OTA endpoints (firmware reflash + LittleFS file upload over WiFi).
+    //  Registered only while the softAP is up, reachable at 192.168.4.1.
+#if AURORA_OTA_ENABLED
+    server.on("/update", HTTP_GET, handleOtaForm);
+    server.on("/update", HTTP_POST, handleOtaUpdate, handleOtaUpdateUpload);
+    server.on("/upload", HTTP_POST, handleFsUpload, handleFsUploadBody);
+    DBG_PRINTLN(F("[OTA] /update + /upload endpoints armed"));
+#endif
 
     //  4. Static file serving from LittleFS (checked only for asset files)
     server.serveStatic("/", LittleFS, "/")
