@@ -91,7 +91,7 @@ void AuroraDisplay::setScreenMode(ScreenMode mode) {
 }
 
 void AuroraDisplay::cycleScreenMode() {
-    uint8_t next = ((uint8_t)_screenMode + 1) % 5;
+    uint8_t next = ((uint8_t)_screenMode + 1) % 6;
     setScreenMode((ScreenMode)next);
 }
 
@@ -100,7 +100,8 @@ const char* AuroraDisplay::screenModeName() const {
         case ScreenMode::DESKMATE:           return "Aurora";
         case ScreenMode::CLOCK_DATE:         return "Clock";
         case ScreenMode::DAILY_QUOTE:        return "Thought";
-        case ScreenMode::QR_CODE:            return "Scan Me";
+        case ScreenMode::QR_CODE:            return "Scan WiFi";
+        case ScreenMode::QR_DASHBOARD:       return "Scan Open";
         case ScreenMode::HEARTBEAT_KEEPSAKE: return "Keepsake Pulse";
     }
     return "Aurora";
@@ -353,6 +354,9 @@ void AuroraDisplay::update() {
         case ScreenMode::QR_CODE:
             renderQRCode(now);
             break;
+        case ScreenMode::QR_DASHBOARD:
+            renderDashboardQRCode(now);
+            break;
         case ScreenMode::HEARTBEAT_KEEPSAKE:
             renderHeartbeat(now);
             break;
@@ -468,11 +472,18 @@ void AuroraDisplay::renderDailyQuote(uint32_t now) {
 
 void AuroraDisplay::renderQRCode(uint32_t now) {
     (void)now;
+    drawQrScreen("WIFI:S:Aurora;T:WPA;P:for-chandni;;", "Scan to Connect");
+}
 
+void AuroraDisplay::renderDashboardQRCode(uint32_t now) {
+    (void)now;
+    drawQrScreen("http://192.168.4.1/", "Scan to Open");
+}
+
+void AuroraDisplay::drawQrScreen(const char* text, const char* heading) {
     QRCode qrcode;
     uint8_t qrcodeData[qrcode_getBufferSize(3)];
-    qrcode_initText(&qrcode, qrcodeData, 3, ECC_LOW,
-                     "WIFI:S:Aurora;T:WPA;P:for-chandni;;");
+    qrcode_initText(&qrcode, qrcodeData, 3, ECC_LOW, text);
 
     // Version 3 = 29×29 modules. Scale 2 → 58×58 px.
     int scale = 2;
@@ -489,8 +500,7 @@ void AuroraDisplay::renderQRCode(uint32_t now) {
 
     // Heading above QR
     _u8g2.setFont(u8g2_font_tom_thumb_4x6_tr);
-    const char* h1 = "Scan to Connect";
-    _u8g2.drawStr((AURORA_OLED_WIDTH - _u8g2.getStrWidth(h1)) / 2, 7, h1);
+    _u8g2.drawStr((AURORA_OLED_WIDTH - _u8g2.getStrWidth(heading)) / 2, 7, heading);
 }
 
 void AuroraDisplay::drawPulseWave(int startX, int endX, int centerY, uint32_t now, uint16_t bpm) {
