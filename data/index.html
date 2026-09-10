@@ -71,7 +71,6 @@
       min-height: 100vh;
       min-height: 100dvh;
       overflow-x: hidden;
-      overscroll-behavior-y: contain;
       -webkit-font-smoothing: antialiased;
       transition: background 0.6s ease, color 0.6s ease;
     }
@@ -282,19 +281,38 @@
       z-index: 5;
       max-width: var(--max-w);
       margin: 0 auto;
-      padding: 4px var(--gutter) calc(var(--nav-height) + 40px);
+      padding: 4px var(--gutter) calc(var(--nav-height) + 16px);
+      min-height: 100vh;
+      min-height: 100dvh;
     }
 
     /* Tab Page View */
     .tab-view {
       display: flex;
       flex-direction: column;
-      gap: 20px;
+      gap: 28px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      padding-bottom: 72px;
       animation: fadeIn 0.35s ease-out;
     }
 
     .tab-view.hidden {
       display: none;
+    }
+
+    /* End-of-page credit — makes the bottom stop of every tab look intentional */
+    .app-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding: 12px 16px 4px;
+      text-align: center;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      color: rgba(200, 205, 255, 0.55);
     }
 
     /* Coquette Dedication */
@@ -1548,6 +1566,12 @@
       </div>
     </section>
 
+    <footer class="app-footer">
+      <span>💖</span>
+      <span>Aurora · for Saira</span>
+      <span>made with love</span>
+    </footer>
+
   </main>
 
   <!-- ============= FLOATING BOTTOM NAVIGATION DOCK ============= -->
@@ -1587,56 +1611,6 @@
   <script>
     (function () {
       'use strict';
-
-      // Block the mobile pull-to-refresh overscroll that reloads the whole page.
-      function canScrollUpFrom(elm) {
-        while (elm && elm !== document.documentElement && elm !== document.body) {
-          var cs = getComputedStyle(elm);
-          var oy = cs.overflowY;
-          var ox = cs.overflowX;
-          if ((oy === 'auto' || oy === 'scroll' || oy === 'overlay') &&
-            elm.scrollHeight > elm.clientHeight + 1) {
-            if (elm.scrollTop > 0) return true;
-          }
-          if ((ox === 'auto' || ox === 'scroll' || ox === 'overlay') &&
-            elm.scrollWidth > elm.clientWidth + 1) {
-            if (elm.scrollLeft > 0) return true;
-          }
-          elm = elm.parentNode;
-        }
-        return window.scrollY > 0;
-      }
-      var ptrStartY = 0,
-        ptrStartX = 0,
-        ptrTracking = false,
-        ptrScrollable = false;
-      document.addEventListener(
-        'touchstart',
-        function (e) {
-          ptrTracking = true;
-          ptrStartY = e.touches[0].clientY;
-          ptrStartX = e.touches[0].clientX;
-          ptrScrollable = canScrollUpFrom(e.target);
-        },
-        { passive: true }
-      );
-      document.addEventListener(
-        'touchmove',
-        function (e) {
-          if (!ptrTracking || ptrScrollable) return;
-          var dy = e.touches[0].clientY - ptrStartY;
-          var dx = e.touches[0].clientX - ptrStartX;
-          if (dy > 0 && window.scrollY <= 0 && Math.abs(dy) > Math.abs(dx)) {
-            e.preventDefault();
-          }
-        },
-        { passive: false }
-      );
-      var ptrEnd = function () {
-        ptrTracking = false;
-      };
-      document.addEventListener('touchend', ptrEnd, { passive: true });
-      document.addEventListener('touchcancel', ptrEnd, { passive: true });
 
       // 30 Grounded, Simple & Romantic Messages for Chandni
       const MESSAGES = [
