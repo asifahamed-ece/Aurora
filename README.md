@@ -37,9 +37,9 @@ The design intent is deliberately non-technical on the OLED: all metrics and sta
 
 **The Gift** — the hand-built device, ready to sit on a desk.
 
-> **Private live preview:** open the rendered dashboard page any time at this
-> link — [gist.github.com/asifahamed-ece/ee9221cd46752af818e399eaa905c4b6](https://gist.github.com/asifahamed-ece/ee9221cd46752af818e399eaa905c4b6)
-> (secret gist: `README.md` renders, `aurora-dashboard.html` is the full offline self-contained dashboard).
+> **Live dashboard preview:** open the rendered dashboard any time at
+> [startling-cuchufli-ccb77c.netlify.app](https://startling-cuchufli-ccb77c.netlify.app/)
+> (single-file static build of the companion web app — no server, no cold start).
 
 ## Features & Capabilities
 
