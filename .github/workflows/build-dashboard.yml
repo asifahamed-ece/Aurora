@@ -1,0 +1,30 @@
+# Build the Aurora dashboard into a single self-contained file (LAN / secret
+# Gist sharing). The device stays private; this only packages the web UI.
+name: Build Aurora Dashboard
+
+on:
+  push:
+    paths:
+      - 'data/**'
+      - 'tools/build_dashboard.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build single-file dashboard
+        run: python3 tools/build_dashboard.py
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: aurora-dashboard
+          path: dist/aurora-dashboard.html
+          if-no-files-found: error

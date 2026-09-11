@@ -116,3 +116,8 @@ data/sleeping_chandni.jpg
 # Local safety backups (firmware/FS snapshots taken before risky changes)
 # ----------------------------------------------------------------------------
 .backups/
+
+# ----------------------------------------------------------------------------
+# Build output (dashboard single-file build)
+# ----------------------------------------------------------------------------
+dist/
