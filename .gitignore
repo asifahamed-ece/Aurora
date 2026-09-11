@@ -95,6 +95,8 @@ screenshots/*.jpeg
 # Allow a README inside screenshots/ to remain
 !screenshots/README.md
 !screenshots/.gitkeep
+# The README hardware photo placeholder (drop your device photo over this file)
+!screenshots/aurora-hardware-placeholder.png
 
 # ----------------------------------------------------------------------------
 # Archive — miscellaneous local files not part of the firmware
