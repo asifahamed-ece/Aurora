@@ -1,8 +1,8 @@
 # Aurora — Implementation Progress Tracker
 
 > **Owner:** Asif (ECE final-year) • **AI Partner:** Claude Code / Antigravity
-> **Goal:** A hand-built ESP32-C3 birthday gift for Chandni (CSE classmate), due Sept 10, 2026.
-> **Current Version:** `aurora-firmware-deskmate` (Fork with Animated Romantic OLED Deskmate & Touch Button Consolidation)
+> **Goal:** A hand-built ESP32-C3 birthday gift for Chandni (CSE classmate), **delivered for her Sept 10, 2026 birthday — ✅ built & gifted.**
+> **Current Version:** `aurora-firmware-deskmate` (Fork with Animated Romantic OLED Deskmate & Touch Button Consolidation) — `v0.5.1`
 
 ---
 
@@ -82,13 +82,15 @@ Building FS image from 'data' directory to .pio/build/esp32c3/littlefs.bin
 | Sept 6 | Birthday Milestone & Letters | Chapter 22 birthday detection, opening loading curtain, 6 keepsake letters, music box |
 | Sept 6 | Deskmate Fork & Modes | Consolidated to 2 buttons; animated OLED Deskmate engine; 4 display modes; 1hr neglect mechanism, 12 AM midnight reminder. |
 | Sept 7 | **Interactive Polish & Bug Fixes** | **Dashboard touch OLED reaction hook, strict RHS safe margins, replaced `<3` with graphic mini-hearts, dynamic scrolling ECG pulse wave with 72->120 BPM acceleration on touch, and 3-second long press for WiFi toggle.** |
+| Sept 9–10 | **Gift Assembly & Delivery** | Hand-built enclosure; device delivered in time for the **Sept 10** birthday. |
+| Sept 12 | **Docs, Dashboard Preview & Design Retro** | README + all markdowns updated to as-built; single-file static dashboard build (`tools/build_dashboard.py`) deployed live at [startling-cuchufli-ccb77c.netlify.app](https://startling-cuchufli-ccb77c.netlify.app/); design spec marked **delivered**. |
 
 ---
 
 ## Flash & Run Commands
 
 ```bash
-cd "/home/shadow/Desktop/ClaudeCode Chats/aurora-firmware-deskmate"
+cd "/home/shadow/Desktop/Agentic_Workflows/Aurora"
 
 # Build & upload firmware
 pio run -t upload

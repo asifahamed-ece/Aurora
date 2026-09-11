@@ -2,8 +2,22 @@
 
 **Author:** Claudyy (Asif's brainstorm partner)
 **Date:** Sept 5, 2026
-**Status:** Pre-commitment feasibility pass — no implementation yet
+**Status:** ~~Pre-commitment feasibility pass — no implementation yet~~ → **✅ CONFIRMED & DELIVERED** *(updated Sept 12, 2026)*
 **Goal:** Validate that the proposed "Aurora" design is buildable in 5 days, on a $3-ish MCU, with the components Asif has, with no surprising failure modes.
+
+## Outcome at delivery (Sept 12)
+
+The verdict held: **the 5-day plan was tight but achievable, and it shipped.**
+
+| Section 9 question | Decided / shipped |
+|---|---|
+| 1. 74HCT125 level shifter? | **Skipped** — 470 Ω series resistor on the data line. Shipped build has a single breathing chaser LED, not a ring. |
+| 2. TFT color display? | **No** — monochrome **1.3" SH1106** (`AURORA_OLED_DRIVER 1`), U8g2, 128×64 @ 400 kHz I2C. |
+| 3. 3× tactile buttons in hand? | Yes — shipped build consolidates to **2 buttons** (Warm Touch GPIO0 + Mode/WiFi GPIO2). |
+| 4. OTA enabled or hidden? | **Enabled** (Block 4), token-secured with `AURORA_OTA_KEY` over the `Aurora` AP only. |
+| 5. 30 messages drafted? | **Yes** — shipped in `data/messages.js`; also the keepsake letter jar + music box. |
+
+All pins were re-verified during the Deskmate Edition consolidation — the as-built map is in [docs/PIN_DIAGRAM.md](docs/PIN_DIAGRAM.md) and `include/config.h`. The `As-designed` pins below are historical.
 
 ---
 
@@ -234,6 +248,8 @@ Based on this analysis, I'd add:
 **Unique-feeling factors that will land:** date-gated secret page, 30-message library, the frontend girl actually being impressed by the dashboard, OTA update story she can tell friends.
 
 **My recommendation:** proceed with the design. Add the items in Section 7 to the spec. Get a 74HCT125 + 470 µF cap + 10kΩ resistor + slide switch + tactile buttons from a local electronics shop tomorrow (₹150 total, well under budget).
+
+> ✅ **Postscript:** recommendation followed — components purchased, device built and delivered for the Sept 10 birthday. The 470 Ω resistor and 10 kΩ pull-up went into the shipped device; the 74HCT125 was not needed (single-LED chaser, short trace).
 
 ---
 

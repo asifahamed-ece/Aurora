@@ -39,8 +39,9 @@ The tiny button on the side cycles through her screens:
 1. Her face (the main thing!)
 2. Clock & date
 3. A sweet quote
-4. A WiFi QR code — scan it to connect
-5. A heartbeat keepsake from me
+4. A WiFi QR code — scan to join her hotspot
+5. A dashboard QR code — scan to open everything on your phone
+6. A heartbeat keepsake from me
 
 ---
 

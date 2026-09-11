@@ -1,7 +1,7 @@
 ---
 title: "Aurora — A Birthday Gift Design Spec"
 date: 2026-09-05
-status: Approved for implementation
+status: ✅ SHIPPED & DELIVERED (updated 2026-09-12)
 author: Claudyy (brainstorm partner with Asif, ECE final-year)
 ---
 
@@ -17,6 +17,20 @@ author: Claudyy (brainstorm partner with Asif, ECE final-year)
 **Form factor:** small hand-built enclosure, perfboard prototype, no 3D printer available.
 
 The intended outcome: a working, polished, robust gift delivered on Sept 9 (one day buffer before the birthday). On unboxing, the gift is impressive on first sight; on first interaction, the recipient is delighted by the dashboard quality; on discovery, the date-gated personal message lands.
+
+---
+
+## Delivery status — ✅ built, delivered (updated Sept 12, 2026)
+
+| Item | Status |
+|---|---|
+| **Components** | ✅ **All purchased** — every line of the BOM below is in hand |
+| **Firmware — Block 1 (deskmate engine)** | ✅ Complete & verified — living OLED deskmate, moods, LED chaser, battery ADC |
+| **Firmware — Block 4 (WiFi + dashboard)** | ✅ Complete & verified — SoftAP `Aurora`, AsyncWebServer + WebSocket, LittleFS dashboard |
+| **The gift** | ✅ Built & delivered in time for her **Sept 10** birthday |
+| **Live dashboard preview** | ✅ Hosted at [startling-cuchufli-ccb77c.netlify.app](https://startling-cuchufli-ccb77c.netlify.app/) |
+
+> **The build evolved while it was made.** The device that shipped is the **"Aurora Deskmate Edition"** — an animated OLED desk companion with a single touch button and a breathing LED, replacing this spec's original 3 buttons + NeoPixel ring. The core intent (hand-built, WiFi dashboard, 30 daily messages, warmth without pressure) shipped as designed; the "as-built" details live in [IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md), [docs/PIN_DIAGRAM.md](docs/PIN_DIAGRAM.md) and [`include/config.h`](include/config.h).
 
 ---
 
@@ -45,23 +59,23 @@ A **date-gated secret page** (`/secret`) is hidden in the UI before Sept 10 and 
 
 | Component | Source | Status |
 |---|---|---|
-| ESP32-C3 Supermini | Owned | ✅ |
-| 12× WS2812B ring (or 8-pixel if that's what he has) | Owned | ✅ |
-| 0.96" SSD1306 OLED (I2C) | Owned | ✅ |
-| 3× 6mm tactile buttons | Owned | ✅ |
-| 3.7V LiPo (500-1000 mAh) | Owned | ✅ |
-| TP4056 charging module | Owned | ✅ |
-| 470 µF electrolytic capacitor | Buy tomorrow (₹10) | ⏳ |
-| 10 kΩ resistor (for GPIO0 pull-up) | Buy tomorrow (₹2) | ⏳ |
-| 470 Ω resistor (for WS2812B data line) | Buy tomorrow (₹2) | ⏳ |
-| Slide switch (SPST) | Buy tomorrow (₹15) | ⏳ |
-| 4× M3 brass standoffs (15mm) | Buy tomorrow (₹40) | ⏳ |
-| 3mm clear acrylic sheet (200mm × 150mm) | Buy tomorrow (₹100) | ⏳ |
-| Black acrylic or thin plywood (for box body) | Buy tomorrow (₹100) | ⏳ |
-| M3 screws (8×) | Buy tomorrow (₹20) | ⏳ |
-| Perfboard (5×7 cm or similar) | Owned or buy (₹30) | ⏳ |
+| ESP32-C3 Supermini | Owned | ✅ Purchased |
+| 12× WS2812B ring (or 8-pixel if that's what he has) | Owned | ✅ Purchased *(superseded in shipped build — see As-built note)* |
+| 0.96" SSD1306 OLED (I2C) | Owned | ✅ Purchased |
+| 3× 6mm tactile buttons | Owned | ✅ Purchased *(consolidated to 2 in shipped build)* |
+| 3.7V LiPo (500-1000 mAh) | Owned | ✅ Purchased |
+| TP4056 charging module | Owned | ✅ Purchased |
+| 470 µF electrolytic capacitor | Purchased (₹10) | ✅ Purchased |
+| 10 kΩ resistor (for GPIO0 pull-up) | Purchased (₹2) | ✅ Purchased |
+| 470 Ω resistor (for data line) | Purchased (₹2) | ✅ Purchased |
+| Slide switch (SPST) | Purchased (₹15) | ✅ Purchased |
+| 4× M3 brass standoffs (15mm) | Purchased (₹40) | ✅ Purchased |
+| 3mm clear acrylic sheet (200mm × 150mm) | Purchased (₹100) | ✅ Purchased |
+| Black acrylic or thin plywood (for box body) | Purchased (₹100) | ✅ Purchased |
+| M3 screws (8×) | Purchased (₹20) | ✅ Purchased |
+| Perfboard (5×7 cm or similar) | Purchased (₹30) | ✅ Purchased |
 
-**Total cost of new components: ~₹300** (~$3.50).
+**Total cost of new components: ~₹300** (~$3.50) — ✅ **fully spent; nothing left on the list.**
 
 ### Final pin map (feasibility-verified)
 
@@ -85,6 +99,21 @@ Battery+ → TP4056 BAT+
 - GPIO0: External 10kΩ pull-up ensures the C3 boots correctly even if the Up button is held during reset (GPIO0 is a boot-mode pin).
 - GPIO5 for WS2812B: GPIO8 was the originally-suggested pin but it's a strapping pin AND the on-board LED. GPIO5 is safe.
 - GPIO1 and GPIO10 are safe for buttons with internal pull-ups.
+
+### As-built pin map (Deskmate Edition — matches `include/config.h` exactly)
+
+The map above was superseded during the Deskmate Edition consolidation. The pins actually wired and flashed:
+
+```
+GPIO8 → OLED SDA    GPIO9 → OLED SCL        (I2C 400 kHz, SSD1306 or SH1106)
+GPIO4 → LED chaser (single breathing LED, 220Ω in series)
+GPIO0 → Warm-Touch button (external 10kΩ pull-up to 3V3)
+GPIO2 → Mode-cycle button — short press = next screen / 3s hold = WiFi AP toggle
+GPIO3 → battery voltage-divider mid-point (2× 100kΩ, ADC1_CH3)
+470µF → across 3V3 and GND, physically close to the C3
+```
+
+Verification: [docs/PIN_DIAGRAM.md](docs/PIN_DIAGRAM.md).
 
 ---
 
@@ -276,6 +305,14 @@ Both layers must pass for the secret page to be visible.
 | **Day 4** | Sept 8 | Dashboard HTML/CSS/JS. Date-gated secret page. LiPo + TP4056 + slide switch wiring. Test the full stack on a soldered perfboard. |
 | **Day 5** | Sept 9 | Enclosure build: cut acrylic, mount components, button caps through holes, OLED window alignment. Final assembly. Rehearse the unboxing flow. Charge battery. |
 
+### Actual outcome (shipped)
+
+| Day | Planned | Shipped |
+|---|---|---|
+| **Day 1** | Components + breadboard prototype | ✅ All components bought; breadboard verified |
+| **Day 2–4** | Firmware modes, dashboard, secret page | ✅ Deskmate Edition firmware + LittleFS dashboard, letters & music box |
+| **Day 5** | Enclosure + final assembly | ✅ Hand-built enclosure, delivered for the **Sept 10** birthday |
+
 ### Risk mitigation
 - Day 5 is buffer. No firmware changes after Day 4.
 - Soldering happens on Day 3-4 in parallel with firmware — they meet on Day 4 evening.
@@ -301,41 +338,40 @@ Before gifting, Asif must verify:
 
 ---
 
-## Critical files (to be created during implementation)
+## Source of truth (as-built)
 
-- `firmware/aurora.ino` — main Arduino sketch
-- `firmware/secrets.h` — WiFi credentials placeholder, message library array
-- `firmware/state.h` — global state, mode management
-- `firmware/display.h` — OLED rendering helpers
-- `firmware/leds.h` — NeoPixel animation library
-- `firmware/wifi_manager.h` — AP/station mode logic, captive portal
-- `firmware/dashboard_api.h` — AsyncWebServer route handlers
-- `firmware/secret_gate.h` — date-gating logic
-- `firmware/battery.h` — voltage monitor, deep-sleep on low battery
-- `data/index.html` — dashboard main page
-- `data/app.css` — dashboard styles
-- `data/app.js` — dashboard logic
-- `data/secret.html` — date-gated personal letter
-- `README.md` — build instructions, pin map, troubleshooting
-- `MESSAGES.md` — the 30 daily messages (with index numbers for reference)
+The files planned below now exist as a PlatformIO project (this repo):
+
+| Planned | Actual in repo |
+|---|---|
+| `firmware/aurora.ino` | `src/main.cpp` — setup/loop: deskmate animation, touch & midnight checks |
+| `firmware/state.h` | `include/state.h` + `src/block4/state.cpp` — NVS-backed state singleton |
+| `firmware/display.h` / `leds.h` / `buttons.h` / `battery.h` | `include/display.h`, `include/chaser.h`, `include/buttons.h` + `src/block1/*` |
+| `firmware/wifi_manager.h` / `dashboard_api.h` | `src/block4/*` — SoftAP, AsyncWebServer, AsyncWebSocket |
+| `data/index.html`, `app.css`, `app.js` | `data/index.html` + `data/app.js` + `data/style.css` (self-contained) |
+| `data/secret.html` | `data/letter.html` (keepsake letters) + music box tab |
+| `MESSAGES.md` | `data/messages.js` — the 30 daily messages |
+| `README.md` | `README.md` (overview) + `docs/USER_MANUAL.md` (the card) + `docs/PIN_DIAGRAM.md` |
 
 ---
 
 ## Out of scope (explicitly)
 
-- OTA firmware updates (per Asif's choice)
+- OTA firmware updates (per Asif's choice — *since reversed: OTA is enabled in Block 4 over the `Aurora` AP, token-secured via `AURORA_OTA_KEY`*)
 - Ambient sensor (per Asif's choice)
 - Mobile app (the dashboard is a web app, no native app)
 - Cloud sync / accounts (everything is local)
 - Multiple languages (English only, written for her)
-- Touch interface (buttons only, per Asif's choice)
+- Touch interface (buttons only, per Asif's choice — *since evolved: the shipped build IS a touch interface, a single Warm-Touch button on GPIO0*)
 - 3D-printed enclosure (per Asif's choice)
 
 ---
 
 ## Open questions (none remaining)
 
-All design decisions are locked. Implementation can begin as soon as Asif approves this spec.
+All design decisions were locked. Implementation began immediately after Asif approved this spec and is now shipped.
+
+> ★ **Evolved during the build:** the date-gated `/secret` single note became a keepsake **letter jar + music box** (richer, lower-pressure); the 3-button + NeoPixel ring became the **touch button + breathing LED** deskmate; OTA went from "disabled" to **enabled** (Block 4, token-secured over the `Aurora` AP). The emotional payload and build intent from below are unchanged.
 
 ---
 
