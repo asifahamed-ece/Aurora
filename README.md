@@ -38,7 +38,7 @@ The design intent is deliberately non-technical on the OLED: all metrics and sta
 **The Gift** — the hand-built device, ready to sit on a desk.
 
 > **Live dashboard preview:** open the rendered dashboard any time at
-> [startling-cuchufli-ccb77c.netlify.app](https://startling-cuchufli-ccb77c.netlify.app/)
+> [Aurora - for Saira](https://startling-cuchufli-ccb77c.netlify.app/)
 > (single-file static build of the companion web app — no server, no cold start).
 
 ## Features & Capabilities
