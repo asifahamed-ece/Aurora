@@ -97,6 +97,14 @@ screenshots/*.jpeg
 !screenshots/.gitkeep
 # The README hardware photo placeholder (drop your device photo over this file)
 !screenshots/aurora-hardware-placeholder.png
+# Curated hardware photos for the README (deliberately tracked)
+!screenshots/Aurora_Face.jpg
+!screenshots/Clock.jpg
+!screenshots/Heatbeats.jpg
+!screenshots/Internals.jpg
+!screenshots/Packed.jpg
+!screenshots/QR.jpg
+!screenshots/Thoughts.jpg
 
 # ----------------------------------------------------------------------------
 # Archive — miscellaneous local files not part of the firmware
