@@ -37,6 +37,10 @@ The design intent is deliberately non-technical on the OLED: all metrics and sta
 
 **The Gift** — the hand-built device, ready to sit on a desk.
 
+> **Private live preview:** open the rendered dashboard page any time at this
+> link — [gist.github.com/asifahamed-ece/ee9221cd46752af818e399eaa905c4b6](https://gist.github.com/asifahamed-ece/ee9221cd46752af818e399eaa905c4b6)
+> (secret gist: `README.md` renders, `aurora-dashboard.html` is the full offline self-contained dashboard).
+
 ## Features & Capabilities
 
 ### Living Deskmate (`DeskmateMood`)
