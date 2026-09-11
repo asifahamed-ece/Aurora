@@ -20,22 +20,22 @@ The design intent is deliberately non-technical on the OLED: all metrics and sta
 ## Features at a Glance
 
 <p align="center">
-  <img src="screenshots/02_dashboard_today.png" width="220" height="220" style="object-fit:cover;border-radius:8px;margin:8px;" alt="Mobile dashboard Today tab">
-  <img src="screenshots/03_letters_tab.png" width="220" height="220" style="object-fit:cover;border-radius:8px;margin:8px;" alt="Keepsake letters tab">
+  <img src="screenshots/Aurora_Face.jpg" width="220" height="220" style="object-fit:cover;border-radius:8px;margin:8px;" alt="Aurora the deskmate on the OLED">
+  <img src="screenshots/Clock.jpg" width="220" height="220" style="object-fit:cover;border-radius:8px;margin:8px;" alt="Clock and date screen">
 </p>
 
-**Mobile Dashboard** — greeting, live time, today's daily message, and touch stats, refreshed live from the deskmate.
+**The Deskmate** — Aurora's living face on the OLED: blinking, smiling, and watching over the desk.
 
-**Keepsake Letters** — an envelope jar of short personal letters, ready to open on a mood.
+**Clock & Date** — one button press cycles to a large digital clock with a contextual greeting.
 
 <p align="center">
-  <img src="screenshots/08_dashboard_birthday_mode.png" width="220" height="220" style="object-fit:cover;border-radius:8px;margin:8px;" alt="Birthday mode">
-  <img src="screenshots/aurora-hardware-placeholder.png" width="220" height="220" style="object-fit:cover;border-radius:8px;margin:8px;" alt="Aurora hardware photo — replace with a real photo of the device">
+  <img src="screenshots/Thoughts.jpg" width="220" height="220" style="object-fit:cover;border-radius:8px;margin:8px;" alt="Daily thoughts screen">
+  <img src="screenshots/Packed.jpg" width="220" height="220" style="object-fit:cover;border-radius:8px;margin:8px;" alt="The finished Aurora device">
 </p>
 
-**Birthday Mode** — Aurora notices the date and celebrates with a special screen.
+**Daily Thoughts** — today's rotating supportive message, one of 30.
 
-**Aurora — the device itself** — save a square photo of the hardware over `screenshots/aurora-hardware-placeholder.png` and it replaces this placeholder automatically.
+**The Gift** — the hand-built device, ready to sit on a desk.
 
 ## Features & Capabilities
 
