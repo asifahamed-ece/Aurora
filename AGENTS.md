@@ -33,7 +33,7 @@ aurora-firmware-deskmate/
 │   └── block4/           # WiFi AP, AsyncWebServer, state, messages, clock
 ├── include/              # Header files (config.h, display.h, buttons.h, etc.)
 ├── lib/                  # External libraries (vendored ESPAsyncWebServer-patched — RISC-V heap fix)
-├── data/                 # Data files for LittleFS dashboard (index.html, messages.js, letter.html, style.css)
+├── data/                 # Data files for LittleFS dashboard (index.html, messages.js, sleeping_chandni.jpg)
 ├── docs/                 # Hardware & user documentation (PIN_DIAGRAM.md, USER_MANUAL.md, Clear_Touches.md)
 ├── platformio.ini        # PlatformIO build configuration
 └── partitions_aurora.csv # Partition table (LittleFS labeled "littlefs")

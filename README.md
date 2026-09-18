@@ -126,5 +126,5 @@ All time, messages, letters, and touch history are stored **on-device only** (Li
 | [`2026-09-05-aurora-gift-design.md`](2026-09-05-aurora-gift-design.md) | Original design spec (concept, tone, timeline, enclosure) |
 | [`feasibility-analysis.md`](feasibility-analysis.md) | Deep technical feasibility pass (pins, memory budget, libraries) |
 | [`IMPLEMENTATION_PROGRESS.md`](IMPLEMENTATION_PROGRESS.md) | Build status, subsystem verification, change log |
-| `data/` | LittleFS dashboard sources (`index.html`, `messages.js`, `letter.html`, …) |
+| `data/` | LittleFS dashboard sources (`index.html`, `messages.js`, `sleeping_chandni.jpg`, …) |
 | `lib/ESPAsyncWebServer-patched/` | Vendored AsyncWebServer with RISC-V heap-corruption fix |

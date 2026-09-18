@@ -125,10 +125,9 @@ GND     → common ground
 | **Remaining for LittleFS (dashboard + assets)** | **~2.5 MB** ✅ |
 
 **Dashboard size estimate:**
-- `index.html` (self-contained, CSS/JS inlined): ~30 KB
-- `messages.js`: ~8 KB
-- `letter.html`: ~5 KB
-- Total: **~45 KB** — fits 50x over.
+- `index.html` (self-contained, CSS/JS inlined): ~77 KB
+- `messages.js`: ~3 KB
+- Total: **~80 KB** — fits 30x over.
 
 **RAM budget (320 KB usable after WiFi):**
 

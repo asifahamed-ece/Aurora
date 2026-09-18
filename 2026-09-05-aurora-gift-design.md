@@ -192,15 +192,12 @@ The original three modes were superseded during the build by the Deskmate Editio
 
 ```
 /data/
-├── index.html          (main dashboard — self-contained, CSS/JS inlined)
+├── index.html          (main dashboard — self-contained, CSS/JS inlined, includes the letters + music box)
 ├── messages.js         (the 30 daily thoughts, loaded by the dashboard)
-├── letter.html         (keepsake letters fragment)
-├── style.css           (legacy standalone stylesheet — not loaded by index.html)
-├── app.js              (legacy standalone updater — not loaded by index.html)
 └── sleeping_chandni.jpg (Dreamland photo card)
 ```
 
-Total: ~50 KB. Trivially fits in 4 MB flash.
+Total: ~80 KB. Trivially fits in 4 MB flash.
 
 ### Visual design language
 
@@ -331,7 +328,7 @@ The files planned below now exist as a PlatformIO project (this repo):
 | `firmware/display.h` / `leds.h` / `buttons.h` / `battery.h` | `include/display.h`, `include/chaser.h`, `include/buttons.h` + `src/block1/*` |
 | `firmware/wifi_manager.h` / `dashboard_api.h` | `src/block4/*` — SoftAP, AsyncWebServer, AsyncWebSocket |
 | `data/index.html`, `app.css`, `app.js` | `data/index.html` (self-contained) + `data/messages.js` |
-| `data/secret.html` | `data/letter.html` (keepsake letters) + music box tab |
+| `data/secret.html` | keepsake letters + music box — inline in `data/index.html` |
 | `MESSAGES.md` | `data/messages.js` — the 30 daily messages |
 | `README.md` | `README.md` (overview) + `docs/USER_MANUAL.md` (the card) + `docs/PIN_DIAGRAM.md` |
 
