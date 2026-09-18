@@ -38,18 +38,21 @@ The intended outcome: a working, polished, robust gift delivered on Sept 9 (one 
 
 A small hand-built box containing:
 - An ESP32-C3 Supermini
-- A 12-pixel WS2812B NeoPixel ring
-- A 0.96" SSD1306 monochrome OLED display
-- 3 tactile buttons (Up, Select, Down)
+- A mood-synced breathing LED (single, GPIO4, via 220Ω resistor)
+- A 1.3" SH1106 monochrome OLED display (128×64, U8g2; also SSD1306-compatible)
+- 2 tactile buttons: Warm-Touch (GPIO0) + Mode/WiFi (GPIO2)
 - A 3.7V LiPo + TP4056 charging module + slide switch
-- 470 µF cap + 10kΩ pull-up + 470Ω resistor (fail-safe components)
+- 470 Ω series resistor + 10kΩ pull-up (fail-safe components)
 
-The device operates in three modes navigable by buttons:
-1. **Clock mode** (default) — shows day, date, live time, and one of 30 daily calming/supportive messages. LEDs breathe gently.
-2. **Interaction mode** — Up/Down navigate special screens (e.g., "Days I've been with you", "Stats", "Surprise me"). Select triggers animations.
-3. **WiFi mode** (entered by long-pressing Select) — C3 broadcasts `Aurora-Setup`, captive portal asks for home WiFi credentials, then device joins her home WiFi and serves a beautiful local dashboard at `http://aurora.local/`.
+The device shipped as the **Aurora Deskmate Edition** — an animated OLED companion with **6 display modes** cycled by the Mode button (short press):
+1. **Deskmate** (default) — living animated pet: blinking eyes, heart-eyes on touch, lonely/sad after 1 hour neglect, 12:00 AM daily-message reminder, sleeping.
+2. **Clock & Date** — day, date, live time.
+3. **Daily Quote** — one of 30 daily calming/supportive messages (`dayOfYear % 30`).
+4. **Scan WiFi QR** — on-OLED QR code to join the `Aurora` hotspot.
+5. **Scan Dashboard QR** — on-OLED QR code for `http://192.168.4.1/`.
+6. **Heartbeat Keepsake** — animated ECG pulse line + accelerating lub-dub heart.
 
-A **date-gated secret page** (`/secret`) is hidden in the UI before Sept 10 and returns 404 if accessed directly. After Sept 10, it reveals a personal letter written by Asif.
+A 3-second hold on the Mode button toggles the WiFi softAP. The original clock/interaction/WiFi-setup 3-mode concept below was superseded by this design during the build.
 
 ---
 
@@ -120,55 +123,36 @@ Verification: [docs/PIN_DIAGRAM.md](docs/PIN_DIAGRAM.md).
 ## Firmware architecture
 
 ### Tech stack
-- **Framework:** Arduino (ESP32 Arduino core 2.0.x or later)
-- **Libraries:**
-  - `Adafruit_NeoPixel` (LED ring)
-  - `Adafruit_SSD1306` + `Adafruit_GFX` (OLED)
-  - `ESPAsyncWebServer` + `AsyncTCP` (web server)
-  - `DNSServer` (captive portal)
-  - `ArduinoJson` v7 (state API)
-  - `WiFi` (built-in)
-  - `Preferences` (built-in, for saving WiFi credentials)
-  - `NTPClient` + `time.h` (time sync)
-  - `esp_task_wdt` (watchdog)
-- **Storage:** LittleFS for dashboard HTML/CSS/JS files
-- **OTA:** Disabled (per Asif's choice)
+- **Framework:** Arduino (ESP32 Arduino core, PlatformIO `espressif32`)
+- **Libraries (from `platformio.ini`):**
+  - `olikraus/U8g2` (OLED — runs both SH1106 and SSD1306)
+  - `ESPAsyncWebServer-aurora` (vendored, patched for RISC-V heap safety) + `AsyncTCP-esphome`
+  - `bblanchon/ArduinoJson` v6 (state API)
+  - `ricmoo/QRCode` (on-OLED QR generation)
+  - `WiFi` + `Preferences` (built-in; no `NTPClient` — the clock is seeded from the compile-time epoch and advanced by `millis()`)
+- **Storage:** LittleFS for the dashboard
+- **OTA:** Enabled over the softAP, token-secured via `AURORA_OTA_KEY` (reversed from "disabled")
 
-### Three operating modes
+### Operating model (as-built)
 
-#### Mode 1: Clock / Daily Message (default on boot)
-- OLED line 1: Day, Date (e.g., "Friday, Sept 10")
-- OLED line 2: Live time (HH:MM:SS, NTP-synced)
-- OLED line 3: Today's calming message (index = `dayOfYear % 30`)
-- LED animation: slow breathing, 5-second period, warm color (amber blend)
-- Wakes on any button press → enters Mode 2
+The original three modes were superseded during the build by the Deskmate Edition's **two buttons + six screens**:
 
-#### Mode 2: Interaction
-- **Up button:** cycle forward through special screens
-- **Down button:** cycle backward
-- **Select button:** trigger current screen's "show me" action (e.g., rainbow chase, days-together animation)
-- Screens:
-  1. "Stats" — button presses today, total button presses, battery voltage
-  2. "Days together" — `(today - giftDate)` days, with celebration animation at milestones (30, 100, 365)
-  3. "Mood" — a 1-5 mood scale she can set with Up/Down, persisted in Preferences
-  4. "Surprise" — a one-time random animation: rainbow chase, sparkle, or color wave
-- 30 seconds of no button press → return to Mode 1
+| Button | Action |
+|---|---|
+| **Warm-Touch (GPIO0)** — short press | Records a Warm Touch; wakes the deskmate and flips it into excited heart-eyes + accelerated heartbeat |
+| **Mode (GPIO2)** — short press | Cycles the 6 screens: Deskmate → Clock & Date → Daily Quote → Scan WiFi QR → Scan Dashboard QR → Heartbeat Keepsake |
+| **Mode (GPIO2)** — 3-second hold | Toggles the WiFi softAP on/off (`Aurora` / `for-chandni`, `192.168.4.1`) |
 
-#### Mode 3: WiFi Setup (entered via long-press Select from Mode 1)
-- C3 broadcasts `Aurora-Setup` as open AP for 60 seconds
-- After 60s, becomes password-protected (`aurora1234`)
-- Captive portal: any HTTP request → redirected to `192.168.4.1/setup`
-- Setup page form: WiFi SSID + password
-- On submit: C3 saves credentials via `Preferences`, restarts in station mode
-- Station mode: joins saved WiFi, starts mDNS as `aurora.local`, serves dashboard at port 80
-- On boot in station mode: tries saved WiFi for 15s, falls back to AP mode if fails
+- **Attention / neglect:** 1 hour without a touch → `LONELY_SAD` (droopy eyes, teardrop, "Miss you... Touch me?").
+- **Midnight:** 12:00 AM triggers an animated envelope reminder to read the day's message on the dashboard.
+- **WiFi (shipped):** always-available softAP with captive portal + dashboard; no home-WiFi station mode and no mDNS in the shipped build.
 
 ### Daily message library
-- 30 messages stored as a `const char* messages[30]` array in PROGMEM
+- 30 messages stored in `src/block4/messages.cpp` (flash-resident); the dashboard loads its own copy from `data/messages.js`
 - Selected by `dayOfYear % 30`
 - Tone: CSE-flavored, calming, supportive, identity-affirming — **the kind of things a person who genuinely cares about her would want her to hear on a hard day.** Warm but not presumptuous. They can show care and even affection, but they don't assume a future together.
 - Length: ~10-20 words each
-- Asif drafts these in-session on Day 3 (see Build Timeline)
+- Asif drafts these in-session (see Build Timeline)
 
 **Tone guidance — what to include:**
 - Acknowledgement of her craft, her effort, her intelligence, her growth
@@ -185,23 +169,20 @@ Verification: [docs/PIN_DIAGRAM.md](docs/PIN_DIAGRAM.md).
 - Anything that sounds like a transaction ("I did this so you'd...")
 - Daily pressure to feel a certain way
 
-**The point:** the 30 messages are *her daily companion* for as long as she keeps Aurora on her desk. They should feel like a steady, warm presence — not like a slow-motion ask. The confession happens once, in the /secret page, on Sept 10. Everything else just says *"you matter, and I'm glad I knew you."*
+**The point:** the 30 messages are *her daily companion* for as long as she keeps Aurora on her desk. They should feel like a steady, warm presence — not like a slow-motion ask. The one-shot note shipped as the keepsake **letter jar** + birthday letter in the dashboard; the date-gated `/secret` page was superseded during the build. Everything else just says *"you matter, and I'm glad I knew you."*
 
 ### Watchdog
-- ESP32 hardware watchdog enabled, 30-second timeout
-- `loop()` must call `esp_task_wdt_reset()` every cycle
-- Auto-recovery from any lockup
+- **Not in the shipped build** (`esp_task_wdt` was dropped) — stability comes from the AsyncWebServer heap-safety patch (pre-allocated request buffer) instead.
 
 ### Battery monitoring
 - ADC read on a voltage divider (2× 100kΩ) from battery+ → GPIO3 (ADC1_CH3)
-- If V_batt < 3.3V, OLED shows "Low battery" warning
-- If V_batt < 3.0V, LEDs dim to 10% to extend runtime
-- If V_batt < 2.8V, device enters deep-sleep and refuses to boot until charged
+- Thresholds (see `AURORA_BAT_*` in `include/config.h`): `OK` ≥ 3.6 V · `LOW` < 3.4 V · `CRITICAL` < 3.1 V · boot-blocked below 2.8 V
+- Status is shown on the dashboard (`/api/state`) and reflected in the deskmate's mood
 
 ### Power-on behavior
 - Slide switch controls battery line
-- Boot time: < 2 seconds to clock display
-- All previous state (WiFi creds, mood, stats) persists in Preferences (NVS)
+- Boot time: < 2 seconds to the Deskmate screen (default screen)
+- State (warm touches, last-touch time, clock epoch, midnight acknowledgement) persists in Preferences (NVS)
 
 ---
 
@@ -211,52 +192,53 @@ Verification: [docs/PIN_DIAGRAM.md](docs/PIN_DIAGRAM.md).
 
 ```
 /data/
-├── index.html       (main dashboard, ~25 KB)
-├── app.css          (~8 KB)
-├── app.js           (~12 KB)
-├── secret.html      (date-gated personal letter, ~5 KB)
-└── error.html       (404 page for /secret before unlock)
+├── index.html          (main dashboard — self-contained, CSS/JS inlined)
+├── messages.js         (the 30 daily thoughts, loaded by the dashboard)
+├── letter.html         (keepsake letters fragment)
+├── style.css           (legacy standalone stylesheet — not loaded by index.html)
+├── app.js              (legacy standalone updater — not loaded by index.html)
+└── sleeping_chandni.jpg (Dreamland photo card)
 ```
 
 Total: ~50 KB. Trivially fits in 4 MB flash.
 
 ### Visual design language
 
-- **Theme:** dark by default (background: `#0e0e10`, foreground: `#e8d9c0` cream)
-- **Color palette:** warm cream + soft amber + deep charcoal (matches the LED color, intentional)
-- **Typography:** system font stack with a custom-display font for headings
-- **Layout:** single column on mobile, max-width 720px centered
-- **Background:** subtle CSS-only starfield animation (very cheap, very pretty)
+- **Theme:** light "strawberry-milk" (background gradient white → `#ffd2dc`, text `#461628`)
+- **Color palette:** blush pink + cream + rose accents (`#ff5c8a`, `#ff3366`), `theme-color #ffe5ec`
+- **Typography:** system font stack + rounded display font for headings
+- **Layout:** single column on mobile, max-width centered
+- **Background:** CSS-only floating hearts/petals (all generated in the browser)
 
 ### Dashboard components (`index.html`)
 
-1. **Header card** — greeting ("Hi [her name]") + live time + day-of-year progress bar
-2. **Today's message card** — current daily message, large and centered
-3. **Stats row** — 3 small cards: button presses today, days together, last interaction
-4. **Network status** — IP address, mDNS name, signal strength
+1. **Today** — greeting, live time, today's daily message, mood, battery, touch stats
+2. **Letters** — keepsake envelope jar of short personal letters (incl. "Open when you can't sleep at 2 AM")
+3. **Dreamland** — resting photo card + quiet note + integrated Music Box (Web Audio, browser-generated)
+4. **Birthday mode** — auto-celebrated when the clock hits Sept 10
 5. **Footer** — small "made with care" credit + version number
 
 ### API endpoints
 
 ```
-GET  /api/state         → JSON: { time, message, stats, battery, network }
-GET  /api/message?day=N → JSON: { day, message } (for previewing)
-POST /api/secret-unlock-test → returns 404 unless date >= 2026-09-10
-GET  /secret            → HTML: secret page, only if date >= 2026-09-10
+GET  /api/state         → JSON snapshot (time, message, stats, battery, network) for first paint
+GET  /version           → firmware version string
+WS   /ws                → push socket — state broadcast ~every 2 s + live touch sync
+GET  /update, POST /update → Web OTA firmware reflash (hotspot only)
+POST /upload            → LittleFS upload (dashboard asset OTA)
+GET  /generate_204, /hotspot-detect.html → silent captive-portal detection
+onNotFound / fallback   → unknown routes serve the dashboard (captive-portal "login" landing)
 ```
 
-### Polling strategy
-- Dashboard polls `/api/state` every 2 seconds via `fetch()`
-- LED state shown in real-time on the dashboard (e.g., "Breathing", "Sparkle", "Setup mode")
+### Live-update strategy
+- Dashboard fetches `/api/state` once for first paint, then receives live updates over the WebSocket (`/ws`, ~2 s broadcasts)
+- Touches sent from the dashboard are mirrored on the physical OLED in real time
 
-### Date-gating the secret page
-Two layers of protection:
-1. **Client-side:** the dashboard's main UI queries `/api/state`, which returns `unlocked: false` if `now < 2026-09-10`. The dashboard's footer link to `/secret` is hidden via CSS.
-2. **Server-side:** the `/secret` route handler checks the system date on every request. If `now < 2026-09-10`, returns 404 (with a generic "Not found" page, no hint that it exists).
-
-Both layers must pass for the secret page to be visible.
+### Gating in the shipped build
+- The `/secret` date-gating below was **superseded**: content is surfaced as the always-open **keepsake letter jar**, a **music box**, and automatic **birthday mode** when the clock hits Sept 10, plus a 12:00 AM daily-message reminder on the OLED.
 
 ### Content of the /secret page (soft-confession)
+*(In the shipped build this landed as the keepsake letter jar + birthday letter in the dashboard; the voice guidance below carried over to those letters.)*
 - **Type:** a single, short, honest note. One page. ~150-250 words.
 - **Voice:** Asif's actual voice — not flowery, not theatrical. Quiet.
 - **Tone:** honest about his feelings, clear that he doesn't expect anything back, graceful about the future being unknown.
@@ -277,7 +259,7 @@ Both layers must pass for the secret page to be visible.
 ## Enclosure design (hand-built, no 3D printer)
 
 ### Structure
-- **Top panel:** 3mm clear acrylic, laser-cut or hand-scored, with a rectangular cutout for the OLED window (~28mm × 16mm) and circular cutouts for the 3 buttons (~6mm diameter each)
+- **Top panel:** 3mm clear acrylic, laser-cut or hand-scored, with a rectangular cutout for the OLED window (~28mm × 16mm) and circular cutouts for the 2 buttons (~6mm diameter each)
 - **Side panels:** black acrylic (3mm) or thin plywood, cut to 80mm × 30mm × 4 pieces, glued or screwed together
 - **Bottom panel:** black acrylic, with a cutout for the slide switch and a micro-USB access hole
 - **Standoffs:** 4× M3 brass standoffs (15mm) screwed between top and bottom panels, with the perfboard mounted on top of the standoffs
@@ -285,7 +267,7 @@ Both layers must pass for the secret page to be visible.
 ### Mounting strategy
 - **OLED:** hot-glued to underside of top panel, aligned with the cutout
 - **Buttons:** soldered to perfboard, button caps protrude through top panel cutouts
-- **LED ring:** mounted on perfboard, positioned under the top panel with a small cutout (or visible through a translucent diffuser if Asif adds one)
+- **Breathing LED:** soldered directly to the perfboard, glowing out of the box (single LED, no diffuser needed)
 - **Battery:** loose inside the box, secured with a dab of hot glue
 - **TP4056:** mounted on the side, micro-USB accessible from the side of the box
 
@@ -322,19 +304,19 @@ Both layers must pass for the secret page to be visible.
 
 ## Verification (how to test end-to-end)
 
-Before gifting, Asif must verify:
+Before gifting, Asif must verify (shipped checklist):
 
-1. **Power on from battery:** device boots to Mode 1 within 2s, shows correct time (after NTP sync), shows today's message.
-2. **Button navigation:** all 3 buttons respond, no false triggers, no missed presses.
-3. **LED animations:** breathing is smooth, surprise animations complete cleanly, no flicker.
-4. **WiFi setup flow:** reset device (long-press Select), AP `Aurora-Setup` appears, captive portal loads, can submit home WiFi creds, device restarts and joins home WiFi.
-5. **Dashboard:** from phone on same WiFi, `http://aurora.local/` loads within 3 seconds, shows live time, today's message, updates every 2 seconds.
-6. **Secret page before unlock:** direct navigation to `http://aurora.local/secret` returns 404. Dashboard footer doesn't show the link.
-7. **Secret page after unlock (simulated):** set device clock to Sept 10+, secret page loads with the personal letter.
-8. **OTA** (n/a, skipped per design).
-9. **Battery life:** fully charged, WiFi connected, LEDs at 30% brightness, dashboard refreshing → device should run ≥8 hours.
-10. **Brownout test:** rapid button presses during WiFi reconnection → device must not crash, watchdog must recover.
-11. **Rehearsal:** do a full unboxing rehearsal (open box, press Select, see greeting, navigate to dashboard URL, open on phone, navigate to /secret). The whole flow should take < 60 seconds and feel magical.
+1. **Power on from battery:** device boots to the Deskmate screen within 2s; the clock keeps time without NTP.
+2. **Button navigation:** Warm-Touch (GPIO0) triggers heart-eyes; Mode button (GPIO2) cycles all 6 screens; 3-second hold toggles WiFi.
+3. **LED animations:** breathing is smooth and mood-synced (800 ms touched / 1500 ms normal / 3200 ms lonely), no flicker.
+4. **WiFi:** softAP `Aurora` appears, captive portal loads, `http://192.168.4.1/` serves the dashboard.
+5. **Dashboard:** from the hotspot, the dashboard loads within 3 seconds, shows live time and today's message, updates live over WebSocket.
+6. **Touch sync:** touches sent from the dashboard trigger the excited heart-eyes reaction on the physical OLED.
+7. **Neglect & midnight:** leaving the device untouched for 1 hour shows the lonely mood; 12:00 AM shows the envelope reminder.
+8. **OTA** over the hotspot: token-secured web reflash works.
+9. **Battery life:** fully charged with WiFi + display running → device runs well beyond the workday.
+10. **Brownout test:** rapid button presses during WiFi use → device must not crash.
+11. **Rehearsal:** do a full unboxing rehearsal (open box, touch the deskmate, cycle screens, join the hotspot, open the dashboard, open the letters). The whole flow should take < 60 seconds and feel magical.
 
 ---
 
@@ -348,7 +330,7 @@ The files planned below now exist as a PlatformIO project (this repo):
 | `firmware/state.h` | `include/state.h` + `src/block4/state.cpp` — NVS-backed state singleton |
 | `firmware/display.h` / `leds.h` / `buttons.h` / `battery.h` | `include/display.h`, `include/chaser.h`, `include/buttons.h` + `src/block1/*` |
 | `firmware/wifi_manager.h` / `dashboard_api.h` | `src/block4/*` — SoftAP, AsyncWebServer, AsyncWebSocket |
-| `data/index.html`, `app.css`, `app.js` | `data/index.html` + `data/app.js` + `data/style.css` (self-contained) |
+| `data/index.html`, `app.css`, `app.js` | `data/index.html` (self-contained) + `data/messages.js` |
 | `data/secret.html` | `data/letter.html` (keepsake letters) + music box tab |
 | `MESSAGES.md` | `data/messages.js` — the 30 daily messages |
 | `README.md` | `README.md` (overview) + `docs/USER_MANUAL.md` (the card) + `docs/PIN_DIAGRAM.md` |
@@ -392,4 +374,4 @@ The build itself is still a real, impressive, hand-crafted thing — independent
 ## References
 
 - [feasibility-analysis.md](feasibility-analysis.md) — the deep technical feasibility pass that informed this spec
-- [Web research notes](#) — see chat history for the supporting web searches (ESP32-C3 compatibility, memory budgets, WS2812B reliability, ArduinoJson + AsyncWebServer best practices)
+- Web research notes — see the build chat history for the supporting web searches (ESP32-C3 compatibility, memory budgets, async-server reliability, ArduinoJson best practices)

@@ -21,7 +21,7 @@ The project has been upgraded to **Aurora Deskmate Edition** in `aurora-firmware
 | **OLED Safe Margin & Anti-Clipping** | ✅ PASSED | Strict 114-116px width clamping with multi-line word wrapping and font scaling. Safe against bezel and SH1106 column shifts. |
 | **Emoji & Pixel-Art Hearts** | ✅ PASSED | Completely eliminated literal `<3` text strings; replaced with clean romantic phrasing and rendered pixel-art graphic hearts (`drawHeart`). |
 | **Dynamic Animated Pulse Meter** | ✅ PASSED | Heartbeat Keepsake mode features an animated, travelling ECG waveform and a dynamic lub-dub pulsing heart with BPM acceleration (72 to 120 BPM upon touch). |
-| **Multi-Function Button 2 (GPIO2)** | ✅ PASSED | Short press cycles OLED display modes (Deskmate -> Clock & Date -> Daily Quote -> Heartbeat Keepsake). 3-second long press toggles WiFi AP. |
+| **Multi-Function Button 2 (GPIO2)** | ✅ PASSED | Short press cycles OLED display modes (Deskmate -> Clock & Date -> Daily Quote -> Scan WiFi QR -> Scan Dashboard QR -> Heartbeat Keepsake). 3-second long press toggles WiFi AP. |
 | **Attention / Neglect System** | ✅ PASSED | Tracks elapsed time since last touch; transitions to `LONELY_SAD` with droopy eyes, quivering mouth, sliding teardrop after 1 hour. |
 | **Midnight Message Reminder** | ✅ PASSED | Automatically triggers at 00:00 (12:00 AM) with animated envelope, heart seal, sparkles, and daily message prompt. |
 | **LED Heartbeat Tempo Sync** | ✅ PASSED | Syncs LED breathing period to deskmate mood (800ms excited heartbeat when touched, 1500ms normal, 3200ms slow lonely sigh). |
@@ -34,7 +34,7 @@ The project has been upgraded to **Aurora Deskmate Edition** in `aurora-firmware
 
 ### Block 1 — Hardware Drivers + Animated Deskmate Engine
 - **Touch Button (GPIO0):** Active LOW touch button for Warm Touches.
-- **Multi-Function Push Button (GPIO2):** Short click to cycle 4 display modes; 3-second hold to toggle WiFi SoftAP.
+- **Multi-Function Push Button (GPIO2):** Short click to cycle 6 display modes (incl. both QR-code screens); 3-second hold to toggle WiFi SoftAP.
 - **OLED Display (GPIO8 SDA, GPIO9 SCL):** 400kHz I2C, supports 0.96" SSD1306 and 1.3" SH1106 displays (`AURORA_OLED_DRIVER 1`).
 - **LED Breathing Chaser (GPIO4):** LEDC PWM channel 0 with dynamic period control.
 - **Battery ADC (GPIO3):** Voltage divider (100kΩ/100kΩ), averaged sampling.
@@ -80,7 +80,7 @@ Building FS image from 'data' directory to .pio/build/esp32c3/littlefs.bin
 | Sept 6 | Block 1 + Block 4 Merge | Unified setup/loop, LittleFS filesystem mount, AsyncTCP stack size increase to 8KB |
 | Sept 6 | RISC-V Stability Patch | Vendored `ESPAsyncWebServer-aurora` pre-allocating request buffer to prevent heap crashes |
 | Sept 6 | Birthday Milestone & Letters | Chapter 22 birthday detection, opening loading curtain, 6 keepsake letters, music box |
-| Sept 6 | Deskmate Fork & Modes | Consolidated to 2 buttons; animated OLED Deskmate engine; 4 display modes; 1hr neglect mechanism, 12 AM midnight reminder. |
+| Sept 6 | Deskmate Fork & Modes | Consolidated to 2 buttons; animated OLED Deskmate engine; 6 display modes (incl. 2 QR screens); 1hr neglect mechanism, 12 AM midnight reminder. |
 | Sept 7 | **Interactive Polish & Bug Fixes** | **Dashboard touch OLED reaction hook, strict RHS safe margins, replaced `<3` with graphic mini-hearts, dynamic scrolling ECG pulse wave with 72->120 BPM acceleration on touch, and 3-second long press for WiFi toggle.** |
 | Sept 9–10 | **Gift Assembly & Delivery** | Hand-built enclosure; device delivered in time for the **Sept 10** birthday. |
 | Sept 12 | **Docs, Dashboard Preview & Design Retro** | README + all markdowns updated to as-built; single-file static dashboard build (`tools/build_dashboard.py`) deployed live at [startling-cuchufli-ccb77c.netlify.app](https://startling-cuchufli-ccb77c.netlify.app/); design spec marked **delivered**. |

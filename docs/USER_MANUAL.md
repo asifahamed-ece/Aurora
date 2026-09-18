@@ -1,14 +1,14 @@
 ---
 title: "Aurora — Your Deskmate"
 subtitle: "A little guide for Saira"
-image: sleeping_chandni.jpg
+image: data/sleeping_chandni.jpg
 layout: manual
 ---
 
 # Hey Saira! This is Aurora
 
 A tiny desk buddy who lives on your desk and keeps you company.
-She blinks, smiles, and hums a lullaby for you.
+She blinks, smiles, and reacts to you.
 
 ---
 
@@ -47,8 +47,7 @@ The tiny button on the side cycles through her screens:
 
 ## Music
 
-Aurora hums a gentle lullaby. She plays it softly so she doesn't bother you.
-You can toggle it from the dashboard on your phone.
+The music box lives on her dashboard — open it on your phone and a gentle Brahms-lullaby arrangement plays quietly from your phone's own speaker (it's generated in the browser, so Aurora herself stays silent).
 
 ---
 
@@ -80,7 +79,7 @@ Press the little button to cycle to the next QR code.
 - She remembers every time you touch her
 - She breathes softly with a little light — it changes with her mood
 - She checks her battery and tells you if she needs charging
-- The WiFi is always on so your phone connects automatically
+- Her WiFi is on so your phone connects automatically (a 3-second hold on the side button turns it off or on)
 
 ---
 

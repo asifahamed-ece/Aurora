@@ -75,7 +75,7 @@ The design intent is deliberately non-technical on the OLED: all metrics and sta
 ### Battery Care
 
 - ADC on a 100 kΩ/100 kΩ voltage divider (GPIO3), averaged sampling.
-- Thresholds: `OK` > 3.5 V · `LOW` < 3.4 V ("Battery Hungry") · `CRITICAL` < 3.1 V ("Please Charge Me") · boot-block below 2.8 V.
+- Thresholds: `OK` > 3.6 V · `LOW` < 3.4 V ("Battery Hungry") · `CRITICAL` < 3.1 V ("Please Charge Me") · boot-block below 2.8 V.
 
 ### Midnight Reminder
 
@@ -126,5 +126,5 @@ All time, messages, letters, and touch history are stored **on-device only** (Li
 | [`2026-09-05-aurora-gift-design.md`](2026-09-05-aurora-gift-design.md) | Original design spec (concept, tone, timeline, enclosure) |
 | [`feasibility-analysis.md`](feasibility-analysis.md) | Deep technical feasibility pass (pins, memory budget, libraries) |
 | [`IMPLEMENTATION_PROGRESS.md`](IMPLEMENTATION_PROGRESS.md) | Build status, subsystem verification, change log |
-| `data/` | LittleFS dashboard sources (`index.html`, `app.js`, `messages.js`, …) |
+| `data/` | LittleFS dashboard sources (`index.html`, `messages.js`, `letter.html`, …) |
 | `lib/ESPAsyncWebServer-patched/` | Vendored AsyncWebServer with RISC-V heap-corruption fix |

@@ -84,6 +84,8 @@ GND     → common ground
 
 **Verdict:** If you have or can get a 74HCT125, use it. Otherwise, 470 Ω series resistor is good enough.
 
+> ✅ **As-built:** the shipped device uses a **single mood-synced breathing LED** on GPIO4 (no ring, no level shifter needed) — the 470 Ω series resistor went in as designed.
+
 ---
 
 ## 3. SSD1306 OLED — what to expect from monochrome
@@ -114,21 +116,19 @@ GND     → common ground
 |---|---|
 | Arduino core + WiFi stack | ~800 KB |
 | ESPAsyncWebServer + AsyncTCP | ~150 KB |
-| ArduinoJson (v7) | ~50 KB |
-| Adafruit_NeoPixel | ~15 KB |
-| u8g2 (full font set) | ~200 KB |
-| Adafruit_SSD1306 | ~10 KB |
-| Button / NTP / misc drivers | ~30 KB |
+| ArduinoJson (v6, bblanchon) | ~50 KB |
+| u8g2 | ~200 KB |
+| ricmoo/QRCode | ~10 KB |
+| Button / misc drivers | ~30 KB |
 | Firmware code itself | ~50 KB |
 | **Subtotal** | **~1.3 MB** |
 | **Remaining for LittleFS (dashboard + assets)** | **~2.5 MB** ✅ |
 
 **Dashboard size estimate:**
-- `index.html` (with embedded fonts as base64): ~25 KB
-- `app.css`: ~8 KB
-- `app.js`: ~12 KB
-- `secret.html`: ~5 KB
-- Total: **~50 KB** — fits 50x over.
+- `index.html` (self-contained, CSS/JS inlined): ~30 KB
+- `messages.js`: ~8 KB
+- `letter.html`: ~5 KB
+- Total: **~45 KB** — fits 50x over.
 
 **RAM budget (320 KB usable after WiFi):**
 
@@ -138,7 +138,7 @@ GND     → common ground
 | AsyncWebServer | ~10 KB |
 | ArduinoJson working buffer (static, pre-allocated) | 2-4 KB |
 | OLED frame buffer (128×64/8 = 1 KB) | 1 KB |
-| WS2812B ring buffer (12 LEDs × 3 bytes) | 36 B |
+| Breathing chaser LED (LEDC PWM) | ~0 B (timer) |
 | Free heap remaining for tasks/messages | **~200 KB** ✅ |
 
 **Verdict:** Memory is *not* a constraint. We're using <2% of flash for the dashboard and have 200+ KB of headroom for RAM.
@@ -150,7 +150,7 @@ GND     → common ground
 These are the failure modes I want to design for, not patch later:
 
 ### Power brownouts (LiPo + WiFi + LEDs simultaneously)
-- **Cause:** WiFi TX burst draws ~250 mA, WS2812B full white draws ~60 mA × 12 = 720 mA peak. A 500 mAh LiPo can sag.
+- **Cause:** WiFi TX burst draws ~250 mA; the shipped build's single breathing LED draws ~20 mA (the 720 mA WS2812B ring never shipped). A 500 mAh LiPo can sag under TX bursts.
 - **Solution:**
   - 470 µF electrolytic cap across 3.3V rail (between C3 3.3V pin and GND)
   - 100 nF decoupling cap near each IC
@@ -161,29 +161,25 @@ These are the failure modes I want to design for, not patch later:
 - **Cause:** GPIO0 is a boot-mode pin — LOW at boot puts C3 into download mode.
 - **Solution:** external 10kΩ pull-up to 3.3V on GPIO0. Even if the user holds the Up button, the pull-up wins during boot.
 
-### WiFi AP + Station mode confusion
-- **Cause:** if home WiFi is down or wrong password saved, captive portal logic can lock up.
-- **Solution:**
-  - On boot, C3 tries last-saved WiFi for 10 seconds. If fails, falls back to AP mode (`Aurora-Setup`).
-  - AP mode has a 60-second window where it's open, then becomes password-protected.
-  - Always-paired long-press Select resets WiFi credentials (back to AP mode).
-  - Boot-time watchdog: if no successful WiFi connection in 15s, log + continue as AP.
+### WiFi (station-mode) confusion
+- **Cause:** if home WiFi is down or wrong password saved, captive-portal logic can lock up.
+- **Solution in shipped build:** the device never joins home WiFi — it runs a **permanent softAP `Aurora`** with captive portal + dashboard, so there is no credential state to get stuck in. The mode button's 3-second hold toggles the AP itself.
 
 ### Watchdog timer
 - **Cause:** WiFi stack or web handler can hang under malformed requests.
-- **Solution:** enable the C3's hardware watchdog (TWDT) with a 30-second timeout. If the loop() doesn't feed it, the chip auto-resets.
+- **Solution in shipped build:** `esp_task_wdt` was **not** used — the AsyncWebServer vendored patch (pre-allocated request buffer + AsyncTCP stack bump) prevents the allocator hangs instead.
 
 ### Secret page premature access
 - **Cause:** what if she opens the dashboard before Sept 10 and finds `/secret` doesn't work?
-- **Solution:** the menu item is *hidden* in the UI before Sept 10 (the dashboard queries `/api/state` which reports `now < unlockDate` and hides the link). The endpoint itself still 404s if called directly. Two layers of date-gating.
+- **Solution:** *superseded in the shipped build* — there is no `/secret` route; the letters jar is always open and birthday mode is detected from the clock.
 
-### NTP failure on first boot (no time → wrong daily message)
-- **Cause:** if NTP fails, the C3 has no idea what day it is → picks wrong message.
-- **Solution:** fallback to the C3's internal RTC (which is set by NTP once successfully). If both fail, the device still works — it just shows message #0 every day until NTP succeeds. The C3's RTC drifts ~30 sec/day without sync but is fine for day counting.
+### Clock on first boot (no NTP → wrong day?)
+- **Cause:** no NTP is used, so the C3 needs another time source.
+- **Solution in shipped build:** the clock is seeded from the **compile-time epoch** at flash time and advanced by `millis()`; NVS saves the epoch so time survives reboots. Day-rolling is timezone-aware, and message #`dayOfYear % 30` is correct from the first boot.
 
 ### Power switch / battery protection
 - **Cause:** LiPo over-discharge destroys the cell.
-- **Solution:** include a small slide switch on the battery line. Plus firmware-side: read battery voltage via ADC and show a low-battery warning on OLED if V_batt < 3.3V.
+- **Solution:** include a small slide switch on the battery line. Plus firmware-side: read battery voltage via ADC (2× 100kΩ → GPIO3) and report status on the dashboard (`OK` ≥ 3.6 V · `LOW` < 3.4 V · `CRITICAL` < 3.1 V · boot-blocked < 2.8 V).
 
 ---
 
@@ -205,7 +201,7 @@ A few project types I came across that are *close* to what we're building but we
 
 ## 7. Things to add to the v3 design (recommendations)
 
-Based on this analysis, I'd add:
+Based on this analysis, I'd add *(✔ = adopted in the shipped build · ✖ = superseded/not needed after the single-LED & permanent-softAP consolidation)*:
 
 1. **74HCT125 level shifter** for WS2812B (₹30, 1 IC, 0.1 µF cap). *Increases reliability from 95% → 99.9%.*
 
